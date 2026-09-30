@@ -1,0 +1,24 @@
+{
+  "005930": [
+    {
+      "id": "news-1",
+      "title": "삼성전자, 2025년 4분기 매출 93.8조 원… 분기 기준 역대 최대",
+      "url": "https://news.samsung.com/kr/",
+      "source": "삼성전자 뉴스룸",
+      "published_at": "2026-01-15",
+      "summary": "2025년 4분기에 매출 93.8조 원, 영업이익 20.1조 원으로 분기 기준 가장 많은 매출을 올렸어요. AI용 메모리(HBM)가 잘 팔린 덕분이에요.",
+      "financial_link": { "label": "2025년 매출", "value": "333.6조 원" },
+      "is_placeholder": false
+    },
+    {
+      "id": "news-2",
+      "title": "HBM4 공급 관련 기사 (확인 후 추가 예정)",
+      "url": null,
+      "source": null,
+      "published_at": null,
+      "summary": "아직 확인된 기사가 없어서 비워둔 자리예요.",
+      "financial_link": null,
+      "is_placeholder": true
+    }
+  ]
+}

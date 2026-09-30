@@ -1,0 +1,28 @@
+{
+  "005930": {
+    "unit": "조 원",
+    "basis": "연결 기준",
+    "source": "삼성전자 공식 실적 발표 (2026년 1월)",
+    "annual": [
+      { "fiscal_year": 2023, "revenue": 258.94, "operating_income": 6.57 },
+      { "fiscal_year": 2024, "revenue": 300.9, "operating_income": 32.7 },
+      { "fiscal_year": 2025, "revenue": 333.6, "operating_income": 43.6 }
+    ],
+    "latest_quarter": {
+      "label": "2025년 4분기",
+      "revenue": 93.8,
+      "operating_income": 20.1,
+      "note": "분기 기준 역대 최대"
+    },
+    "segments": {
+      "base_label": "2025년 4분기 기준",
+      "items": [{ "code": "DS", "name": "DS(반도체)", "revenue": 44.0 }]
+    },
+    "indicators": {
+      "roe": { "value": 9.2, "is_sample": true },
+      "debt_ratio": { "value": 27.1, "is_sample": true },
+      "per": { "value": 18.5, "is_sample": true },
+      "pbr": { "value": 1.9, "is_sample": true }
+    }
+  }
+}
