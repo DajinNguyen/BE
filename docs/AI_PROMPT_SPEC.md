@@ -2,13 +2,13 @@
 
 | 항목 | 내용 |
 |---|---|
-| 문서 버전 | v0.2 |
+| 문서 버전 | v0.3 |
 | 작성일 | 2026-10-12 (최초 2026-10-07) |
 | 대상 | `POST /api/companies/{stock_code}/report` — AI 기업 분석 리포트 생성 |
 | 코드 위치 | `backend/app/services/report_service.py`의 `SYSTEM_PROMPT` 상수 |
 | 원칙 | **이 문서와 코드가 다르면 코드가 정답이다.** 프롬프트를 바꾸면 이 문서도 같이 고친다 |
 
-> ⚠️ **2026-10-12 업데이트**: 프론트가 2026-10-06 클라이언트 3차 미팅 피드백으로 리포트 응답 형식을 재설계했습니다(`frontend/docs/report-schema-proposal.md`, `API_SPEC.md` §5). **아래 §2~§6은 전부 코드에 지금 실제로 들어있는 "구버전" 프롬프트 기준입니다** — 아직 새 스키마(헤드라인·5개 고정 카테고리·before/after)로 다시 쓰지 않았습니다. 새 스키마에 맞춰 프롬프트를 어떻게 바꿔야 하는지는 **§7(신규)**에 정리했습니다. 프롬프트를 실제로 재작성하면 §7 내용을 §2~§6에 반영하고 이 경고를 지우세요.
+> ✅ **2026-10-12 (v0.3)**: 프론트의 새 리포트 형식(`frontend/docs/report-schema-proposal.md`, `API_SPEC.md` §5)에 맞춰 프롬프트와 출력 스키마를 다시 썼습니다. 아래 §2~§6은 새 코드 기준이고, v0.2의 §7(재설계 목표안)에서 정한 내용은 §7에 결정 사항으로 정리했습니다.
 
 ## 1. 왜 이 문서가 필요한가
 
@@ -21,7 +21,8 @@
 - 출력은 자유 텍스트가 아니라 **구조화 출력(response_schema)**으로 강제 — 모델이 형식을 벗어난 응답을 할 수 없음
 
 ```
-사용자 데이터(JSON) → [시스템 프롬프트 + 모델] → ReportContent (스키마 강제) → 서버가 메타 필드(stock_code, generated_at 등) 채워서 저장
+사용자 데이터(JSON) → [시스템 프롬프트 + 모델] → ReportContent (스키마 강제: headline, key_points, vision_summary, quiz)
+  → 서버가 정리(_sanitize) + 근거 자료(evidence)·sources·status를 데이터에서 직접 조립해서 저장
 ```
 
 ## 3. 시스템 프롬프트 구성요소 체크리스트
@@ -33,16 +34,16 @@
 | 1 | 역할(Role) 정의 | 누구에게, 어떤 입장에서 말하는 AI인지 | ✅ "주식 초보 10대에게 설명하는 선생님" |
 | 2 | 입력 설명 | 어떤 데이터가 주어지는지, 그 데이터의 성격 | ✅ "확인된 데이터(JSON)가 주어지면 그것만 근거로" |
 | 3 | 강성 규칙 (Hard Constraints) | 반드시 지켜야 할 것 — 안전·포지셔닝 관련 | ✅ 숫자 조작 금지, 투자 권유 금지, 데이터 부족 시 지어내지 않기 |
-| 4 | 출력 구조 가이드 | 필드별 개수·형식 — 스키마와 1:1 대응 | ✅ summary/key_points/charts/connection/strengths/watch_points/quiz 전부 명시 |
+| 4 | 출력 구조 가이드 | 필드별 개수·형식 — 스키마와 1:1 대응 | ✅ headline / key_points(5개 고정 분류, before·after·reason·meaning·evidence) / vision_summary / quiz 전부 명시 |
 | 5 | 톤·문체 규칙 | 말투, 전문용어 처리 | ✅ "~해요" 체, 용어는 쉬운 말로 (단, 용어 자체는 그대로 쓰고 풀이는 용어 시트가 담당) |
-| 6 | 엣지케이스 처리 지침 | 데이터가 부족·애매할 때 뭘 해야 하는지 | 🟡 부분적 — "지어내지 말 것"만 있고, 구체적 케이스 지침 없음 |
+| 6 | 엣지케이스 처리 지침 | 데이터가 부족·애매할 때 뭘 해야 하는지 | 🟡 부분적 — 미래 계획(`is_plan`) 구분, 근거가 부족한 분류 처리, `available_evidence` 밖 근거 금지 규칙 추가. 그 밖의 케이스는 서버 `_sanitize()`가 사후 정리 |
 | 7 | Few-shot 예시 | 입력→출력 예시로 형식 일관성 확보 | ⬜ 없음 (제로샷) |
 
 ### 6번 — 비어있는 부분 (§5 미결 사항에 정리)
 
 ### 7번 — 없음 (§5 미결 사항에 정리)
 
-## 4. 현재 시스템 프롬프트 (2026-10-07 기준, 코드가 정본)
+## 4. 현재 시스템 프롬프트 (2026-10-12 기준, 코드가 정본)
 
 ```
 당신은 주식을 처음 시작하는 10대 초보자에게 기업을 설명하는 선생님이에요.
@@ -52,36 +53,50 @@
 - 숫자는 주어진 데이터에 있는 값(또는 derived 항목에 미리 계산된 값)만 그대로 쓰세요. 새 숫자를 만들거나 추정하지 마세요.
 - "사세요", "파세요", "지금이 기회" 같은 매수·매도 권유나 주가 전망 표현은 쓰지 마세요.
 - 모든 문장은 "~해요" 체로, 전문 용어는 쉬운 말로 풀어서 쓰세요.
-- 데이터가 부족한 부분은 지어내지 말고 다루지 마세요.
+- 데이터가 부족한 부분은 지어내지 마세요.
+- timeline에서 is_plan이 true인 항목은 아직 이뤄지지 않은 계획이에요. "~할 계획이라고 밝혔어요"처럼 사실과 구분해서 쓰세요.
 
 작성 가이드:
-- summary: 회사의 최근 흐름을 2~3문장으로 요약해요.
-- key_points: 3~5개. category는 performance(실적)·profitability(수익성)·stability(재무 안정성)·business(사업)·news(뉴스) 중 하나,
-  status는 good·normal·caution 중 하나예요. source에는 근거 자료와 기준(예: "2025년 연간 · 연결 기준"),
-  base_date에는 근거 자료 날짜(YYYY-MM-DD)를 적어요. id는 "kp-<category>" 형식이에요.
-- charts: 설명에 도움이 되는 차트 1~3개. type은 annual_revenue·annual_operating_income·operating_margin·segment_revenue 중 하나이고,
-  segment_revenue는 사업부문 매출 데이터가 있을 때만 써요. id는 "chart-1"처럼 번호를 붙여요.
-- connection: 회사의 계획·뉴스·실제 숫자가 어떻게 이어지는지 chain(짧은 문구 3개 안팎)과 conclusion으로 보여줘요.
-- strengths / watch_points: 각각 1~3개, 숫자 근거가 있는 문장으로 써요.
-- quiz: 리포트 내용으로 풀 수 있는 3지선다 문제 2~3개. answer_index는 0부터 시작하는 정답 번호예요. id는 "q1"처럼 번호를 붙여요.
+- headline: 이 회사의 최근 흐름을 한 문장으로 정리해요.
+- key_points: 정확히 5개, category마다 하나씩 이 순서로 써요.
+  performance(실적 특징) → revenue_source(주요 수익원) → recent_change(최근 실적 변화) → risk(위험·변화 요인) → strength(핵심 경쟁력)
+  - title: 한 줄 결론이에요.
+  - before / after: 비교할 과거 값과 현재 값이에요. label(무엇), value(단위를 붙인 값, 예: "43.6조 원"), period(예: "2025")를 적어요.
+    value는 데이터에 있는 숫자만 써요. 비교할 숫자가 없으면 null로 두고, 하나만 있어도 돼요.
+  - reason: 왜 그런지 1~2문장으로 써요.
+  - meaning: 초보자에게 무슨 뜻인지 1문장으로 풀어요.
+  - evidence: 이 포인트의 근거 자료 종류예요. available_evidence에 있는 것(financials, news, vision) 중에서만 골라요.
+    financials는 재무제표, news는 뉴스, vision은 회사 소개·사업부문·계획(timeline)이에요.
+  - 근거가 부족한 category라도 빼지 말고, 있는 데이터 안에서 확인된 사실만으로 짧게 써요.
+- vision_summary: 회사가 무엇을 하는지와 밝힌 계획을 1~2문장으로 써요.
+- quiz: 리포트 내용으로 풀 수 있는 3지선다 문제 2~3개. answer_index는 0부터 시작하는 정답 번호예요.
 ```
 
 **함께 전달되는 입력 데이터** (`build_context()`가 구성, 프롬프트 본문이 아니라 사용자 메시지로 전달)
 
 | 키 | 내용 |
 |---|---|
-| `company` | 이름, 업종, 사업 설명, 사업부문, **타임라인(`is_plan` 포함)** |
+| `company` | 종목코드, 이름, 업종, 사업 설명, 사업부문, **타임라인(`is_plan` 포함)** |
 | `financials` | 연도별 매출/영업이익, 최근 분기, 사업부문별 매출 (지표 `indicators`는 제외) |
 | `derived` | 매출증가율·영업이익률 — 서버가 미리 계산 (AI가 계산하지 않음) |
 | `news` | 플레이스홀더(`is_placeholder: true`)가 아닌 실제 뉴스만 |
+| `available_evidence` | 이 회사에 실제로 있는 근거 종류 (`financials` 항상, `news`·`vision`은 자료가 있을 때만) |
+
+**서버가 AI 출력 뒤에 하는 일** (`_sanitize()`, `write_report()`)
+
+- `key_points`: 분류별 첫 번째 것만 남기고 `performance → revenue_source → recent_change → risk → strength` 순서로 정렬, `evidence`는 중복 제거 + `available_evidence` 밖의 값 제거
+- `quiz`: `answer_index`가 보기 범위를 벗어난 문제 제거
+- `evidence.financials`: 연도별 배열, 최근 연도 매출·영업이익·영업이익률·부채비율(예시 값이면 `is_sample: true`)을 데이터에서 그대로 조립
+- `evidence.news`: 원문 링크(`url`)가 있는 실제 뉴스만
+- `evidence.vision`: `vision_summary`(AI) + 사업부문별 매출(데이터) + 출처(`timeline_source`)
 
 ## 5. 미결 사항 — 다음에 보강할 것
 
 | # | 항목 | 문제 | 제안 |
 |---|---|---|---|
-| 1 | **미래 계획 vs 확정 사실 구분** | `timeline`에 `is_plan: true`(미래 계획)와 `false`(확정 과거)가 섞여 있는데, 프롬프트에 구분 지침이 없음. AI가 계획을 기정사실처럼 쓰면 "주가 전망 금지" 원칙과 충돌 위험 | 규칙 추가: `"is_plan: true인 항목은 '~라고 밝혔어요/계획이에요'처럼 아직 실현되지 않은 것으로 구분해서 쓰세요"` |
-| 2 | **빈 데이터 케이스 지침** | `news`가 비어있거나 `segments`가 없을 때 구체적으로 뭘 해야 하는지 명시 안 됨 (지금은 백엔드 `_sanitize()`가 사후 필터링으로 방어) | 규칙 추가: `"news가 비어있으면 news 카테고리의 key_point는 만들지 마세요"`, `"사업부문 매출 데이터가 없으면 segment_revenue 차트를 쓰지 마세요"` — 모델 단계에서 막으면 `_sanitize()`의 사후 필터링(=토큰 낭비) 빈도가 줄어듦 |
-| 3 | **길이 기준 부재** | `key_points.body`, `charts.caption` 등에 문장 수/글자 수 기준이 없어 생성마다 길이가 들쭉날쭉할 수 있음 | 각 필드에 "1~2문장" 같은 기준 추가 검토 |
+| 1 | ~~미래 계획 vs 확정 사실 구분~~ | ✅ v0.3에서 해결 | 규칙 추가됨: "timeline에서 is_plan이 true인 항목은 아직 이뤄지지 않은 계획이에요…" |
+| 2 | ~~빈 데이터 케이스 지침~~ | ✅ v0.3에서 해결 | `available_evidence`로 있는 근거만 고르게 하고, 근거가 부족한 분류도 확인된 사실만으로 짧게 쓰도록 지시. 차트 선택은 새 스키마에서 사라짐 |
+| 3 | ~~길이 기준 부재~~ | ✅ v0.3에서 해결 | headline 1문장, reason 1~2문장, meaning 1문장, vision_summary 1~2문장으로 명시 |
 | 4 | **Few-shot 예시 없음** | 제로샷이라 Claude/Gemini 간 톤·형식이 미묘하게 다를 수 있음 | 삼성전자 목데이터(`app/data/report_samsung.json`)를 "좋은 예시 1개"로 프롬프트에 포함할지 검토 — 토큰 비용과 일관성 향상의 트레이드오프 판단 필요 |
 | 5 | **모델별 프롬프트 분기 여부** | 지금은 Claude/Gemini에 완전히 동일한 프롬프트를 사용 중. 실제로 품질 차이가 나면 모델별로 미세조정할지, 아니면 끝까지 동일하게 유지할지 | 두 모델의 결과물을 몇 차례 비교해보고 결정 |
 
@@ -93,39 +108,20 @@
 - [ ] 매수·매도 권유나 주가 전망 표현이 없는가
 - [ ] 미래 계획(`is_plan: true`)을 확정된 사실처럼 쓰지 않았는가
 - [ ] 전체 문장이 "~해요" 체를 유지하는가
-- [ ] `key_points`의 `source`/`base_date`가 실제 근거와 일치하는가
-- [ ] `charts.type`이 실제 존재하는 데이터(예: 사업부문 매출)에만 쓰였는가
+- [ ] `key_points`가 5개 분류를 모두 채웠는가 (빠진 분류가 있으면 화면에 그만큼 덜 보임)
+- [ ] `before`/`after`의 `value`가 입력 데이터의 숫자와 단위까지 일치하는가
+- [ ] `key_points[].evidence`가 실제로 근거로 쓴 자료와 맞는가
 - [ ] `quiz.answer_index`가 `options` 범위 안에 있는가 (범위 밖이면 백엔드가 자동으로 걸러냄)
 
-## 7. 🆕 새 스키마에 맞춘 프롬프트 재설계 (목표안, 아직 코드 미반영)
+## 7. 새 스키마 반영 결과 (v0.2 §7 목표안에 대한 결정)
 
-`API_SPEC.md` §5의 새 `CompanyReport` 스키마를 AI가 채우려면, §4의 현재 프롬프트에서 아래가 바뀌어야 합니다.
-
-### 7.1 출력 구조 가이드 — 달라지는 부분
-
-| 현재 (구버전) | 새 스키마 | 영향 |
-|---|---|---|
-| `summary` (2~3문장) | `headline` (1문장) | 더 짧고 단정적인 한 줄로 압축하라는 지시 필요 |
-| `key_points` 3~5개, 자유 카테고리(performance/profitability/stability/business/news) | **정확히 5개**, 고정 카테고리(`performance`/`revenue_source`/`recent_change`/`risk`/`strength`) | AI가 "5개를 다 채워야 한다"는 걸 강제해야 함 — 데이터가 부실해도 5개 중 하나를 비워두는 게 아니라, 있는 데이터 안에서라도 각 카테고리에 맞는 포인트를 짜내야 함 (단, §3.6 엣지케이스 규칙과 상충 — 데이터가 정말 없으면 어떻게 할지 §7.2에서 결정 필요) |
-| `key_points[].body` (자유 서술) | `key_points[].before` / `after` / `reason` / `meaning` 4개로 분리 | AI가 "비교 수치"와 "왜"와 "무슨 뜻인지"를 구조적으로 나눠 써야 함 — 각각 길이 제한(1~2문장)을 명시하는 게 좋음 |
-| `charts[]` (AI가 그래프 종류 선택) | 삭제 | **AI 역할이 줄어듦** — 이제 그래프는 전적으로 `evidence.financials`의 원본 배열로 프론트가 그림. 프롬프트에서 차트 관련 지시 전부 삭제 |
-| `connection` (비전→뉴스→숫자 연결 한 문단) | 삭제, `key_points[].reason`/`meaning`에 흡수 | 각 포인트 안에서 연결짓는 서술로 분산 |
-| `strengths[]` / `watch_points[]` | `key_points[category=strength]` / `key_points[category=risk]` | 별도 배열이 아니라 5개 중 2개 자리로 흡수됨 |
-| `analyzed_sources[]` + `data_sources[]` | `sources[]` 하나 | 구분 없이 합쳐서 출력 |
-| (없음) | `key_points[].evidence: ("financials"|"news"|"vision")[]` | 이 포인트가 어떤 근거에 기반했는지 AI가 명시해야 함 (여러 개 가능) |
-
-### 7.2 추가로 풀어야 할 설계 질문
-- **5개를 항상 채워야 하는데, 근거 데이터가 부족하면?** (예: 뉴스가 하나도 없으면 `recent_change` 포인트를 어떻게 쓸지) — §5 미결 사항 2번과 연결되는 문제. "데이터가 부족하면 다루지 않는다"는 기존 원칙과, "5개는 항상 고정"이라는 새 요구사항이 정면으로 충돌하므로 **AI·백엔드·프론트 3자 합의가 필요**합니다.
-- **`before`/`after`가 둘 다 `null`인 포인트를 허용할지** — 비교 수치가 없는 카테고리(예: `strength`)는 자연스럽게 `null`일 수 있음. 허용 범위를 명시해야 함.
-- **`evidence.financials.highlights`를 AI가 채우는지, 백엔드가 채우는지** — `report-schema-proposal.md` 원칙상 "숫자는 백엔드가" 채워야 하므로, 이 필드는 AI 출력이 아니라 백엔드가 `Financials` 데이터에서 직접 계산해서 채우는 걸 권장 (ReportContent 스키마를 분리해서 AI가 쓰는 부분과 백엔드가 채우는 부분을 명확히 나눠야 함)
-
-### 7.3 작업 순서 제안
-1. `backend/app/schemas/report.py`를 새 스키마로 재작성 (`ReportContent`를 `headline`/`key_points`/`quiz`만 AI 담당으로 축소, `evidence`는 백엔드가 `Financials`/`News`에서 조립)
-2. `SYSTEM_PROMPT`를 §7.1 표 기준으로 재작성
-3. `app/data/report_samsung.json`(목데이터 픽스처)도 새 스키마로 다시 작성 — 지금 건 구버전 그대로라 새 프론트와 안 맞음
-4. 이 문서 §2~§6을 새 내용으로 교체하고 이 §7은 지움
-
----
+| v0.2에서 열어 둔 질문 | 결정 (v0.3 코드) |
+|---|---|
+| 5개를 항상 채워야 하는데 근거가 부족하면? | 프롬프트로 "빼지 말고, 있는 데이터 안에서 확인된 사실만으로 짧게" 쓰게 함. 그래도 빠지면 서버는 있는 것만 순서대로 보냄 (프론트는 5개 미만도 표시 가능) |
+| `before`/`after` 둘 다 `null` 허용? | 허용. 하나만 있어도 됨 (프론트가 "과거 → 현재" 줄을 생략) |
+| `highlights`는 AI가? 백엔드가? | 백엔드. `evidence` 전체를 서버가 데이터에서 조립하고 AI 출력 스키마(`ReportContent`)에서는 뺌 |
+| AI가 새로 쓰는 필드 | `headline`, `key_points`, `vision_summary`(기업 비전 요약), `quiz` |
+| 리포트 미지원 회사 | `REPORT_NOT_READY` 폐지. 재무 자료가 없으면 AI를 부르지 않고 바로 `status: "failed"` + 사유 |
 
 ## 8. 변경 이력
 
@@ -133,3 +129,4 @@
 |---|---|---|
 | v0.1 | 2026-10-07 | 최초 작성. 구성요소 체크리스트, 현재 프롬프트 스냅샷, 미결 사항 5개 정리 |
 | v0.2 | 2026-10-12 | 프론트 리포트 스키마 전면 교체에 따라 §7(새 스키마 대응 설계안) 추가. 현재 프롬프트는 구버전임을 명시 |
+| v0.3 | 2026-10-12 | 새 스키마로 프롬프트·출력 스키마 재작성. §2~§7을 새 코드 기준으로 교체, 미래 계획 구분 규칙 추가 |

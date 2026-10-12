@@ -1,0 +1,20 @@
+{
+  "trading_value_top": [
+    { "stock_code": "005930", "trading_value": 21450 },
+    { "stock_code": "000660", "trading_value": 18730 },
+    { "stock_code": "012450", "trading_value": 9820 },
+    { "stock_code": "329180", "trading_value": 7640 },
+    { "stock_code": "373220", "trading_value": 6210 },
+    { "stock_code": "035420", "trading_value": 4380 },
+    { "stock_code": "005380", "trading_value": 3920 },
+    { "stock_code": "068270", "trading_value": 3150 }
+  ],
+  "rising": {
+    "criteria": "기준을 정하는 중이에요. 지금은 예시 목록이에요.",
+    "stock_codes": ["012450", "329180", "009150", "196170", "000660", "015760"]
+  },
+  "most_viewed": {
+    "criteria": "다진에서 최근 7일 동안 많이 본 기업 (집계 기준 정하는 중 · 예시 목록)",
+    "stock_codes": ["005930", "000660", "035720", "005380", "035420", "373220"]
+  }
+}

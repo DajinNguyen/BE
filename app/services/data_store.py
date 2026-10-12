@@ -1,6 +1,7 @@
-"""Part 1 데모용 시드 데이터 저장소.
+"""시드 데이터 저장소.
 
-OpenDART / pykrx 연동 전까지는 `app/data/*.json` 에 확인된 값만 넣어두고 읽어서 쓴다.
+OpenDART / pykrx 연동 전까지는 `app/data/*.json` 에 넣어둔 값을 읽어서 쓴다.
+확인 전 숫자는 `is_sample: true` 로 표시돼 있다.
 """
 
 import json
@@ -8,52 +9,49 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from app.core.errors import company_not_found
+from app.core.errors import company_not_found, data_not_found
 from app.schemas.company import CompanyDetail, CompanySummary
-from app.schemas.financials import Financials, Indicators
+from app.schemas.financials import Financials
 from app.schemas.news import NewsItem
 from app.schemas.term import Term
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
-def _load(name: str) -> Any:
+def load_json(name: str) -> Any:
     return json.loads((DATA_DIR / name).read_text(encoding="utf-8"))
 
 
 @lru_cache
 def _companies() -> dict[str, CompanyDetail]:
-    return {c["stock_code"]: CompanyDetail(**c) for c in _load("companies.json")}
+    return {c["stock_code"]: CompanyDetail(**c) for c in load_json("companies.json")}
 
 
 def _normalize(text: str) -> str:
     return "".join(text.split()).lower()
 
 
-def _to_summary(company: CompanyDetail) -> CompanySummary:
+def to_summary(company: CompanyDetail) -> CompanySummary:
     return CompanySummary(**company.model_dump(include=set(CompanySummary.model_fields)))
 
 
-def search_companies(query: str) -> list[CompanySummary]:
+def search_companies(query: str, limit: int) -> list[CompanySummary]:
     needle = _normalize(query)
     if not needle:
         return []
-    return [
-        _to_summary(c)
-        for c in _companies().values()
-        if any(needle in _normalize(field) for field in (c.name, c.name_en, c.stock_code))
-    ]
+    matches = []
+    for c in _companies().values():
+        fields = [_normalize(f) for f in (c.name, c.name_en, c.stock_code)]
+        if any(needle in f for f in fields):
+            matches.append((needle not in fields, c))  # 정확히 일치하는 회사를 먼저
+    matches.sort(key=lambda m: m[0])
+    return [to_summary(c) for _, c in matches[:limit]]
 
 
 def companies_by_codes(stock_codes: list[str]) -> list[CompanySummary]:
     """요청한 순서대로 돌려주고, 없는 종목코드는 건너뛴다."""
     companies = _companies()
-    return [_to_summary(companies[code]) for code in stock_codes if code in companies]
-
-
-def popular_companies() -> list[CompanySummary]:
-    companies = _companies()
-    return [_to_summary(companies[code]) for code in _load("popular.json") if code in companies]
+    return [to_summary(companies[code]) for code in stock_codes if code in companies]
 
 
 def get_company(stock_code: str) -> CompanyDetail:
@@ -63,29 +61,25 @@ def get_company(stock_code: str) -> CompanyDetail:
     return company
 
 
-def get_financials(stock_code: str) -> Financials:
+def find_financials(stock_code: str) -> Financials | None:
+    """재무 자료가 아직 없는 회사는 None (숫자를 지어내지 않는다)."""
     get_company(stock_code)
-    data = _load("financials.json").get(stock_code)
-    if data is None:
-        # 확인된 재무 데이터가 아직 없는 회사: 숫자를 지어내지 않고 빈 값으로 내려준다.
-        return Financials(
-            stock_code=stock_code,
-            unit="조 원",
-            basis="연결 기준",
-            source=None,
-            annual=[],
-            latest_quarter=None,
-            segments=None,
-            indicators=Indicators(),
-        )
-    return Financials(stock_code=stock_code, **data)
+    data = load_json("financials.json").get(stock_code)
+    return None if data is None else Financials(stock_code=stock_code, **data)
+
+
+def get_financials(stock_code: str) -> Financials:
+    financials = find_financials(stock_code)
+    if financials is None:
+        raise data_not_found()
+    return financials
 
 
 def get_news(stock_code: str) -> list[NewsItem]:
     get_company(stock_code)
-    return [NewsItem(**n) for n in _load("news.json").get(stock_code, [])]
+    return [NewsItem(**n) for n in load_json("news.json").get(stock_code, [])]
 
 
 @lru_cache
 def get_terms() -> list[Term]:
-    return [Term(**t) for t in _load("terms.json")]
+    return [Term(**t) for t in load_json("terms.json")]

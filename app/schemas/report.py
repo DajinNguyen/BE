@@ -1,39 +1,39 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-ChartType = Literal[
-    "annual_revenue", "annual_operating_income", "operating_margin", "segment_revenue"
-]
-KeyPointCategory = Literal["performance", "profitability", "stability", "business", "news"]
-KeyPointStatus = Literal["good", "normal", "caution"]
+ReportStatus = Literal["none", "generating", "done", "failed"]
+KeyPointCategory = Literal["performance", "revenue_source", "recent_change", "risk", "strength"]
+EvidenceKind = Literal["financials", "news", "vision"]
+
+# 핵심 포인트는 항상 이 순서로 하나씩 보여준다.
+KEY_POINT_ORDER: tuple[KeyPointCategory, ...] = (
+    "performance",
+    "revenue_source",
+    "recent_change",
+    "risk",
+    "strength",
+)
+
+
+class KeyPointValue(BaseModel):
+    label: str
+    value: str
+    period: str
 
 
 class KeyPoint(BaseModel):
-    id: str
     category: KeyPointCategory
     title: str
-    body: str
-    status: KeyPointStatus
-    source: str
-    base_date: str
+    before: KeyPointValue | None
+    after: KeyPointValue | None
+    reason: str
+    meaning: str
+    evidence: list[EvidenceKind]
 
 
-class ReportChart(BaseModel):
-    id: str
-    type: ChartType
-    title: str
-    caption: str
-
-
-class Connection(BaseModel):
-    chain: list[str]
-    conclusion: str
-
-
-class QuizItem(BaseModel):
-    id: str
+class QuizQuestion(BaseModel):
     question: str
     options: list[str]
     answer_index: int
@@ -41,22 +41,67 @@ class QuizItem(BaseModel):
 
 
 class ReportContent(BaseModel):
-    """AI가 작성하는 부분. 나머지 메타 필드는 서버가 채운다."""
+    """AI가 작성하는 부분. 근거 자료(evidence)와 메타 필드는 서버가 채운다."""
 
-    summary: str
+    headline: str
     key_points: list[KeyPoint]
-    charts: list[ReportChart]
-    connection: Connection
-    strengths: list[str]
-    watch_points: list[str]
-    quiz: list[QuizItem]
+    vision_summary: str
+    quiz: list[QuizQuestion]
 
 
-class CompanyReport(ReportContent):
+class FinancialHighlight(BaseModel):
+    label: str
+    value: str
+    source: str
+    is_sample: bool = False
+
+
+class FinancialsEvidence(BaseModel):
+    unit: str
+    years: list[str]
+    revenue: list[float]
+    operating_income: list[float]
+    highlights: list[FinancialHighlight]
+    base_date: str | None = None
+
+
+class NewsEvidence(BaseModel):
+    title: str
+    press: str
+    published_at: str
+    summary: str
+    url: str
+
+
+class RevenueMixItem(BaseModel):
+    name: str
+    amount: float
+    unit: str
+    period: str
+
+
+class VisionEvidence(BaseModel):
+    summary: str
+    revenue_mix: list[RevenueMixItem]
+    source: str
+    base_date: str | None = None
+
+
+class Evidence(BaseModel):
+    financials: FinancialsEvidence | None = None
+    news: list[NewsEvidence] = []
+    vision: VisionEvidence | None = None
+
+
+class CompanyReport(BaseModel):
+    """마지막으로 성공한 리포트 내용 + 지금 상태."""
+
     stock_code: str
-    generated_at: datetime
-    generation_seconds: float
-    is_cached: bool
-    analyzed_sources: list[str]
-    disclaimers: list[str]
-    data_sources: list[str]
+    status: ReportStatus
+    generated_at: datetime | None = None
+    headline: str = ""
+    key_points: list[KeyPoint] = []
+    evidence: Evidence = Field(default_factory=Evidence)
+    quiz: list[QuizQuestion] = []
+    sources: list[str] = []
+    failure_reason: str | None = None

@@ -6,24 +6,70 @@
     "name_en": "Samsung Electronics",
     "sector": "반도체·전자제품",
     "market": "KOSPI",
-    "current_price": { "value": 128500, "is_sample": true },
-    "change_rate": { "value": 1.82, "is_sample": true },
-    "has_report": true,
-    "market_cap": { "value": 760, "is_sample": true },
+    "current_price": {
+      "value": 128500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.82,
+      "is_sample": true
+    },
+    "one_liner": "스마트폰과 반도체를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 760,
+      "is_sample": true
+    },
     "homepage_url": "https://www.samsung.com/sec/",
     "dart_url": "https://dart.fss.or.kr/",
-    "business_description": "삼성전자는 우리가 매일 쓰는 스마트폰부터 TV, 냉장고 같은 가전제품, 그리고 이런 기기 속에 들어가는 반도체까지 만드는 회사예요. 특히 데이터를 기억하는 메모리 반도체를 세계에서 가장 많이 만드는 회사 중 하나예요.",
+    "business_description": "삼성전자는 우리가 매일 쓰는 스마트폰부터, 컴퓨터와 AI 서버 안에 들어가는 반도체까지 만드는 회사예요. 크게 네 가지 사업으로 돈을 벌어요.",
     "business_segments": [
-      { "code": "DS", "name": "DS(반도체)", "description": "메모리 반도체(HBM 등)를 만들고, 다른 회사의 반도체를 대신 만들어 주기도 해요. 요즘 매출에서 가장 큰 비중을 차지해요." },
-      { "code": "DX", "name": "DX(스마트폰·가전)", "description": "갤럭시 스마트폰, TV, 냉장고, 세탁기처럼 우리가 직접 쓰는 제품을 만들어 팔아요." },
-      { "code": "SDC", "name": "SDC(디스플레이)", "description": "스마트폰이나 노트북에 들어가는 화면(OLED 패널)을 만들어요." },
-      { "code": "HARMAN", "name": "하만(전장·오디오)", "description": "자동차에 들어가는 전자장비와 스피커·헤드폰 같은 오디오 제품을 만들어요." }
+      {
+        "code": "DS",
+        "name": "DS(반도체)",
+        "description": "컴퓨터·스마트폰·AI 서버에 들어가는 메모리 반도체(HBM 등)를 만들고, 다른 회사가 설계한 칩을 대신 만들어 주는 파운드리 사업도 해요."
+      },
+      {
+        "code": "MX",
+        "name": "MX·네트워크",
+        "description": "갤럭시 스마트폰·태블릿 같은 기기와, 휴대폰 통신에 쓰이는 네트워크 장비를 만들어요."
+      },
+      {
+        "code": "SDC",
+        "name": "SDC(디스플레이)",
+        "description": "스마트폰·TV·노트북에 들어가는 화면(디스플레이)을 만들어요."
+      },
+      {
+        "code": "HARMAN",
+        "name": "하만(전장·오디오)",
+        "description": "자동차에 들어가는 전자 장비와 스피커·헤드폰 같은 오디오 제품을 만들어요."
+      }
     ],
     "timeline": [
-      { "year": "2023", "title": "이익이 크게 줄었어요", "description": "메모리 반도체 가격이 떨어지면서 1년 동안 남긴 영업이익이 6.57조 원까지 줄었어요.", "is_plan": false },
-      { "year": "2024", "title": "다시 회복하기 시작했어요", "description": "반도체 경기가 살아나면서 매출 300.9조 원, 영업이익 32.7조 원으로 다시 늘었어요.", "is_plan": false },
-      { "year": "2025", "title": "분기 기준 역대 최대 매출", "description": "AI용 메모리(HBM)가 잘 팔리면서 2025년 4분기에 매출 93.8조 원으로 분기 기준 가장 많은 매출을 올렸어요.", "is_plan": false },
-      { "year": "2026", "title": "AI 시대를 이끌겠다는 목표", "description": "HBM4 같은 차세대 AI 메모리 공급을 늘려 AI 반도체 시장에서 앞서 나가겠다는 계획을 밝혔어요.", "is_plan": true }
+      {
+        "year": "2023",
+        "title": "이익이 크게 줄었어요",
+        "description": "영업이익이 6.57조 원까지 줄었어요. 반도체 경기에 따라 실적이 크게 흔들릴 수 있다는 걸 보여준 해예요.",
+        "is_plan": false
+      },
+      {
+        "year": "2024",
+        "title": "이익을 다시 회복했어요",
+        "description": "매출 300.9조 원, 영업이익 32.7조 원으로 다시 크게 늘었어요.",
+        "is_plan": false
+      },
+      {
+        "year": "2025",
+        "title": "HBM으로 역대 최대 분기 매출",
+        "description": "HBM 판매가 늘면서 4분기 매출 93.8조 원으로 분기 기준 역대 최대를 기록했어요.",
+        "is_plan": false
+      },
+      {
+        "year": "2026",
+        "title": "AI 시대를 이끌겠다는 목표",
+        "description": "HBM4 제품 공급을 시작하고, AI 제품 경쟁력으로 AI 시대를 이끌겠다고 밝혔어요.",
+        "is_plan": true
+      }
     ],
     "timeline_source": "삼성전자 2025년 4분기 실적 발표 (2026년 1월)"
   },
@@ -34,70 +80,26 @@
     "name_en": "SK hynix",
     "sector": "반도체",
     "market": "KOSPI",
-    "current_price": { "value": 245000, "is_sample": true },
-    "change_rate": { "value": 2.13, "is_sample": true },
-    "has_report": false,
-    "market_cap": { "value": 178, "is_sample": true },
+    "current_price": {
+      "value": 412000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.35,
+      "is_sample": true
+    },
+    "one_liner": "컴퓨터와 AI 서버에 들어가는 메모리 반도체를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 178,
+      "is_sample": true
+    },
     "homepage_url": "https://www.skhynix.com/",
     "dart_url": "https://dart.fss.or.kr/",
     "business_description": "SK하이닉스는 컴퓨터와 스마트폰, AI 서버 속에서 데이터를 기억하는 메모리 반도체를 만드는 회사예요.",
     "business_segments": [],
     "timeline": [],
-    "timeline_source": null
-  },
-  {
-    "stock_code": "005380",
-    "corp_code": "00164742",
-    "name": "현대차",
-    "name_en": "Hyundai Motor",
-    "sector": "자동차",
-    "market": "KOSPI",
-    "current_price": { "value": 215000, "is_sample": true },
-    "change_rate": { "value": -0.46, "is_sample": true },
-    "has_report": false,
-    "market_cap": { "value": 45, "is_sample": true },
-    "homepage_url": "https://www.hyundai.com/kr/",
-    "dart_url": "https://dart.fss.or.kr/",
-    "business_description": "현대차는 승용차, SUV, 전기차 같은 자동차를 만들어 전 세계에 파는 회사예요.",
-    "business_segments": [],
-    "timeline": [],
-    "timeline_source": null
-  },
-  {
-    "stock_code": "035420",
-    "corp_code": "00266961",
-    "name": "NAVER",
-    "name_en": "NAVER",
-    "sector": "인터넷 서비스",
-    "market": "KOSPI",
-    "current_price": { "value": 198000, "is_sample": true },
-    "change_rate": { "value": 0.76, "is_sample": true },
-    "has_report": false,
-    "market_cap": { "value": 31, "is_sample": true },
-    "homepage_url": "https://www.navercorp.com/",
-    "dart_url": "https://dart.fss.or.kr/",
-    "business_description": "NAVER는 검색 포털 네이버를 운영하고, 쇼핑·웹툰·간편결제 같은 인터넷 서비스를 하는 회사예요.",
-    "business_segments": [],
-    "timeline": [],
-    "timeline_source": null
-  },
-  {
-    "stock_code": "035720",
-    "corp_code": "00258801",
-    "name": "카카오",
-    "name_en": "Kakao",
-    "sector": "인터넷 서비스",
-    "market": "KOSPI",
-    "current_price": { "value": 41500, "is_sample": true },
-    "change_rate": { "value": -1.19, "is_sample": true },
-    "has_report": false,
-    "market_cap": { "value": 18, "is_sample": true },
-    "homepage_url": "https://www.kakaocorp.com/",
-    "dart_url": "https://dart.fss.or.kr/",
-    "business_description": "카카오는 메신저 카카오톡을 중심으로 결제, 택시, 음악, 게임 같은 다양한 서비스를 하는 회사예요.",
-    "business_segments": [],
-    "timeline": [],
-    "timeline_source": null
+    "timeline_source": ""
   },
   {
     "stock_code": "373220",
@@ -106,15 +108,631 @@
     "name_en": "LG Energy Solution",
     "sector": "2차전지",
     "market": "KOSPI",
-    "current_price": { "value": 356000, "is_sample": true },
-    "change_rate": { "value": 0.28, "is_sample": true },
-    "has_report": false,
-    "market_cap": { "value": 83, "is_sample": true },
+    "current_price": {
+      "value": 368000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.81,
+      "is_sample": true
+    },
+    "one_liner": "전기차에 들어가는 배터리를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 83,
+      "is_sample": true
+    },
     "homepage_url": "https://www.lgensol.com/",
     "dart_url": "https://dart.fss.or.kr/",
     "business_description": "LG에너지솔루션은 전기차와 에너지 저장 장치에 들어가는 배터리(2차전지)를 만드는 회사예요.",
     "business_segments": [],
     "timeline": [],
-    "timeline_source": null
+    "timeline_source": ""
+  },
+  {
+    "stock_code": "207940",
+    "corp_code": null,
+    "name": "삼성바이오로직스",
+    "name_en": "Samsung Biologics",
+    "sector": "바이오·제약",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 1054000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.48,
+      "is_sample": true
+    },
+    "one_liner": "다른 제약회사의 바이오 의약품을 대신 만들어 주는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "005380",
+    "corp_code": "00164742",
+    "name": "현대차",
+    "name_en": "Hyundai Motor",
+    "sector": "자동차",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 231500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.43,
+      "is_sample": true
+    },
+    "one_liner": "자동차를 만들어 전 세계에 파는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 45,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hyundai.com/kr/",
+    "dart_url": "https://dart.fss.or.kr/",
+    "business_description": "현대차는 승용차, SUV, 전기차 같은 자동차를 만들어 전 세계에 파는 회사예요.",
+    "business_segments": [],
+    "timeline": [],
+    "timeline_source": ""
+  },
+  {
+    "stock_code": "000270",
+    "corp_code": null,
+    "name": "기아",
+    "name_en": "Kia",
+    "sector": "자동차",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 101200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.29,
+      "is_sample": true
+    },
+    "one_liner": "승용차와 전기차를 만들어 파는 자동차 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "068270",
+    "corp_code": null,
+    "name": "셀트리온",
+    "name_en": "Celltrion",
+    "sector": "바이오·제약",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 182400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.16,
+      "is_sample": true
+    },
+    "one_liner": "오리지널 약과 효과가 비슷한 바이오시밀러를 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "035420",
+    "corp_code": "00266961",
+    "name": "NAVER",
+    "name_en": "NAVER",
+    "sector": "인터넷 서비스",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 248000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.61,
+      "is_sample": true
+    },
+    "one_liner": "검색·쇼핑·웹툰 같은 인터넷 서비스를 운영하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 31,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.navercorp.com/",
+    "dart_url": "https://dart.fss.or.kr/",
+    "business_description": "NAVER는 검색 포털 네이버를 운영하고, 쇼핑·웹툰·간편결제 같은 인터넷 서비스를 하는 회사예요.",
+    "business_segments": [],
+    "timeline": [],
+    "timeline_source": ""
+  },
+  {
+    "stock_code": "035720",
+    "corp_code": "00258801",
+    "name": "카카오",
+    "name_en": "Kakao",
+    "sector": "인터넷 서비스",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 48650,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.22,
+      "is_sample": true
+    },
+    "one_liner": "카카오톡을 중심으로 여러 인터넷 서비스를 하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 18,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kakaocorp.com/",
+    "dart_url": "https://dart.fss.or.kr/",
+    "business_description": "카카오는 메신저 카카오톡을 중심으로 결제, 택시, 음악, 게임 같은 다양한 서비스를 하는 회사예요.",
+    "business_segments": [],
+    "timeline": [],
+    "timeline_source": ""
+  },
+  {
+    "stock_code": "005490",
+    "corp_code": null,
+    "name": "POSCO홀딩스",
+    "name_en": "POSCO Holdings",
+    "sector": "철강·소재",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 312500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.32,
+      "is_sample": true
+    },
+    "one_liner": "철강을 만드는 포스코 등 여러 회사를 거느린 지주회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "051910",
+    "corp_code": null,
+    "name": "LG화학",
+    "name_en": "LG Chem",
+    "sector": "화학",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 286000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.04,
+      "is_sample": true
+    },
+    "one_liner": "플라스틱 원료와 배터리 소재를 만드는 화학 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "006400",
+    "corp_code": null,
+    "name": "삼성SDI",
+    "name_en": "Samsung SDI",
+    "sector": "2차전지",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 214500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.69,
+      "is_sample": true
+    },
+    "one_liner": "전기차와 전자기기용 배터리를 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "105560",
+    "corp_code": null,
+    "name": "KB금융",
+    "name_en": "KB Financial Group",
+    "sector": "금융",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 112300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.81,
+      "is_sample": true
+    },
+    "one_liner": "KB국민은행 등 여러 금융회사를 거느린 금융그룹이에요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "055550",
+    "corp_code": null,
+    "name": "신한지주",
+    "name_en": "Shinhan Financial Group",
+    "sector": "금융",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 68900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.44,
+      "is_sample": true
+    },
+    "one_liner": "신한은행 등 여러 금융회사를 거느린 금융그룹이에요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "012330",
+    "corp_code": null,
+    "name": "현대모비스",
+    "name_en": "Hyundai Mobis",
+    "sector": "자동차 부품",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 298000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.17,
+      "is_sample": true
+    },
+    "one_liner": "자동차에 들어가는 부품과 모듈을 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "028260",
+    "corp_code": null,
+    "name": "삼성물산",
+    "name_en": "Samsung C&T",
+    "sector": "건설·상사",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 176500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.57,
+      "is_sample": true
+    },
+    "one_liner": "건물을 짓고 무역·패션·리조트 사업도 하는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "032830",
+    "corp_code": null,
+    "name": "삼성생명",
+    "name_en": "Samsung Life Insurance",
+    "sector": "보험",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 121000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.33,
+      "is_sample": true
+    },
+    "one_liner": "생명보험을 파는 보험회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "003670",
+    "corp_code": null,
+    "name": "포스코퓨처엠",
+    "name_en": "POSCO Future M",
+    "sector": "2차전지 소재",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 152000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.62,
+      "is_sample": true
+    },
+    "one_liner": "배터리에 들어가는 양극재·음극재를 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "066570",
+    "corp_code": null,
+    "name": "LG전자",
+    "name_en": "LG Electronics",
+    "sector": "가전·전자제품",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 88400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.23,
+      "is_sample": true
+    },
+    "one_liner": "TV·냉장고·세탁기 같은 가전제품을 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "015760",
+    "corp_code": null,
+    "name": "한국전력",
+    "name_en": "KEPCO",
+    "sector": "전력",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 31250,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.13,
+      "is_sample": true
+    },
+    "one_liner": "전기를 사서 가정과 회사에 공급하는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "017670",
+    "corp_code": null,
+    "name": "SK텔레콤",
+    "name_en": "SK Telecom",
+    "sector": "통신",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 56800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.18,
+      "is_sample": true
+    },
+    "one_liner": "휴대폰 통신 서비스를 제공하는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "030200",
+    "corp_code": null,
+    "name": "KT",
+    "name_en": "KT",
+    "sector": "통신",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 49300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.2,
+      "is_sample": true
+    },
+    "one_liner": "유선·무선 통신과 인터넷 서비스를 제공하는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "034730",
+    "corp_code": null,
+    "name": "SK",
+    "name_en": "SK Inc.",
+    "sector": "지주회사",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 168500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "one_liner": "SK그룹의 여러 회사를 거느린 지주회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "003550",
+    "corp_code": null,
+    "name": "LG",
+    "name_en": "LG Corp.",
+    "sector": "지주회사",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 79600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.13,
+      "is_sample": true
+    },
+    "one_liner": "LG그룹의 여러 회사를 거느린 지주회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "086790",
+    "corp_code": null,
+    "name": "하나금융지주",
+    "name_en": "Hana Financial Group",
+    "sector": "금융",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 72100,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.98,
+      "is_sample": true
+    },
+    "one_liner": "하나은행 등 여러 금융회사를 거느린 금융그룹이에요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "316140",
+    "corp_code": null,
+    "name": "우리금융지주",
+    "name_en": "Woori Financial Group",
+    "sector": "금융",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 22350,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.45,
+      "is_sample": true
+    },
+    "one_liner": "우리은행 등 여러 금융회사를 거느린 금융그룹이에요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "096770",
+    "corp_code": null,
+    "name": "SK이노베이션",
+    "name_en": "SK Innovation",
+    "sector": "정유·에너지",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 118900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.92,
+      "is_sample": true
+    },
+    "one_liner": "석유 제품과 배터리 사업을 하는 에너지 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "009150",
+    "corp_code": null,
+    "name": "삼성전기",
+    "name_en": "Samsung Electro-Mechanics",
+    "sector": "전자 부품",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 162300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.44,
+      "is_sample": true
+    },
+    "one_liner": "전자기기에 들어가는 작은 부품(MLCC 등)을 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "018260",
+    "corp_code": null,
+    "name": "삼성에스디에스",
+    "name_en": "Samsung SDS",
+    "sector": "IT 서비스",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 158700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.06,
+      "is_sample": true
+    },
+    "one_liner": "회사들의 전산 시스템과 클라우드를 만들어 주는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "012450",
+    "corp_code": null,
+    "name": "한화에어로스페이스",
+    "name_en": "Hanwha Aerospace",
+    "sector": "항공·방산",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 882000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.09,
+      "is_sample": true
+    },
+    "one_liner": "항공기 엔진과 방위산업 장비를 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "033780",
+    "corp_code": null,
+    "name": "KT&G",
+    "name_en": "KT&G",
+    "sector": "담배·생활소비재",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 128400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.31,
+      "is_sample": true
+    },
+    "one_liner": "담배와 홍삼 제품을 만들어 파는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "010130",
+    "corp_code": null,
+    "name": "고려아연",
+    "name_en": "Korea Zinc",
+    "sector": "비철금속",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 912000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.54,
+      "is_sample": true
+    },
+    "one_liner": "아연·연·은 같은 금속을 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "329180",
+    "corp_code": null,
+    "name": "HD현대중공업",
+    "name_en": "HD Hyundai Heavy Industries",
+    "sector": "조선",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 412500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.73,
+      "is_sample": true
+    },
+    "one_liner": "큰 배와 해양 설비를 만드는 조선 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "247540",
+    "corp_code": null,
+    "name": "에코프로비엠",
+    "name_en": "EcoPro BM",
+    "sector": "2차전지 소재",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 128900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -2.11,
+      "is_sample": true
+    },
+    "one_liner": "배터리에 들어가는 양극재를 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "196170",
+    "corp_code": null,
+    "name": "알테오젠",
+    "name_en": "Alteogen",
+    "sector": "바이오·제약",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 412500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.05,
+      "is_sample": true
+    },
+    "one_liner": "주사약을 피하주사로 바꾸는 기술을 가진 바이오 회사예요",
+    "market_alert": null
   }
 ]

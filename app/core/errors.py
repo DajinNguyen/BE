@@ -16,12 +16,8 @@ def company_not_found() -> AppError:
     return AppError(404, "COMPANY_NOT_FOUND", "찾는 회사가 없어요. 종목코드를 다시 확인해 주세요.")
 
 
-def report_not_ready() -> AppError:
-    return AppError(404, "REPORT_NOT_READY", "이 회사는 아직 AI 리포트를 지원하지 않아요.")
-
-
-def report_not_found() -> AppError:
-    return AppError(404, "REPORT_NOT_FOUND", "아직 만들어진 리포트가 없어요.")
+def data_not_found() -> AppError:
+    return AppError(404, "DATA_NOT_FOUND", "이 회사의 자료를 아직 불러오지 못했어요.")
 
 
 def report_generation_failed(

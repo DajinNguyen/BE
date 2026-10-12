@@ -24,6 +24,11 @@ def init_db() -> None:
     SQLModel.metadata.create_all(engine)
 
 
+def new_session() -> Session:
+    """요청 밖(백그라운드 작업)에서 쓰는 세션."""
+    return Session(engine)
+
+
 def get_session() -> Iterator[Session]:
     with Session(engine) as session:
         yield session
