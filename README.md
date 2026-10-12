@@ -15,6 +15,16 @@ uvicorn app.main:app --reload
 - API 문서: http://localhost:8000/docs
 - AI 키(`ANTHROPIC_API_KEY` > `GEMINI_API_KEY`)가 하나도 없으면 삼성전자 예시 리포트(`app/data/report_samsung.json`)로 동작해요.
 
+## DART 연동
+
+`.env`에 `DART_API_KEY`를 넣으면 OpenDART를 함께 써요. 키가 없거나 DART가 응답하지 않으면 시드 데이터만으로 동작해요.
+
+- 서버 시작 시 상장 회사 고유번호 목록(`corpCode.xml`)을 받아 `.cache/dart/`에 하루 동안 캐시해요.
+- 검색: 회사 이름·영문명·종목코드에 더해 **DART 공식 회사명·영문명**으로도 찾아요 (예: `현대자동차` → 현대차, `케이티` → KT, `KIA CORPORATION` → 기아).
+- 모든 회사의 `corp_code`(DART 고유번호)를 DART 값으로 채워요.
+- 기업 상세: 시드에 홈페이지가 없으면 DART 기업개황(`company.json`)으로 채워요 (회사별 일주일 캐시).
+- 검색 대상은 시드에 있는 35개 회사예요. DART에는 주가가 없어서, 시세가 없는 회사는 아직 프론트 화면에 띄울 수 없어요.
+
 ## 프론트와 연결
 
 프론트 `frontend/.env`에 아래처럼 넣고 `npm run dev`를 실행해요. 화면 코드는 고치지 않아도 돼요.

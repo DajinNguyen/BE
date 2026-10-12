@@ -1,3 +1,4 @@
+import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,11 +7,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import companies, home, reports, terms
 from app.core.db import init_db
 from app.core.errors import register_error_handlers
+from app.services import dart
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    if dart.get_dart() is not None:
+        threading.Thread(target=dart.warm_up, daemon=True).start()
     yield
 
 

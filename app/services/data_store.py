@@ -1,7 +1,8 @@
 """시드 데이터 저장소.
 
-OpenDART / pykrx 연동 전까지는 `app/data/*.json` 에 넣어둔 값을 읽어서 쓴다.
+회사 목록·재무·뉴스는 `app/data/*.json` 에 넣어둔 값을 읽어서 쓴다.
 확인 전 숫자는 `is_sample: true` 로 표시돼 있다.
+DART 키가 있으면 회사마다 DART 고유번호·공식 회사명을 붙이고, 상세 화면에서는 기업개황으로 빈 값을 채운다.
 """
 
 import json
@@ -14,6 +15,7 @@ from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.financials import Financials
 from app.schemas.news import NewsItem
 from app.schemas.term import Term
+from app.services import dart
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -23,8 +25,22 @@ def load_json(name: str) -> Any:
 
 
 @lru_cache
-def _companies() -> dict[str, CompanyDetail]:
+def _seed_companies() -> dict[str, CompanyDetail]:
     return {c["stock_code"]: CompanyDetail(**c) for c in load_json("companies.json")}
+
+
+def _companies() -> dict[str, CompanyDetail]:
+    """시드 회사 + DART 고유번호 (DART를 못 쓰면 시드 그대로)."""
+    seed = _seed_companies()
+    index = dart.corp_index()
+    return {
+        code: (
+            company.model_copy(update={"corp_code": index[code].corp_code})
+            if code in index
+            else company
+        )
+        for code, company in seed.items()
+    }
 
 
 def _normalize(text: str) -> str:
@@ -35,13 +51,22 @@ def to_summary(company: CompanyDetail) -> CompanySummary:
     return CompanySummary(**company.model_dump(include=set(CompanySummary.model_fields)))
 
 
+def _search_fields(company: CompanyDetail, corp: dart.DartCorp | None) -> list[str]:
+    fields = [company.name, company.name_en, company.stock_code]
+    if corp:
+        # 공식 회사명(현대자동차, 케이티 등)과 공식 영문명으로도 찾을 수 있게
+        fields += [corp.corp_name, corp.corp_eng_name]
+    return [_normalize(f) for f in fields if f]
+
+
 def search_companies(query: str, limit: int) -> list[CompanySummary]:
     needle = _normalize(query)
     if not needle:
         return []
+    index = dart.corp_index()
     matches = []
     for c in _companies().values():
-        fields = [_normalize(f) for f in (c.name, c.name_en, c.stock_code)]
+        fields = _search_fields(c, index.get(c.stock_code))
         if any(needle in f for f in fields):
             matches.append((needle not in fields, c))  # 정확히 일치하는 회사를 먼저
     matches.sort(key=lambda m: m[0])
@@ -59,6 +84,16 @@ def get_company(stock_code: str) -> CompanyDetail:
     if company is None:
         raise company_not_found()
     return company
+
+
+def get_company_detail(stock_code: str) -> CompanyDetail:
+    """상세 화면용. 시드에 없는 홈페이지는 DART 기업개황으로 채운다."""
+    company = get_company(stock_code)
+    if company.homepage_url or not company.corp_code:
+        return company
+    overview = dart.company_overview(company.corp_code)
+    homepage = dart.homepage_url(overview) if overview else ""
+    return company.model_copy(update={"homepage_url": homepage}) if homepage else company
 
 
 def find_financials(stock_code: str) -> Financials | None:

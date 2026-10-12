@@ -1,6 +1,8 @@
 import os
 
 os.environ["DATABASE_URL"] = "sqlite://"
+# 테스트는 실제 DART를 부르지 않는다 (.env에 키가 있어도)
+os.environ["DART_API_KEY"] = ""
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

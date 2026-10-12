@@ -22,7 +22,7 @@ def search_companies(
 
 @router.get("/{stock_code}", response_model=CompanyDetail)
 def get_company(stock_code: str):
-    return data_store.get_company(stock_code)
+    return data_store.get_company_detail(stock_code)
 
 
 @router.get("/{stock_code}/financials", response_model=Financials)

@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     anthropic_effort: str = "medium"
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-3.8-flash"
+    dart_api_key: str | None = None
+    dart_cache_dir: str = ".cache/dart"
 
 
 @lru_cache
