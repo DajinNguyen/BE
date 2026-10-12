@@ -7,7 +7,7 @@ ChartType = Literal[
     "annual_revenue", "annual_operating_income", "operating_margin", "segment_revenue"
 ]
 KeyPointCategory = Literal["performance", "profitability", "stability", "business", "news"]
-KeyPointStatus = Literal["good", "neutral", "caution"]
+KeyPointStatus = Literal["good", "normal", "caution"]
 
 
 class KeyPoint(BaseModel):

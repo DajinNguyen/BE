@@ -10,7 +10,12 @@ router = APIRouter(prefix="/api/companies", tags=["companies"])
 
 
 @router.get("", response_model=list[CompanySummary])
-def search_companies(query: str = Query("", description="회사 이름(한/영) 또는 종목코드")):
+def search_companies(
+    query: str = Query("", description="회사 이름(한/영) 또는 종목코드"),
+    stock_codes: str | None = Query(None, description="쉼표로 구분한 종목코드 (관심 기업 목록용)"),
+):
+    if stock_codes is not None:
+        return data_store.companies_by_codes([c for c in stock_codes.split(",") if c])
     return data_store.search_companies(query)
 
 

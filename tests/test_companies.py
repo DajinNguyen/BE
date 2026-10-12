@@ -11,6 +11,12 @@ def test_search_no_result_is_empty_list(client):
     assert res.json() == []
 
 
+def test_companies_by_codes_keeps_order_and_skips_unknown(client):
+    res = client.get("/api/companies", params={"stock_codes": "000660,999999,005930"})
+    assert res.status_code == 200
+    assert [c["stock_code"] for c in res.json()] == ["000660", "005930"]
+
+
 def test_popular(client):
     res = client.get("/api/companies/popular")
     assert res.status_code == 200
