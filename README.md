@@ -25,7 +25,7 @@ ruff check app tests && black --check app tests
 
 | 메서드 | 경로 |
 | --- | --- |
-| GET | `/api/companies?query=` |
+| GET | `/api/companies?query=` · `?stock_codes=a,b` |
 | GET | `/api/companies/popular` |
 | GET | `/api/companies/{stock_code}` |
 | GET | `/api/companies/{stock_code}/financials` |

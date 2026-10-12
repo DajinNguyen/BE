@@ -45,6 +45,12 @@ def search_companies(query: str) -> list[CompanySummary]:
     ]
 
 
+def companies_by_codes(stock_codes: list[str]) -> list[CompanySummary]:
+    """요청한 순서대로 돌려주고, 없는 종목코드는 건너뛴다."""
+    companies = _companies()
+    return [_to_summary(companies[code]) for code in stock_codes if code in companies]
+
+
 def popular_companies() -> list[CompanySummary]:
     companies = _companies()
     return [_to_summary(companies[code]) for code in _load("popular.json") if code in companies]

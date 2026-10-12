@@ -8,8 +8,10 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./dajin.db"
     anthropic_api_key: str | None = None
-    anthropic_model: str = "claude-opus-5"
+    anthropic_model: str = "claude-opus-5-5"
     anthropic_effort: str = "medium"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-3.8-flash"
 
 
 @lru_cache

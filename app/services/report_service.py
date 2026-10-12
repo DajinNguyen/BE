@@ -1,16 +1,21 @@
 """AI 기업 분석 리포트 생성·조회.
 
-숫자는 시드/공시 데이터에서 그대로 가져오고, AI(Claude)는 설명 문장만 작성한다.
+숫자는 시드/공시 데이터에서 그대로 가져오고, AI(Claude 또는 Gemini)는 설명 문장만 작성한다.
 """
 
+import asyncio
 import json
 import logging
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Protocol
 from zoneinfo import ZoneInfo
 
 import anthropic
+from google import genai
+from google.genai import errors as genai_errors
+from google.genai import types as genai_types
 from sqlmodel import Session
 
 from app.core.config import Settings
@@ -44,7 +49,7 @@ SYSTEM_PROMPT = """\
 작성 가이드:
 - summary: 회사의 최근 흐름을 2~3문장으로 요약해요.
 - key_points: 3~5개. category는 performance(실적)·profitability(수익성)·stability(재무 안정성)·business(사업)·news(뉴스) 중 하나,
-  status는 good·neutral·caution 중 하나예요. source에는 근거 자료와 기준(예: "2025년 연간 · 연결 기준"),
+  status는 good·normal·caution 중 하나예요. source에는 근거 자료와 기준(예: "2025년 연간 · 연결 기준"),
   base_date에는 근거 자료 날짜(YYYY-MM-DD)를 적어요. id는 "kp-<category>" 형식이에요.
 - charts: 설명에 도움이 되는 차트 1~3개. type은 annual_revenue·annual_operating_income·operating_margin·segment_revenue 중 하나이고,
   segment_revenue는 사업부문 매출 데이터가 있을 때만 써요. id는 "chart-1"처럼 번호를 붙여요.
@@ -56,6 +61,91 @@ SYSTEM_PROMPT = """\
 
 class ReportWriter(Protocol):
     async def write(self, context: dict[str, Any]) -> ReportContent: ...
+
+
+class FixtureReportWriter:
+    """API 키 없이 데모할 때 쓰는 목데이터 작성자.
+
+    클라이언트 미팅 등에서 실제 Claude 호출 없이 화면만 보여줘야 할 때 쓴다.
+    `ANTHROPIC_API_KEY`가 설정되면 `get_report_writer()`가 자동으로 `ClaudeReportWriter`로 되돌리므로,
+    이 클래스를 쓰기 위해 별도로 되돌릴 코드는 없다.
+    """
+
+    _FIXTURE_DIR = Path(__file__).resolve().parent.parent / "data"
+
+    def __init__(self, fixture_name: str = "report_samsung.json"):
+        self._path = self._FIXTURE_DIR / fixture_name
+
+    async def write(self, context: dict[str, Any]) -> ReportContent:
+        data = json.loads(self._path.read_text(encoding="utf-8"))
+        return ReportContent(**data)
+
+
+class GeminiReportWriter:
+    """Gemini가 과부하(503)일 때를 대비해 재시도하고, 그래도 안 되면 목데이터로 대체한다.
+
+    클라이언트 미팅 등 데모 중에는 "리포트를 만들지 못했어요" 화면이 뜨는 것 자체가 치명적이라,
+    실제 생성이 끝내 실패해도 화면은 항상 뜨도록 안전망을 둔다.
+    """
+
+    _MAX_ATTEMPTS = 3
+    _RETRY_SECONDS = 2.0
+    # 응답이 없을 때 무한정 기다리지 않도록 요청 하나당 상한을 둔다 (단위: ms).
+    _REQUEST_TIMEOUT_MS = 20_000
+
+    def __init__(self, settings: Settings):
+        self._settings = settings
+        self._client: genai.Client | None = None
+        self._fallback = FixtureReportWriter()
+
+    def _get_client(self) -> genai.Client:
+        if self._client is None:
+            self._client = genai.Client(
+                api_key=self._settings.gemini_api_key,
+                http_options=genai_types.HttpOptions(timeout=self._REQUEST_TIMEOUT_MS),
+            )
+        return self._client
+
+    async def _call(self, context: dict[str, Any]) -> ReportContent:
+        response = await self._get_client().aio.models.generate_content(
+            model=self._settings.gemini_model,
+            contents=json.dumps(context, ensure_ascii=False),
+            config=genai_types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                response_mime_type="application/json",
+                response_schema=ReportContent,
+            ),
+        )
+        if response.parsed is None:
+            logger.error("Unexpected Gemini response: no parsed output")
+            raise report_generation_failed()
+        return response.parsed
+
+    async def write(self, context: dict[str, Any]) -> ReportContent:
+        rate_limited = False
+        for attempt in range(1, self._MAX_ATTEMPTS + 1):
+            try:
+                return await self._call(context)
+            except genai_errors.ClientError as e:
+                if getattr(e, "status", None) == "RESOURCE_EXHAUSTED" or getattr(e, "code", None) == 429:
+                    logger.warning("Gemini rate limited (attempt %d): %s", attempt, e)
+                    rate_limited = True
+                else:
+                    logger.exception("Gemini client error, falling back to fixture report")
+                    return await self._fallback.write(context)
+            except genai_errors.ServerError as e:
+                logger.warning("Gemini server error (attempt %d): %s", attempt, e)
+            except Exception as e:  # noqa: BLE001 - 타임아웃·연결 끊김 등 네트워크 레벨 장애도 재시도 대상
+                logger.warning("Gemini request failed (attempt %d): %s", attempt, e)
+            if attempt < self._MAX_ATTEMPTS:
+                await asyncio.sleep(self._RETRY_SECONDS)
+
+        if rate_limited:
+            raise report_generation_failed(
+                "지금은 리포트 요청이 많아요. 잠시 후 다시 시도해 주세요."
+            )
+        logger.error("Gemini unavailable after %d attempts, falling back to fixture report", self._MAX_ATTEMPTS)
+        return await self._fallback.write(context)
 
 
 class ClaudeReportWriter:
