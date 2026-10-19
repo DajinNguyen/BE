@@ -5,6 +5,7 @@
     "name": "삼성전자",
     "name_en": "Samsung Electronics",
     "sector": "반도체·전자제품",
+    "sector_group": "semiconductor",
     "market": "KOSPI",
     "current_price": {
       "value": 128500,
@@ -79,6 +80,7 @@
     "name": "SK하이닉스",
     "name_en": "SK hynix",
     "sector": "반도체",
+    "sector_group": "semiconductor",
     "market": "KOSPI",
     "current_price": {
       "value": 412000,
@@ -107,6 +109,7 @@
     "name": "LG에너지솔루션",
     "name_en": "LG Energy Solution",
     "sector": "2차전지",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 368000,
@@ -135,6 +138,7 @@
     "name": "삼성바이오로직스",
     "name_en": "Samsung Biologics",
     "sector": "바이오·제약",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 1054000,
@@ -153,6 +157,7 @@
     "name": "현대차",
     "name_en": "Hyundai Motor",
     "sector": "자동차",
+    "sector_group": "auto",
     "market": "KOSPI",
     "current_price": {
       "value": 231500,
@@ -181,6 +186,7 @@
     "name": "기아",
     "name_en": "Kia",
     "sector": "자동차",
+    "sector_group": "auto",
     "market": "KOSPI",
     "current_price": {
       "value": 101200,
@@ -199,6 +205,7 @@
     "name": "셀트리온",
     "name_en": "Celltrion",
     "sector": "바이오·제약",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 182400,
@@ -217,6 +224,7 @@
     "name": "NAVER",
     "name_en": "NAVER",
     "sector": "인터넷 서비스",
+    "sector_group": "internet",
     "market": "KOSPI",
     "current_price": {
       "value": 248000,
@@ -245,6 +253,7 @@
     "name": "카카오",
     "name_en": "Kakao",
     "sector": "인터넷 서비스",
+    "sector_group": "internet",
     "market": "KOSPI",
     "current_price": {
       "value": 48650,
@@ -273,6 +282,7 @@
     "name": "POSCO홀딩스",
     "name_en": "POSCO Holdings",
     "sector": "철강·소재",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 312500,
@@ -291,6 +301,7 @@
     "name": "LG화학",
     "name_en": "LG Chem",
     "sector": "화학",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 286000,
@@ -309,6 +320,7 @@
     "name": "삼성SDI",
     "name_en": "Samsung SDI",
     "sector": "2차전지",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 214500,
@@ -327,6 +339,7 @@
     "name": "KB금융",
     "name_en": "KB Financial Group",
     "sector": "금융",
+    "sector_group": "finance",
     "market": "KOSPI",
     "current_price": {
       "value": 112300,
@@ -345,6 +358,7 @@
     "name": "신한지주",
     "name_en": "Shinhan Financial Group",
     "sector": "금융",
+    "sector_group": "finance",
     "market": "KOSPI",
     "current_price": {
       "value": 68900,
@@ -363,6 +377,7 @@
     "name": "현대모비스",
     "name_en": "Hyundai Mobis",
     "sector": "자동차 부품",
+    "sector_group": "auto",
     "market": "KOSPI",
     "current_price": {
       "value": 298000,
@@ -381,6 +396,7 @@
     "name": "삼성물산",
     "name_en": "Samsung C&T",
     "sector": "건설·상사",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 176500,
@@ -399,6 +415,7 @@
     "name": "삼성생명",
     "name_en": "Samsung Life Insurance",
     "sector": "보험",
+    "sector_group": "finance",
     "market": "KOSPI",
     "current_price": {
       "value": 121000,
@@ -417,6 +434,7 @@
     "name": "포스코퓨처엠",
     "name_en": "POSCO Future M",
     "sector": "2차전지 소재",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 152000,
@@ -435,6 +453,7 @@
     "name": "LG전자",
     "name_en": "LG Electronics",
     "sector": "가전·전자제품",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 88400,
@@ -453,6 +472,7 @@
     "name": "한국전력",
     "name_en": "KEPCO",
     "sector": "전력",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 31250,
@@ -471,6 +491,7 @@
     "name": "SK텔레콤",
     "name_en": "SK Telecom",
     "sector": "통신",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 56800,
@@ -489,6 +510,7 @@
     "name": "KT",
     "name_en": "KT",
     "sector": "통신",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 49300,
@@ -507,6 +529,7 @@
     "name": "SK",
     "name_en": "SK Inc.",
     "sector": "지주회사",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 168500,
@@ -525,6 +548,7 @@
     "name": "LG",
     "name_en": "LG Corp.",
     "sector": "지주회사",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 79600,
@@ -543,6 +567,7 @@
     "name": "하나금융지주",
     "name_en": "Hana Financial Group",
     "sector": "금융",
+    "sector_group": "finance",
     "market": "KOSPI",
     "current_price": {
       "value": 72100,
@@ -561,6 +586,7 @@
     "name": "우리금융지주",
     "name_en": "Woori Financial Group",
     "sector": "금융",
+    "sector_group": "finance",
     "market": "KOSPI",
     "current_price": {
       "value": 22350,
@@ -579,6 +605,7 @@
     "name": "SK이노베이션",
     "name_en": "SK Innovation",
     "sector": "정유·에너지",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 118900,
@@ -597,6 +624,7 @@
     "name": "삼성전기",
     "name_en": "Samsung Electro-Mechanics",
     "sector": "전자 부품",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 162300,
@@ -615,6 +643,7 @@
     "name": "삼성에스디에스",
     "name_en": "Samsung SDS",
     "sector": "IT 서비스",
+    "sector_group": "internet",
     "market": "KOSPI",
     "current_price": {
       "value": 158700,
@@ -633,6 +662,7 @@
     "name": "한화에어로스페이스",
     "name_en": "Hanwha Aerospace",
     "sector": "항공·방산",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 882000,
@@ -651,6 +681,7 @@
     "name": "KT&G",
     "name_en": "KT&G",
     "sector": "담배·생활소비재",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 128400,
@@ -669,6 +700,7 @@
     "name": "고려아연",
     "name_en": "Korea Zinc",
     "sector": "비철금속",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 912000,
@@ -687,6 +719,7 @@
     "name": "HD현대중공업",
     "name_en": "HD Hyundai Heavy Industries",
     "sector": "조선",
+    "sector_group": "etc",
     "market": "KOSPI",
     "current_price": {
       "value": 412500,
@@ -705,6 +738,7 @@
     "name": "에코프로비엠",
     "name_en": "EcoPro BM",
     "sector": "2차전지 소재",
+    "sector_group": "etc",
     "market": "KOSDAQ",
     "current_price": {
       "value": 128900,
@@ -723,6 +757,7 @@
     "name": "알테오젠",
     "name_en": "Alteogen",
     "sector": "바이오·제약",
+    "sector_group": "etc",
     "market": "KOSDAQ",
     "current_price": {
       "value": 412500,
@@ -733,6 +768,120 @@
       "is_sample": true
     },
     "one_liner": "주사약을 피하주사로 바꾸는 기술을 가진 바이오 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "042700",
+    "corp_code": null,
+    "name": "한미반도체",
+    "name_en": "Hanmi Semiconductor",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 118000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.84,
+      "is_sample": true
+    },
+    "one_liner": "반도체를 쌓아 붙이는 장비를 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "000990",
+    "corp_code": null,
+    "name": "DB하이텍",
+    "name_en": "DB HiTek",
+    "sector": "반도체 위탁생산",
+    "sector_group": "semiconductor",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 52300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.76,
+      "is_sample": true
+    },
+    "one_liner": "다른 회사가 설계한 반도체를 대신 만들어 주는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "097950",
+    "corp_code": null,
+    "name": "CJ제일제당",
+    "name_en": "CJ CheilJedang",
+    "sector": "식품",
+    "sector_group": "food",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 251500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.4,
+      "is_sample": true
+    },
+    "one_liner": "햇반·비비고 같은 식품과 바이오 소재를 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "271560",
+    "corp_code": null,
+    "name": "오리온",
+    "name_en": "Orion",
+    "sector": "식품",
+    "sector_group": "food",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 103200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.68,
+      "is_sample": true
+    },
+    "one_liner": "초코파이 같은 과자를 만들어 여러 나라에 파는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "004370",
+    "corp_code": null,
+    "name": "농심",
+    "name_en": "Nongshim",
+    "sector": "식품",
+    "sector_group": "food",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 412500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.24,
+      "is_sample": true
+    },
+    "one_liner": "신라면 같은 라면과 과자를 만드는 회사예요",
+    "market_alert": null
+  },
+  {
+    "stock_code": "003230",
+    "corp_code": null,
+    "name": "삼양식품",
+    "name_en": "Samyang Foods",
+    "sector": "식품",
+    "sector_group": "food",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 1182000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.57,
+      "is_sample": true
+    },
+    "one_liner": "불닭볶음면을 만들어 해외에서 많이 파는 회사예요",
     "market_alert": null
   }
 ]

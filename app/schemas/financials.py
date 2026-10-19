@@ -42,4 +42,5 @@ class Financials(BaseModel):
     annual: list[AnnualResult]
     latest_quarter: LatestQuarter | None
     segments: Segments | None
+    indicators_as_of: str | None = None  # 주요 지표 기준 (예: "2025년 사업보고서")
     indicators: Indicators

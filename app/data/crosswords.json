@@ -1,0 +1,215 @@
+[
+  {
+    "id": "basics-easy",
+    "title": "주식 기초",
+    "difficulty": "easy",
+    "size": {
+      "rows": 5,
+      "cols": 5
+    },
+    "words": [
+      {
+        "number": 1,
+        "direction": "down",
+        "row": 0,
+        "col": 2,
+        "answer": "주가",
+        "term_id": "stock_price",
+        "clue": "주식 1주의 가격"
+      },
+      {
+        "number": 2,
+        "direction": "down",
+        "row": 0,
+        "col": 4,
+        "answer": "매수",
+        "term_id": "buy",
+        "clue": "주식을 사는 것"
+      },
+      {
+        "number": 3,
+        "direction": "across",
+        "row": 1,
+        "col": 1,
+        "answer": "주가지수",
+        "term_id": "market_index",
+        "clue": "시장 전체 주가 흐름을 나타낸 숫자"
+      },
+      {
+        "number": 3,
+        "direction": "down",
+        "row": 1,
+        "col": 1,
+        "answer": "주주총회",
+        "term_id": "shareholders_meeting",
+        "clue": "주주들이 모여 회사 일을 정하는 회의"
+      },
+      {
+        "number": 4,
+        "direction": "down",
+        "row": 1,
+        "col": 3,
+        "answer": "지분",
+        "term_id": "stake",
+        "clue": "회사 주식 중 가진 몫"
+      },
+      {
+        "number": 5,
+        "direction": "across",
+        "row": 2,
+        "col": 0,
+        "answer": "주주",
+        "term_id": "shareholder",
+        "clue": "주식을 가진 사람"
+      },
+      {
+        "number": 6,
+        "direction": "down",
+        "row": 3,
+        "col": 4,
+        "answer": "매도",
+        "term_id": "sell",
+        "clue": "주식을 파는 것"
+      },
+      {
+        "number": 7,
+        "direction": "across",
+        "row": 4,
+        "col": 1,
+        "answer": "회계연도",
+        "term_id": "fiscal_year",
+        "clue": "회사가 돈 계산을 끊는 1년 단위"
+      }
+    ]
+  },
+  {
+    "id": "financials-normal",
+    "title": "재무제표 읽기",
+    "difficulty": "normal",
+    "size": {
+      "rows": 7,
+      "cols": 7
+    },
+    "words": [
+      {
+        "number": 1,
+        "direction": "down",
+        "row": 0,
+        "col": 3,
+        "answer": "매출총이익",
+        "term_id": "gross_profit",
+        "clue": "매출에서 매출원가를 뺀 돈"
+      },
+      {
+        "number": 2,
+        "direction": "down",
+        "row": 0,
+        "col": 5,
+        "answer": "증가율",
+        "term_id": "growth_rate",
+        "clue": "이전보다 몇 % 늘었는지"
+      },
+      {
+        "number": 3,
+        "direction": "across",
+        "row": 1,
+        "col": 2,
+        "answer": "매출원가",
+        "term_id": "cost_of_sales",
+        "clue": "팔린 물건을 만드는 데 든 돈"
+      },
+      {
+        "number": 4,
+        "direction": "down",
+        "row": 3,
+        "col": 1,
+        "answer": "영업이익",
+        "term_id": "operating_income",
+        "clue": "매출에서 장사 비용을 뺀 돈"
+      },
+      {
+        "number": 5,
+        "direction": "across",
+        "row": 4,
+        "col": 0,
+        "answer": "영업이익률",
+        "term_id": "operating_margin",
+        "clue": "매출 중 영업이익의 비율"
+      },
+      {
+        "number": 6,
+        "direction": "across",
+        "row": 6,
+        "col": 0,
+        "answer": "손익계산서",
+        "term_id": "income_statement",
+        "clue": "번 돈·쓴 돈·남은 돈을 보여주는 표"
+      }
+    ]
+  },
+  {
+    "id": "market-normal",
+    "title": "시장과 산업",
+    "difficulty": "normal",
+    "size": {
+      "rows": 7,
+      "cols": 7
+    },
+    "words": [
+      {
+        "number": 1,
+        "direction": "down",
+        "row": 0,
+        "col": 0,
+        "answer": "전기차",
+        "term_id": "electric_vehicle",
+        "clue": "배터리 전기로 달리는 자동차"
+      },
+      {
+        "number": 2,
+        "direction": "down",
+        "row": 0,
+        "col": 3,
+        "answer": "관리종목",
+        "term_id": "administrative_issue",
+        "clue": "문제가 있어 거래소가 지켜보는 종목"
+      },
+      {
+        "number": 3,
+        "direction": "across",
+        "row": 1,
+        "col": 0,
+        "answer": "기준금리",
+        "term_id": "interest_rate",
+        "clue": "한국은행이 정하는 이자율 기준"
+      },
+      {
+        "number": 4,
+        "direction": "down",
+        "row": 2,
+        "col": 5,
+        "answer": "낸드플래시",
+        "term_id": "nand",
+        "clue": "전원이 꺼져도 남는 저장 메모리"
+      },
+      {
+        "number": 5,
+        "direction": "across",
+        "row": 3,
+        "col": 2,
+        "answer": "종목코드",
+        "term_id": "stock_code",
+        "clue": "상장 회사마다 붙는 6자리 번호"
+      },
+      {
+        "number": 6,
+        "direction": "across",
+        "row": 5,
+        "col": 2,
+        "answer": "한국거래소",
+        "term_id": "krx",
+        "clue": "주식 시장을 운영하는 기관"
+      }
+    ]
+  }
+]

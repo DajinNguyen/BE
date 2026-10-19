@@ -135,6 +135,51 @@
     "example": "가족 전체 용돈을 한 장부에 합쳐서 적는 것처럼, 계열 회사들의 숫자를 모두 더해서 봐요."
   },
   {
+    "id": "buy",
+    "term": "매수",
+    "aliases": [
+      "매수"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "주식을 사는 거예요. 증권사 앱에서 원하는 가격과 수량을 정해 주문해요.",
+    "example": "삼성전자 주식 1주를 매수했다는 건 삼성전자 주식 1주를 샀다는 뜻이에요."
+  },
+  {
+    "id": "sell",
+    "term": "매도",
+    "aliases": [
+      "매도"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "가지고 있는 주식을 파는 거예요.",
+    "example": "산 가격보다 비싸게 매도하면 그 차이만큼 이익이 생기고, 싸게 팔면 손해를 봐요."
+  },
+  {
+    "id": "shareholders_meeting",
+    "term": "주주총회",
+    "aliases": [
+      "주주총회",
+      "주총"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "주주들이 모여 이사를 뽑거나 배당을 정하는 등 회사의 중요한 일을 투표로 정하는 회의예요.",
+    "example": "보통 1년에 한 번 정기 주주총회가 열리고, 주식을 많이 가진 주주일수록 더 많은 표를 가져요."
+  },
+  {
+    "id": "stake",
+    "term": "지분",
+    "aliases": [
+      "지분"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "회사 전체 주식 가운데 어떤 사람이나 회사가 가진 몫이에요. 보통 %로 나타내요.",
+    "example": "회사 주식이 모두 100주이고 그중 10주를 가지고 있다면 지분은 10%예요."
+  },
+  {
     "id": "financial_statements",
     "term": "재무제표",
     "aliases": [

@@ -15,7 +15,6 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Protocol
-from zoneinfo import ZoneInfo
 
 import anthropic
 from google import genai
@@ -33,18 +32,21 @@ from app.schemas.report import (
     KEY_POINT_ORDER,
     CompanyReport,
     Evidence,
+    EvidenceKind,
+    EvidenceRef,
     FinancialHighlight,
     FinancialsEvidence,
+    KeyPoint,
     NewsEvidence,
     ReportContent,
+    ReportDataAsOf,
     RevenueMixItem,
     VisionEvidence,
 )
 from app.services.data_store import find_financials, get_company, get_news
+from app.services.market_clock import KST, last_close_date
 
 logger = logging.getLogger(__name__)
-
-KST = ZoneInfo("Asia/Seoul")
 
 SOURCES_BASE = ["금융감독원 DART", "한국거래소"]
 
@@ -342,6 +344,31 @@ def _vision_evidence(
     )
 
 
+def _financials_basis(financials: Financials) -> str:
+    """재무 자료 기준. 예: "2025년 사업보고서" (없으면 "2025년 연간")"""
+    latest = max(financials.annual, key=lambda a: a.fiscal_year, default=None)
+    if financials.indicators_as_of:
+        return financials.indicators_as_of
+    return f"{latest.fiscal_year}년 연간" if latest else financials.basis
+
+
+def _data_as_of(financials: Financials, news: list[NewsEvidence]) -> ReportDataAsOf:
+    return ReportDataAsOf(
+        financials=_financials_basis(financials),
+        price=last_close_date().isoformat(),
+        news=(news[0].published_at or None) if news else None,  # 뉴스는 최신 순
+    )
+
+
+def _evidence_refs(data_as_of: ReportDataAsOf) -> dict[EvidenceKind, EvidenceRef]:
+    """근거 칩. 이름에는 출처를, 날짜에는 자료 날짜를 넣는다."""
+    return {
+        "financials": EvidenceRef(type="financials", label=f"재무제표 {data_as_of.financials}"),
+        "news": EvidenceRef(type="news", label="뉴스", date=data_as_of.news),
+        "vision": EvidenceRef(type="vision", label="기업 비전"),
+    }
+
+
 def build_context(company: CompanyDetail, financials: Financials) -> dict[str, Any]:
     news = [n.model_dump() for n in get_news(company.stock_code) if not n.is_placeholder]
     available = ["financials"]
@@ -393,20 +420,27 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
     context = build_context(company, financials)
     content = _sanitize(await writer.write(context), context["available_evidence"])
 
+    news = _news_evidence(get_news(stock_code))
+    data_as_of = _data_as_of(financials, news)
+    refs = _evidence_refs(data_as_of)
     generated_at = datetime.now(KST).replace(microsecond=0)
     report = CompanyReport(
         stock_code=stock_code,
         status="done",
         generated_at=generated_at,
         headline=content.headline,
-        key_points=content.key_points,
+        key_points=[
+            KeyPoint(**p.model_dump(exclude={"evidence"}), evidence=[refs[k] for k in p.evidence])
+            for p in content.key_points
+        ],
         evidence=Evidence(
             financials=_financials_evidence(financials),
-            news=_news_evidence(get_news(stock_code)),
+            news=news,
             vision=_vision_evidence(company, financials, content.vision_summary),
         ),
         quiz=content.quiz,
         sources=SOURCES_BASE + ([financials.source] if financials.source else []),
+        data_as_of=data_as_of,
     )
     return report, generated_at
 
@@ -531,3 +565,18 @@ def list_generated(session: Session, limit: int) -> list[CompanyReport]:
         .limit(limit)
     ).all()
     return [CompanyReport(**r.content) for r in records if r.content]
+
+
+def latest_headlines(session: Session, stock_codes: list[str]) -> dict[str, str]:
+    """회사별 마지막으로 성공한 리포트의 한 줄 결론 (홈 거래대금 목록용). 리포트가 없으면 빠진다."""
+    records = session.exec(
+        select(ReportRecord).where(
+            col(ReportRecord.stock_code).in_(stock_codes),
+            col(ReportRecord.generated_at).is_not(None),
+        )
+    ).all()
+    return {
+        r.stock_code: r.content["headline"]
+        for r in records
+        if r.content and r.content.get("headline")
+    }

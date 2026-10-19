@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import companies, home, reports, terms
+from app.api import companies, home, learn, reports, terms
 from app.core.db import init_db
 from app.core.errors import register_error_handlers
 from app.services import dart
@@ -32,3 +32,4 @@ app.include_router(home.router)
 app.include_router(companies.router)
 app.include_router(reports.router)
 app.include_router(terms.router)
+app.include_router(learn.router)

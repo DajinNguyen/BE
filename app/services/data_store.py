@@ -10,12 +10,14 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from app.core.errors import company_not_found, data_not_found
+from app.core.errors import company_not_found, data_not_found, puzzle_not_found
 from app.schemas.company import CompanyDetail, CompanySummary
+from app.schemas.crossword import CrosswordPuzzle, CrosswordSummary
 from app.schemas.financials import Financials
 from app.schemas.news import NewsItem
 from app.schemas.term import Term
 from app.services import dart
+from app.services.market_clock import last_close_date
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -73,6 +75,11 @@ def search_companies(query: str, limit: int) -> list[CompanySummary]:
     return [to_summary(c) for _, c in matches[:limit]]
 
 
+def all_companies() -> list[CompanySummary]:
+    """시드 목록 순서 그대로 (대략 시가총액 순)."""
+    return [to_summary(c) for c in _companies().values()]
+
+
 def companies_by_codes(stock_codes: list[str]) -> list[CompanySummary]:
     """요청한 순서대로 돌려주고, 없는 종목코드는 건너뛴다."""
     companies = _companies()
@@ -87,8 +94,10 @@ def get_company(stock_code: str) -> CompanyDetail:
 
 
 def get_company_detail(stock_code: str) -> CompanyDetail:
-    """상세 화면용. 시드에 없는 홈페이지는 DART 기업개황으로 채운다."""
-    company = get_company(stock_code)
+    """상세 화면용. 시세 기준일을 붙이고, 시드에 없는 홈페이지는 DART 기업개황으로 채운다."""
+    company = get_company(stock_code).model_copy(
+        update={"price_as_of": last_close_date().isoformat()}
+    )
     if company.homepage_url or not company.corp_code:
         return company
     overview = dart.company_overview(company.corp_code)
@@ -118,3 +127,24 @@ def get_news(stock_code: str) -> list[NewsItem]:
 @lru_cache
 def get_terms() -> list[Term]:
     return [Term(**t) for t in load_json("terms.json")]
+
+
+@lru_cache
+def _crosswords() -> dict[str, CrosswordPuzzle]:
+    return {p["id"]: CrosswordPuzzle(**p) for p in load_json("crosswords.json")}
+
+
+def list_crosswords() -> list[CrosswordSummary]:
+    return [
+        CrosswordSummary(
+            id=p.id, title=p.title, difficulty=p.difficulty, size=p.size, word_count=len(p.words)
+        )
+        for p in _crosswords().values()
+    ]
+
+
+def get_crossword(puzzle_id: str) -> CrosswordPuzzle:
+    puzzle = _crosswords().get(puzzle_id)
+    if puzzle is None:
+        raise puzzle_not_found()
+    return puzzle

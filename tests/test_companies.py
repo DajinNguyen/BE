@@ -1,3 +1,6 @@
+from datetime import date
+
+
 def test_search_matches_korean_english_and_code(client):
     for query in [
         "삼성전자",
@@ -37,6 +40,7 @@ def test_company_summary_fields_match_frontend(client):
         "name": "삼성전자",
         "name_en": "Samsung Electronics",
         "sector": "반도체·전자제품",
+        "sector_group": "semiconductor",
         "market": "KOSPI",
         "current_price": {"value": 128500, "is_sample": True},
         "change_rate": {"value": 1.82, "is_sample": True},
@@ -59,6 +63,8 @@ def test_company_detail(client):
     assert body["market_cap"]["is_sample"] is True
     assert body["timeline"][-1]["is_plan"] is True
     assert len(body["business_segments"]) == 4
+    # 시세 기준일은 직전 장 마감일 (주말이 아닌 날)
+    assert date.fromisoformat(body["price_as_of"]).weekday() < 5
 
 
 def test_company_detail_without_source_data_uses_empty_values(client):
@@ -90,6 +96,7 @@ def test_financials(client):
     assert body["latest_quarter"]["revenue"] == 93.8
     assert len(body["segments"]["items"]) == 4
     assert body["indicators"]["roe"] == {"value": 9.2, "is_sample": True}
+    assert body["indicators_as_of"] == "2025년 사업보고서"
 
 
 def test_financials_without_seed_data_is_data_not_found(client):
@@ -139,6 +146,6 @@ def test_news_without_seed_data_is_empty_list(client):
 
 def test_terms(client):
     terms = client.get("/api/terms").json()
-    assert len(terms) == 66
+    assert len(terms) == 70
     assert terms[0]["id"] == "stock"
     assert set(terms[0]) == {"id", "term", "aliases", "category", "level", "easy", "example"}

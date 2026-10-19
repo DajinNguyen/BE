@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from app.core.db import new_session
 from app.models.report import ReportRecord
@@ -19,6 +19,7 @@ def test_report_before_generation_is_none(client):
         "quiz": [],
         "sources": [],
         "failure_reason": None,
+        "data_as_of": None,
     }
 
 
@@ -41,7 +42,16 @@ def test_post_returns_generating_then_get_returns_done(client, fake_writer):
 
     # 핵심 포인트는 분류별 1개씩 고정 순서, 근거 종류는 중복 없이
     assert [p["category"] for p in report["key_points"]] == KEY_POINT_ORDER
-    assert report["key_points"][0]["evidence"] == ["financials"]
+    assert report["key_points"][0]["evidence"] == [
+        {"type": "financials", "label": "재무제표 2025년 사업보고서", "date": None}
+    ]
+    assert report["key_points"][-1]["evidence"] == [
+        {"type": "news", "label": "뉴스", "date": "2026년 1월"},
+        {"type": "vision", "label": "기업 비전", "date": None},
+    ]
+    assert report["data_as_of"]["financials"] == "2025년 사업보고서"
+    assert date.fromisoformat(report["data_as_of"]["price"]).weekday() < 5
+    assert report["data_as_of"]["news"] == "2026년 1월"
     assert report["key_points"][0]["after"] is None
 
     # 정답 번호가 보기 범위를 벗어난 퀴즈는 걸러진다
@@ -169,3 +179,24 @@ def test_fixture_writer_matches_frontend_sample(client):
     assert report["status"] == "done"
     assert [p["category"] for p in report["key_points"]] == KEY_POINT_ORDER
     assert len(report["quiz"]) == 3
+
+
+def test_report_saved_with_old_evidence_format_still_reads(client):
+    """근거가 종류 이름뿐이던 예전 리포트도 칩 형식으로 바꿔서 돌려준다."""
+    client.post("/api/companies/005930/report")
+    with new_session() as session:
+        record = session.get(ReportRecord, "005930")
+        content = dict(record.content)
+        content["key_points"] = [
+            {**p, "evidence": [e["type"] for e in p["evidence"]]} for p in content["key_points"]
+        ]
+        content.pop("data_as_of")
+        record.content = content
+        session.add(record)
+        session.commit()
+
+    report = client.get("/api/companies/005930/report").json()
+    assert report["key_points"][0]["evidence"] == [
+        {"type": "financials", "label": "재무제표", "date": None}
+    ]
+    assert report["data_as_of"] is None

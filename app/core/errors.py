@@ -20,6 +20,10 @@ def data_not_found() -> AppError:
     return AppError(404, "DATA_NOT_FOUND", "이 회사의 자료를 아직 불러오지 못했어요.")
 
 
+def puzzle_not_found() -> AppError:
+    return AppError(404, "PUZZLE_NOT_FOUND", "퍼즐을 찾지 못했어요.")
+
+
 def report_generation_failed(
     detail: str = "리포트를 만드는 중에 문제가 생겼어요. 잠시 후 다시 시도해 주세요.",
 ) -> AppError:

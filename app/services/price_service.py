@@ -5,6 +5,7 @@ from datetime import date, timedelta
 
 from app.schemas.price import Period, PriceHistory, PricePoint
 from app.services.data_store import get_company
+from app.services.market_clock import last_close_date
 
 PERIOD_DAYS: dict[str, int] = {"1m": 30, "3m": 91, "6m": 182, "1y": 365}
 
@@ -27,7 +28,7 @@ def _business_days(end: date, days: int) -> list[date]:
 
 def get_price_history(stock_code: str, period: Period, today: date | None = None) -> PriceHistory:
     company = get_company(stock_code)
-    end = today or date.today()
+    end = today or last_close_date()  # 마지막 값은 직전 장 마감일 종가 (실시간 아님)
     weekly = period == "1y"
     days = (_weekly_days if weekly else _business_days)(end, PERIOD_DAYS[period])
     volatility = 0.032 if weekly else 0.015  # 주 단위는 한 칸 변동폭이 더 크다
