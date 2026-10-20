@@ -19,7 +19,7 @@ engine = _make_engine(get_settings().database_url)
 
 
 def init_db() -> None:
-    from app.models import report  # noqa: F401  테이블 등록용
+    from app.models import report, user  # noqa: F401  테이블 등록용
 
     SQLModel.metadata.create_all(engine)
 
