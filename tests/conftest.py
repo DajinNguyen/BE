@@ -3,6 +3,8 @@ import os
 os.environ["DATABASE_URL"] = "sqlite://"
 # 테스트는 실제 DART를 부르지 않는다 (.env에 키가 있어도)
 os.environ["DART_API_KEY"] = ""
+# 네이버 시세도 부르지 않는다 (시드 예시 값으로 동작)
+os.environ["NAVER_PRICES_ENABLED"] = "false"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

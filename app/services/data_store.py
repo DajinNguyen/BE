@@ -3,6 +3,7 @@
 회사 목록·재무·뉴스는 `app/data/*.json` 에 넣어둔 값을 읽어서 쓴다.
 확인 전 숫자는 `is_sample: true` 로 표시돼 있다.
 DART 키가 있으면 회사마다 DART 고유번호·공식 회사명을 붙이고, 상세 화면에서는 기업개황으로 빈 값을 채운다.
+네이버 시세를 받으면 현재가·등락률·시가총액을 실제 값(`is_sample: false`)으로 바꾼다.
 """
 
 import json
@@ -11,12 +12,13 @@ from pathlib import Path
 from typing import Any
 
 from app.core.errors import company_not_found, data_not_found, puzzle_not_found
+from app.schemas.common import SampleValue
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.crossword import CrosswordPuzzle, CrosswordSummary
 from app.schemas.financials import Financials
 from app.schemas.news import NewsItem
 from app.schemas.term import Term
-from app.services import dart
+from app.services import dart, naver
 from app.services.market_clock import last_close_date
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -31,16 +33,29 @@ def _seed_companies() -> dict[str, CompanyDetail]:
     return {c["stock_code"]: CompanyDetail(**c) for c in load_json("companies.json")}
 
 
+def _with_live_data(
+    company: CompanyDetail, corp: dart.DartCorp | None, quote: naver.Quote | None
+) -> CompanyDetail:
+    update: dict[str, Any] = {}
+    if corp:
+        update["corp_code"] = corp.corp_code
+    if quote:
+        update |= {
+            "current_price": SampleValue(value=quote.price, is_sample=False),
+            "change_rate": SampleValue(value=quote.change_rate, is_sample=False),
+            "market_cap": SampleValue(value=round(quote.market_cap / 1e12, 1), is_sample=False),
+            "price_as_of": quote.traded_at.date().isoformat(),
+        }
+    return company.model_copy(update=update) if update else company
+
+
 def _companies() -> dict[str, CompanyDetail]:
-    """시드 회사 + DART 고유번호 (DART를 못 쓰면 시드 그대로)."""
+    """시드 회사 + DART 고유번호 + 네이버 시세 (받지 못한 값은 시드 그대로)."""
     seed = _seed_companies()
     index = dart.corp_index()
+    quotes = naver.quotes(list(seed))
     return {
-        code: (
-            company.model_copy(update={"corp_code": index[code].corp_code})
-            if code in index
-            else company
-        )
+        code: _with_live_data(company, index.get(code), quotes.get(code))
         for code, company in seed.items()
     }
 
@@ -95,9 +110,9 @@ def get_company(stock_code: str) -> CompanyDetail:
 
 def get_company_detail(stock_code: str) -> CompanyDetail:
     """상세 화면용. 시세 기준일을 붙이고, 시드에 없는 홈페이지는 DART 기업개황으로 채운다."""
-    company = get_company(stock_code).model_copy(
-        update={"price_as_of": last_close_date().isoformat()}
-    )
+    company = get_company(stock_code)
+    if company.price_as_of is None:  # 시세를 못 받았으면 예시 값의 기준일은 직전 장 마감일
+        company = company.model_copy(update={"price_as_of": last_close_date().isoformat()})
     if company.homepage_url or not company.corp_code:
         return company
     overview = dart.company_overview(company.corp_code)

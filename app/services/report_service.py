@@ -352,10 +352,12 @@ def _financials_basis(financials: Financials) -> str:
     return f"{latest.fiscal_year}년 연간" if latest else financials.basis
 
 
-def _data_as_of(financials: Financials, news: list[NewsEvidence]) -> ReportDataAsOf:
+def _data_as_of(
+    company: CompanyDetail, financials: Financials, news: list[NewsEvidence]
+) -> ReportDataAsOf:
     return ReportDataAsOf(
         financials=_financials_basis(financials),
-        price=last_close_date().isoformat(),
+        price=company.price_as_of or last_close_date().isoformat(),
         news=(news[0].published_at or None) if news else None,  # 뉴스는 최신 순
     )
 
@@ -421,7 +423,7 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
     content = _sanitize(await writer.write(context), context["available_evidence"])
 
     news = _news_evidence(get_news(stock_code))
-    data_as_of = _data_as_of(financials, news)
+    data_as_of = _data_as_of(company, financials, news)
     refs = _evidence_refs(data_as_of)
     generated_at = datetime.now(KST).replace(microsecond=0)
     report = CompanyReport(
