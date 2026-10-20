@@ -3,6 +3,7 @@
 회사 목록·재무·뉴스는 `app/data/*.json` 에 넣어둔 값을 읽어서 쓴다.
 확인 전 숫자는 `is_sample: true` 로 표시돼 있다.
 DART 키가 있으면 회사마다 DART 고유번호·공식 회사명을 붙이고, 상세 화면에서는 기업개황으로 빈 값을 채운다.
+재무는 DART 재무제표를 먼저 쓰고, 받지 못하면 시드 재무를 쓴다.
 네이버 시세를 받으면 현재가·등락률·시가총액을 실제 값(`is_sample: false`)으로 바꾼다.
 """
 
@@ -15,10 +16,10 @@ from app.core.errors import company_not_found, data_not_found, puzzle_not_found
 from app.schemas.common import SampleValue
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.crossword import CrosswordPuzzle, CrosswordSummary
-from app.schemas.financials import Financials
+from app.schemas.financials import Financials, Segments
 from app.schemas.news import NewsItem
 from app.schemas.term import Term
-from app.services import dart, naver
+from app.services import dart, dart_financials, naver
 from app.services.market_clock import last_close_date
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -120,17 +121,37 @@ def get_company_detail(stock_code: str) -> CompanyDetail:
     return company.model_copy(update={"homepage_url": homepage}) if homepage else company
 
 
-def find_financials(stock_code: str) -> Financials | None:
-    """재무 자료가 아직 없는 회사는 None (숫자를 지어내지 않는다)."""
-    get_company(stock_code)
+def _seed_financials(stock_code: str) -> Financials | None:
     data = load_json("financials.json").get(stock_code)
     return None if data is None else Financials(stock_code=stock_code, **data)
 
 
+def find_financials(stock_code: str) -> Financials | None:
+    """DART 재무제표를 먼저 쓰고, 받지 못하면 시드. 둘 다 없으면 None (숫자를 지어내지 않는다)."""
+    company = get_company(stock_code)
+    seed = _seed_financials(stock_code)
+    live = (
+        dart_financials.fetch_financials(stock_code, company.corp_code, company.market_cap)
+        if company.corp_code
+        else None
+    )
+    if live is None:
+        return seed
+    if seed and seed.segments and live.segments is None and seed.unit == live.unit:
+        # DART API에는 사업부문별 매출이 없어서 시드에 있으면 그대로 쓴다
+        live = live.model_copy(update={"segments": seed.segments})
+    return live
+
+
 def get_financials(stock_code: str) -> Financials:
+    """재무 API 응답용. 프론트는 segments가 항상 있다고 보므로 없으면 빈 목록으로 채운다."""
     financials = find_financials(stock_code)
     if financials is None:
         raise data_not_found()
+    if financials.segments is None:
+        financials = financials.model_copy(
+            update={"segments": Segments(base_label="아직 자료가 없어요", items=[])}
+        )
     return financials
 
 

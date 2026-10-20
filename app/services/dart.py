@@ -2,6 +2,7 @@
 
 - 고유번호 목록(corpCode.xml): 상장 회사의 DART 고유번호·공식 회사명·영문명. 하루 한 번 받아서 파일로 캐시한다.
 - 기업개황(company.json): 홈페이지 등 회사 기본 정보. 회사별로 캐시한다.
+- 단일회사 주요계정(fnlttSinglAcnt.json): 매출·영업이익·순이익·부채·자본. 보고서별로 하루 캐시한다.
 
 키가 없거나 DART가 응답하지 않으면 빈 값을 돌려주고, 호출하는 쪽은 시드 데이터만으로 동작한다.
 """
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://opendart.fss.or.kr/api"
 CORP_CODES_TTL = 24 * 60 * 60  # 하루
 OVERVIEW_TTL = 7 * 24 * 60 * 60  # 일주일
+ACCOUNTS_TTL = 24 * 60 * 60  # 하루 (새 보고서가 공시되면 다음 날 반영)
 TIMEOUT = 10.0
 RETRY_AFTER = (
     10 * 60
@@ -49,6 +51,7 @@ class DartClient:
         self._corps_loaded_at = 0.0
         self._corps_retry_at = 0.0
         self._overviews: dict[str, tuple[float, dict[str, Any]]] = {}
+        self._accounts: dict[str, tuple[float, list[dict]]] = {}
 
     # ------------------------------------------------------------------ 캐시 파일
 
@@ -142,6 +145,45 @@ class DartClient:
         self._overviews[corp_code] = (time.time(), data)
         return data
 
+    # ------------------------------------------------------------------ 재무제표 주요계정
+
+    def single_accounts(self, corp_code: str, year: int, reprt_code: str) -> list[dict] | None:
+        """단일회사 주요계정(fnlttSinglAcnt). 보고서가 없으면 [], 받지 못하면 None."""
+        key = f"{corp_code}_{year}_{reprt_code}"
+        hit = self._accounts.get(key)
+        if hit and time.time() - hit[0] < ACCOUNTS_TTL:
+            return hit[1]
+        name = f"accounts_{key}.json"
+        rows = self._read_cache(name, ACCOUNTS_TTL)
+        if rows is None:
+            try:
+                res = httpx.get(
+                    f"{BASE_URL}/fnlttSinglAcnt.json",
+                    params={
+                        "crtfc_key": self._key,
+                        "corp_code": corp_code,
+                        "bsns_year": str(year),
+                        "reprt_code": reprt_code,
+                    },
+                    timeout=TIMEOUT,
+                )
+                res.raise_for_status()
+                data = res.json()
+            except (httpx.HTTPError, ValueError) as e:
+                logger.warning("DART 재무제표를 받지 못했어요 (%s): %s", key, e)
+                return None
+            status = data.get("status")
+            if status == "013":  # 조회된 데이터 없음 (아직 공시 전 등)
+                rows = []
+            elif status == "000":
+                rows = data.get("list") or []
+            else:
+                logger.warning("DART 재무제표 오류 (%s): %s", key, data.get("message"))
+                return None
+            self._write_cache(name, rows)
+        self._accounts[key] = (time.time(), rows)
+        return rows
+
 
 @lru_cache
 def get_dart() -> DartClient | None:
@@ -159,6 +201,11 @@ def corp_index() -> dict[str, DartCorp]:
 def company_overview(corp_code: str) -> dict[str, Any] | None:
     client = get_dart()
     return client.company_overview(corp_code) if client else None
+
+
+def single_accounts(corp_code: str, year: int, reprt_code: str) -> list[dict] | None:
+    client = get_dart()
+    return client.single_accounts(corp_code, year, reprt_code) if client else None
 
 
 def warm_up() -> None:
