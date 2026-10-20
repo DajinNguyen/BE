@@ -1,0 +1,42 @@
+{
+  "trading_value_top": [
+    { "stock_code": "005930", "trading_value": 21450 },
+    { "stock_code": "000660", "trading_value": 18730 },
+    { "stock_code": "012450", "trading_value": 9820 },
+    { "stock_code": "329180", "trading_value": 7640 },
+    { "stock_code": "373220", "trading_value": 6210 },
+    { "stock_code": "035420", "trading_value": 4380 },
+    { "stock_code": "005380", "trading_value": 3920 },
+    { "stock_code": "042700", "trading_value": 3510 },
+    { "stock_code": "068270", "trading_value": 3150 },
+    { "stock_code": "003230", "trading_value": 2980 },
+    { "stock_code": "247540", "trading_value": 2740 },
+    { "stock_code": "000270", "trading_value": 2510 },
+    { "stock_code": "035720", "trading_value": 2330 },
+    { "stock_code": "207940", "trading_value": 2180 },
+    { "stock_code": "006400", "trading_value": 1990 },
+    { "stock_code": "105560", "trading_value": 1820 },
+    { "stock_code": "009150", "trading_value": 1710 },
+    { "stock_code": "196170", "trading_value": 1640 },
+    { "stock_code": "005490", "trading_value": 1520 },
+    { "stock_code": "003670", "trading_value": 1410 },
+    { "stock_code": "051910", "trading_value": 1330 },
+    { "stock_code": "012330", "trading_value": 1240 },
+    { "stock_code": "055550", "trading_value": 1150 },
+    { "stock_code": "010130", "trading_value": 1070 },
+    { "stock_code": "097950", "trading_value": 980 },
+    { "stock_code": "015760", "trading_value": 910 },
+    { "stock_code": "066570", "trading_value": 860 },
+    { "stock_code": "271560", "trading_value": 790 },
+    { "stock_code": "086790", "trading_value": 720 },
+    { "stock_code": "000990", "trading_value": 650 }
+  ],
+  "rising": {
+    "criteria": "기준을 정하는 중이에요. 지금은 예시 목록이에요.",
+    "stock_codes": ["012450", "329180", "009150", "196170", "000660", "015760"]
+  },
+  "most_viewed": {
+    "criteria": "다진에서 최근 7일 동안 많이 본 기업 (집계 기준 정하는 중 · 예시 목록)",
+    "stock_codes": ["005930", "000660", "035720", "005380", "035420", "373220"]
+  }
+}
