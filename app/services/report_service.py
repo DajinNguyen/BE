@@ -120,9 +120,10 @@ class GeminiReportWriter:
     _MAX_ATTEMPTS = 3
     _RETRY_SECONDS = 2.0
     # 응답이 없을 때 무한정 기다리지 않도록 요청 하나당 상한을 둔다 (단위: ms).
-    # 리포트 한 건 생성에 50초 넘게 걸리기도 해서 넉넉히 둔다.
-    # 3번 시도해도 GENERATION_TIMEOUT(5분) 안에 끝나야 한다.
-    _REQUEST_TIMEOUT_MS = 90_000
+    # Gemini가 과부하일 때 504(deadline exceeded)가 이 시간만큼 걸려서 돌아오므로,
+    # 너무 길게 두면 화면에서 "눌렀는데 몇 분째 안 끝남"으로 느껴진다. 45초로 둬서
+    # 3번 재시도해도 체감상 1분 안팎이면 목데이터로 넘어가게 한다.
+    _REQUEST_TIMEOUT_MS = 45_000
 
     def __init__(self, settings: Settings):
         self._settings = settings
