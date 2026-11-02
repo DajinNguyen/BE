@@ -34,6 +34,11 @@ def _seed_companies() -> dict[str, CompanyDetail]:
     return {c["stock_code"]: CompanyDetail(**c) for c in load_json("companies.json")}
 
 
+def company_exists(stock_code: str) -> bool:
+    """시세를 부르지 않고 시드 목록만 본다 (커뮤니티 글쓰기 등에서 회사 확인용)."""
+    return stock_code in _seed_companies()
+
+
 def _with_live_data(
     company: CompanyDetail, corp: dart.DartCorp | None, quote: naver.Quote | None
 ) -> CompanyDetail:
