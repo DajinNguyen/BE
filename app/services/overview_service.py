@@ -2,6 +2,8 @@
 
 시드(`app/data/companies.json`)에 사업부문·회사의 방향이 없는 회사만 만든다.
 - 상세 화면을 처음 열면 백그라운드에서 만들기 시작하고, 다음에 열 때부터 채워진다.
+- 새 사업보고서가 공시되면(접수번호가 바뀌면) 다시 만든다. 새로 만드는 동안이나 실패해도
+  예전 개요를 그대로 보여준다.
 - `python -m app.scripts.generate_overviews` 로 미리 한꺼번에 만들 수도 있다.
 - 숫자는 주어진 자료(사업보고서 글, DART 연도별 재무)에 있는 값만 쓰게 하고,
   회사의 방향(timeline) 연도는 서버가 확인한 연도만 남긴다.
@@ -252,7 +254,7 @@ def apply_overview(session: Session, company: CompanyDetail) -> CompanyDetail:
     if not needs_overview(company):
         return company
     record = session.get(CompanyOverviewRecord, company.stock_code)
-    if record is None or record.status != "done" or not record.content:
+    if record is None or not record.content:  # 다시 만드는 중·실패해도 예전 개요는 보여준다
         return company
     content = OverviewContent(**record.content)
     update: dict[str, Any] = {
@@ -269,19 +271,28 @@ def _as_utc(value: datetime) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=UTC)
 
 
+def is_outdated(record: CompanyOverviewRecord, corp_code: str) -> bool:
+    """개요를 만든 뒤에 새 사업보고서가 공시됐는지 (DART 공시 목록은 하루 캐시)."""
+    report = dart.latest_annual_report(corp_code)
+    return report is not None and bool(record.rcept_no) and report.rcept_no != record.rcept_no
+
+
 def start_generation(session: Session, company: CompanyDetail, now: datetime | None = None) -> bool:
-    """만들어야 하면 "만드는 중"으로 표시하고 True. 이미 있거나·만드는 중이거나·방금 실패했으면 False."""
+    """만들어야 하면 "만드는 중"으로 표시하고 True.
+    최신 보고서로 이미 있거나·만드는 중이거나·방금 실패했으면 False."""
     if not needs_overview(company) or not company.corp_code:
         return False
     now = now or datetime.now(UTC)
     record = session.get(CompanyOverviewRecord, company.stock_code)
     if record is not None:
         if record.status == "done":
-            return False
-        since = record.started_at if record.status == "generating" else record.updated_at
-        wait = GENERATION_TIMEOUT if record.status == "generating" else RETRY_FAILED_AFTER
-        if since is not None and now - _as_utc(since) < wait:
-            return False
+            if not is_outdated(record, company.corp_code):
+                return False
+        else:
+            since = record.started_at if record.status == "generating" else record.updated_at
+            wait = GENERATION_TIMEOUT if record.status == "generating" else RETRY_FAILED_AFTER
+            if since is not None and now - _as_utc(since) < wait:
+                return False
     else:
         record = CompanyOverviewRecord(stock_code=company.stock_code, status="generating")
     record.status = "generating"
