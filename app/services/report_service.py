@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 import anthropic
+from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types as genai_types
 from sqlmodel import Session, col, select
@@ -48,7 +49,6 @@ from app.schemas.report import (
     YearlyFigure,
 )
 from app.services.data_store import find_financials, get_company, latest_company_news
-from app.services.gemini_keys import GeminiKeyPool
 from app.services.market_clock import KST, last_close_date
 
 logger = logging.getLogger(__name__)
@@ -132,20 +132,26 @@ class GeminiReportWriter:
 
     def __init__(self, settings: Settings):
         self._settings = settings
-        self._keys = GeminiKeyPool(settings.gemini_api_keys, self._REQUEST_TIMEOUT_MS)
+        self._client: genai.Client | None = None
         self._fallback = FixtureReportWriter()
 
-    async def _call(self, context: dict[str, Any]) -> ReportContent:
-        response = await self._keys.call(
-            lambda client: client.aio.models.generate_content(
-                model=self._settings.gemini_model,
-                contents=json.dumps(context, ensure_ascii=False),
-                config=genai_types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                    response_mime_type="application/json",
-                    response_schema=ReportContent,
-                ),
+    def _get_client(self) -> genai.Client:
+        if self._client is None:
+            self._client = genai.Client(
+                api_key=self._settings.gemini_api_key,
+                http_options=genai_types.HttpOptions(timeout=self._REQUEST_TIMEOUT_MS),
             )
+        return self._client
+
+    async def _call(self, context: dict[str, Any]) -> ReportContent:
+        response = await self._get_client().aio.models.generate_content(
+            model=self._settings.gemini_model,
+            contents=json.dumps(context, ensure_ascii=False),
+            config=genai_types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                response_mime_type="application/json",
+                response_schema=ReportContent,
+            ),
         )
         if response.parsed is None:
             logger.error("Unexpected Gemini response: no parsed output")
