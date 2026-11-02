@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Cookie, Depends, Query, Response
+from fastapi import APIRouter, Cookie, Depends, Header, Query, Response
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
@@ -26,19 +26,32 @@ def _set_cookie(response: Response, key: str, value: str, max_age: int, path: st
     )
 
 
-@router.get("/google")
-def login_with_google(
-    next: str | None = Query(None, description="로그인 후 돌아갈 프론트 주소"),
-):
-    """Google 로그인 화면으로 보낸다. 프론트는 이 주소로 페이지를 이동시키면 된다."""
+def _redirect_to_google(next_url: str) -> RedirectResponse:
     if not auth_service.is_configured():
         raise auth_not_configured()
-    state, token = auth_service.make_state(auth_service.safe_next(next))
+    state, token = auth_service.make_state(next_url)
     response = RedirectResponse(auth_service.authorization_url(state), status_code=302)
     _set_cookie(
         response, STATE_COOKIE, token, int(auth_service.STATE_TTL.total_seconds()), "/api/auth"
     )
     return response
+
+
+@router.get("/google/login")
+def login_with_google_path(
+    redirect: str | None = Query(None, description="로그인 후 돌아갈 프론트 화면 경로 (/로 시작)"),
+    referer: str | None = Header(None),
+):
+    """Google 로그인 화면으로 보낸다. 프론트는 이 주소로 페이지를 이동시키면 된다."""
+    return _redirect_to_google(auth_service.next_from_path(redirect, referer))
+
+
+@router.get("/google")
+def login_with_google(
+    next: str | None = Query(None, description="로그인 후 돌아갈 프론트 전체 주소"),
+):
+    """예전 방식 (전체 주소를 받는다). 새 프론트는 `/google/login?redirect=` 를 쓴다."""
+    return _redirect_to_google(auth_service.safe_next(next))
 
 
 @router.get("/google/callback", include_in_schema=False)
@@ -71,8 +84,13 @@ def google_callback(
 
 @router.get("/me", response_model=AuthUser)
 def me(user: User = Depends(current_user)):
-    """로그인한 사용자. 로그인하지 않았으면 401 `NOT_LOGGED_IN`."""
-    return AuthUser(email=user.email, name=user.name)
+    """로그인한 사용자. 로그인하지 않았으면 401 `LOGIN_REQUIRED`."""
+    return AuthUser(
+        id=str(user.id),
+        email=user.email,
+        name=user.name,
+        nickname=auth_service.nickname_for(user),
+    )
 
 
 @router.post("/logout", status_code=204)

@@ -82,6 +82,23 @@ def safe_next(next_url: str | None) -> str:
     return f"{origins[0]}/"
 
 
+def next_from_path(path: str | None, referer: str | None) -> str:
+    """프론트가 보낸 화면 경로(`/companies/005930?tab=community`)를 돌아갈 전체 주소로 바꾼다.
+
+    프론트 주소는 요청을 보낸 화면(Referer)이 허용 목록에 있으면 그 주소, 아니면 첫 번째 주소.
+    `//evil.com`, `https://…` 처럼 우리 사이트 밖을 가리키는 값이면 첫 화면(`/`)으로 보낸다.
+    """
+    origins = get_settings().frontend_origins
+    origin = origins[0]
+    if referer:
+        parts = urlsplit(referer)
+        if f"{parts.scheme}://{parts.netloc}" in origins:
+            origin = f"{parts.scheme}://{parts.netloc}"
+    if not path or not path.startswith("/") or path.startswith("//") or "\\" in path:
+        path = "/"
+    return f"{origin}{path}"
+
+
 def with_query(url: str, **params: str) -> str:
     parts = urlsplit(url)
     query = urlencode(parse_qsl(parts.query) + list(params.items()))
@@ -195,6 +212,27 @@ def upsert_user(session: Session, profile: GoogleProfile) -> User:
     session.commit()
     session.refresh(user)
     return user
+
+
+_NICK_ADJECTIVES = [
+    "부지런한", "반짝이는", "꼼꼼한", "든든한", "차분한", "씩씩한", "궁금한", "느긋한",
+    "똑똑한", "용감한", "다정한", "성실한", "호기심많은", "침착한", "새내기", "알뜰한",
+]  # fmt: skip
+_NICK_NOUNS = [
+    "다람쥐", "고래", "부엉이", "거북이", "펭귄", "수달", "여우", "판다",
+    "코알라", "돌고래", "사슴", "참새", "햄스터", "고슴도치", "라쿤", "알파카",
+]  # fmt: skip
+
+
+def nickname_for(user: User) -> str:
+    """커뮤니티에 보이는 이름. 실명(Google 이름) 대신 사용자 번호로 만든다 (10대 사용자 보호).
+
+    번호를 붙여서 겹치지 않고, 저장하지 않아도 늘 같은 이름이 나온다.
+    """
+    n = user.id or 0
+    adjective = _NICK_ADJECTIVES[n % len(_NICK_ADJECTIVES)]
+    noun = _NICK_NOUNS[(n // len(_NICK_ADJECTIVES)) % len(_NICK_NOUNS)]
+    return f"{adjective}{noun}{n}"
 
 
 def issue_session(user: User) -> str:
