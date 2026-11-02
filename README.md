@@ -93,6 +93,7 @@ ruff check app tests && black --check app tests
 | GET | `/api/terms` |
 | GET | `/api/learn/crosswords` · `/api/learn/crosswords/{puzzle_id}` |
 | GET / POST | `/api/auth/google/login` · `/api/auth/me` · `/api/auth/logout` |
+| GET / POST | `/api/companies/{stock_code}/posts` (커뮤니티, 아래 참고) |
 
 ## 데이터
 
@@ -105,6 +106,27 @@ ruff check app tests && black --check app tests
 - 업종 탭(`sector_companies`)은 회사마다 정한 `sector_group`으로 묶고, 탭 안은 시가총액 순이에요. 분류는 프론트 목 데이터와 같아요.
 - 홈 거래대금 목록의 `ai_headline`은 그 회사의 마지막 성공 리포트 `headline`이에요. 리포트가 없으면 `null`이에요.
 - PER·PBR·ROE·부채비율(`indicators`)은 DART 재무를 받으면 계산한 값이고, 시드만 쓸 때는 예시 값이에요.
+
+## 커뮤니티 (기업별 게시판)
+
+FE `docs/community-api-request.md` 형식 그대로예요. **보기는 누구나, 쓰기는 로그인한 사람만**이에요.
+
+| 메서드 | 경로 | 로그인 |
+| --- | --- | --- |
+| GET | `/api/companies/{stock_code}/posts?sort=latest\|popular&category=&page=1&size=10` | 필요 없음 |
+| GET | `/api/posts/{post_id}` · `/api/posts/{post_id}/comments` | 필요 없음 |
+| POST | `/api/companies/{stock_code}/posts` (글쓰기) | 필요 |
+| PUT / DELETE | `/api/posts/{post_id}` (수정·삭제, 작성자만) | 필요 |
+| POST | `/api/posts/{post_id}/comments` · DELETE `/api/comments/{comment_id}` | 필요 |
+| POST / DELETE | `/api/posts/{post_id}/like` (여러 번 보내도 결과가 같아요) | 필요 |
+| POST | `/api/reports` (글·댓글 신고) | 필요 |
+
+- 로그인하지 않고 쓰면 `401 LOGIN_REQUIRED`예요.
+- 서버 검사: 제목 1~50자·본문 1~2,000자·댓글 1~500자(`400 INVALID_LENGTH`), 금지어(`400 BANNED_WORD`, 목록은 FE `communityRules.ts`와 같아요), 같은 사람은 글을 30초에 한 번(`429 TOO_FREQUENT`), 같은 대상은 한 번만 신고(`409 ALREADY_REPORTED`), 남의 글·댓글 수정·삭제(`403 NOT_OWNER`).
+- 서로 다른 사람의 신고가 3건 쌓이면 숨겨요(`is_hidden: true`, 제목·본문은 빈 문자열). 숨긴 글을 다시 살리는 관리자 화면은 아직 없어요.
+- 인기순은 좋아요 많은 순(전체 기간), 같으면 최신순이에요.
+- 글을 지우면 댓글·좋아요·신고 기록도 함께 지워요.
+- 테이블: `community_posts`, `community_comments`, `community_likes`, `community_reports` (서버를 켤 때 자동으로 만들어요).
 
 ## AI 리포트
 

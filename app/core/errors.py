@@ -38,6 +38,43 @@ def report_generation_failed(
     return AppError(502, "REPORT_GENERATION_FAILED", detail)
 
 
+# 커뮤니티
+
+
+def post_not_found() -> AppError:
+    return AppError(404, "POST_NOT_FOUND", "글을 찾지 못했어요. 지워졌을 수 있어요.")
+
+
+def comment_not_found() -> AppError:
+    return AppError(404, "COMMENT_NOT_FOUND", "댓글을 찾지 못했어요. 지워졌을 수 있어요.")
+
+
+def report_target_not_found() -> AppError:
+    return AppError(404, "TARGET_NOT_FOUND", "신고할 글이나 댓글을 찾지 못했어요.")
+
+
+def not_owner(detail: str) -> AppError:
+    return AppError(403, "NOT_OWNER", detail)
+
+
+def invalid_length(detail: str) -> AppError:
+    return AppError(400, "INVALID_LENGTH", detail)
+
+
+def banned_word(label: str) -> AppError:
+    return AppError(400, "BANNED_WORD", f"{label}은(는) 쓸 수 없어요.")
+
+
+def too_frequent(seconds: int) -> AppError:
+    return AppError(
+        429, "TOO_FREQUENT", f"글은 {seconds}초에 한 번만 쓸 수 있어요. 잠시 후 다시 시도해 주세요."
+    )
+
+
+def already_reported() -> AppError:
+    return AppError(409, "ALREADY_REPORTED", "이미 신고했어요.")
+
+
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(_: Request, exc: AppError) -> JSONResponse:
