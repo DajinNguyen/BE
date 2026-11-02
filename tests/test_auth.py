@@ -69,7 +69,7 @@ def test_login_not_configured(client, monkeypatch):
     monkeypatch.setattr(get_settings(), "google_client_id", None)
     res = client.get("/api/auth/google", follow_redirects=False)
     assert res.status_code == 503
-    assert res.json()["code"] == "AUTH_NOT_CONFIGURED"
+    assert res.json()["error"]["code"] == "AUTH_NOT_CONFIGURED"
 
 
 def test_login_redirects_to_google(client, google):
@@ -214,7 +214,7 @@ def test_google_token_error(client, google):
 def test_me_requires_login(client):
     res = client.get("/api/auth/me")
     assert res.status_code == 401
-    assert res.json() == {"detail": "로그인이 필요해요.", "code": "LOGIN_REQUIRED"}
+    assert res.json() == {"error": {"code": "LOGIN_REQUIRED", "message": "로그인이 필요해요."}}
 
     client.cookies.set(auth_service.SESSION_COOKIE, "not-a-jwt")
     assert client.get("/api/auth/me").status_code == 401

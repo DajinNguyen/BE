@@ -72,6 +72,14 @@ VITE_API_BASE_URL=http://localhost:8000
 
 CORS는 `http://localhost:5173`, `http://localhost:5174`를 허용해 둬서 이 두 포트에서 띄워야 해요.
 
+## 에러 형식
+
+모든 API의 에러는 FE `docs/frontend-data-requirements.md` 0장 형식이에요. `message`는 화면에 그대로 보여줄 수 있는 쉬운 문장이에요.
+
+```json
+{ "error": { "code": "COMPANY_NOT_FOUND", "message": "찾는 회사가 없어요. 종목코드를 다시 확인해 주세요." } }
+```
+
 ## 테스트 · 린트
 
 ```bash

@@ -24,8 +24,10 @@ def test_report_before_generation_is_none(client):
 
 
 def test_report_unknown_company(client):
-    assert client.get("/api/companies/999999/report").json()["code"] == "COMPANY_NOT_FOUND"
-    assert client.post("/api/companies/999999/report").json()["code"] == "COMPANY_NOT_FOUND"
+    assert client.get("/api/companies/999999/report").json()["error"]["code"] == "COMPANY_NOT_FOUND"
+    assert (
+        client.post("/api/companies/999999/report").json()["error"]["code"] == "COMPANY_NOT_FOUND"
+    )
 
 
 def test_post_returns_generating_then_get_returns_done(client, fake_writer):

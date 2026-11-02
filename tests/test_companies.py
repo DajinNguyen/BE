@@ -80,13 +80,13 @@ def test_company_detail_without_source_data_uses_empty_values(client):
 def test_company_not_found(client):
     res = client.get("/api/companies/999999")
     assert res.status_code == 404
-    assert res.json()["code"] == "COMPANY_NOT_FOUND"
-    assert res.json()["detail"]
+    assert res.json()["error"]["code"] == "COMPANY_NOT_FOUND"
+    assert res.json()["error"]["message"]
 
 
 def test_popular_endpoint_removed(client):
     # 프론트에서 삭제됨. /api/home 으로 대체
-    assert client.get("/api/companies/popular").json()["code"] == "COMPANY_NOT_FOUND"
+    assert client.get("/api/companies/popular").json()["error"]["code"] == "COMPANY_NOT_FOUND"
 
 
 def test_financials(client):
@@ -102,7 +102,7 @@ def test_financials(client):
 def test_financials_without_seed_data_is_data_not_found(client):
     res = client.get("/api/companies/000660/financials")
     assert res.status_code == 404
-    assert res.json()["code"] == "DATA_NOT_FOUND"
+    assert res.json()["error"]["code"] == "DATA_NOT_FOUND"
 
 
 def test_prices(client):
@@ -124,12 +124,12 @@ def test_prices_one_year_is_weekly(client):
 def test_prices_invalid_period(client):
     res = client.get("/api/companies/005930/prices", params={"period": "5y"})
     assert res.status_code == 422
-    assert res.json()["code"] == "VALIDATION_ERROR"
+    assert res.json()["error"]["code"] == "VALIDATION_ERROR"
 
 
 def test_prices_unknown_company(client):
     res = client.get("/api/companies/999999/prices", params={"period": "1m"})
-    assert res.json()["code"] == "COMPANY_NOT_FOUND"
+    assert res.json()["error"]["code"] == "COMPANY_NOT_FOUND"
 
 
 def test_news(client):
@@ -169,7 +169,7 @@ def test_news_without_seed_data_is_empty_list(client):
 
 def test_news_unknown_company(client):
     res = client.get("/api/companies/999999/news")
-    assert (res.status_code, res.json()["code"]) == (404, "COMPANY_NOT_FOUND")
+    assert (res.status_code, res.json()["error"]["code"]) == (404, "COMPANY_NOT_FOUND")
 
 
 def test_terms(client):
