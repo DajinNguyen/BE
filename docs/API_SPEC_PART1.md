@@ -133,7 +133,7 @@
   "stock_code": "005930",
   "period": "3m",
   "is_sample": true,
-  "points": [{ "date": "2026-01-02", "close": 128500 }]
+  "points": [{ "date": "2026-01-02", "open": 127000, "high": 129500, "low": 126500, "close": 128500 }]
 }
 ```
 

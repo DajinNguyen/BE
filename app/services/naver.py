@@ -1,7 +1,7 @@
 """네이버 금융 시세 연동 (비공식 API).
 
 - 현재가(polling.finance.naver.com): 현재가·등락률·거래대금·시가총액·거래 시각. 여러 종목을 한 번에 받고 1분 캐시한다.
-- 일별·주별 종가(api.stock.naver.com): 주가 흐름 그래프용. 종목·기간별로 1시간 캐시한다.
+- 일별·주별 시가·고가·저가·종가(api.stock.naver.com): 주가 흐름 캔들 그래프용. 종목·기간별로 1시간 캐시한다.
 
 공식 API가 아니라서 예고 없이 바뀌거나 막힐 수 있다. 실패하면 None/빈 dict를 돌려주고,
 호출하는 쪽은 시드 예시 값(is_sample: true)으로 동작한다.
@@ -41,6 +41,15 @@ class Quote:
     traded_at: datetime  # 마지막 체결 시각 (KST)
 
 
+@dataclass(frozen=True)
+class Candle:
+    date: date
+    open: int  # 시가 (원)
+    high: int  # 고가
+    low: int  # 저가
+    close: int  # 종가
+
+
 def _parse_quote(item: dict[str, Any]) -> Quote:
     return Quote(
         stock_code=item["itemCode"],
@@ -56,7 +65,7 @@ class NaverClient:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._quotes: dict[str, tuple[float, Quote]] = {}
-        self._charts: dict[tuple[str, str, date], tuple[float, list[tuple[date, int]]]] = {}
+        self._charts: dict[tuple[str, str, date], tuple[float, list[Candle]]] = {}
         self._retry_at = 0.0
 
     def _get(self, url: str, params: dict[str, str] | None = None) -> Any:
@@ -92,12 +101,10 @@ class NaverClient:
             for q in quotes:
                 self._quotes[q.stock_code] = (fetched_at, q)
 
-    # ------------------------------------------------------------------ 일별·주별 종가
+    # ------------------------------------------------------------------ 일별·주별 캔들
 
-    def closes(
-        self, stock_code: str, start: date, end: date, weekly: bool
-    ) -> list[tuple[date, int]] | None:
-        """(날짜, 종가) 목록. 받지 못하면 마지막으로 받은 값, 그것도 없으면 None."""
+    def candles(self, stock_code: str, start: date, end: date, weekly: bool) -> list[Candle] | None:
+        """일별·주별 캔들 목록. 받지 못하면 마지막으로 받은 값, 그것도 없으면 None."""
         timeframe = "week" if weekly else "day"
         key = (stock_code, timeframe, start)
         hit = self._charts.get(key)
@@ -111,7 +118,13 @@ class NaverClient:
                 {"startDateTime": f"{start:%Y%m%d}0000", "endDateTime": f"{end:%Y%m%d}2359"},
             )
             points = [
-                (datetime.strptime(r["localDate"], "%Y%m%d").date(), round(r["closePrice"]))
+                Candle(
+                    date=datetime.strptime(r["localDate"], "%Y%m%d").date(),
+                    open=round(r["openPrice"]),
+                    high=round(r["highPrice"]),
+                    low=round(r["lowPrice"]),
+                    close=round(r["closePrice"]),
+                )
                 for r in rows
             ]
         except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
@@ -133,6 +146,6 @@ def quotes(stock_codes: list[str]) -> dict[str, Quote]:
     return client.quotes(stock_codes) if client else {}
 
 
-def closes(stock_code: str, start: date, end: date, weekly: bool) -> list[tuple[date, int]] | None:
+def candles(stock_code: str, start: date, end: date, weekly: bool) -> list[Candle] | None:
     client = get_naver()
-    return client.closes(stock_code, start, end, weekly) if client else None
+    return client.candles(stock_code, start, end, weekly) if client else None

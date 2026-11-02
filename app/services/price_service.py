@@ -32,11 +32,14 @@ def get_price_history(stock_code: str, period: Period, today: date | None = None
     weekly = period == "1y"
 
     live_end = today or datetime.now(KST).date()
-    live = naver.closes(
+    live = naver.candles(
         stock_code, live_end - timedelta(days=PERIOD_DAYS[period]), live_end, weekly
     )
     if live:
-        points = [PricePoint(date=d, close=c) for d, c in live]
+        points = [
+            PricePoint(date=c.date, open=c.open, high=c.high, low=c.low, close=c.close)
+            for c in live
+        ]
         return PriceHistory(stock_code=stock_code, period=period, is_sample=False, points=points)
 
     end = today or last_close_date()  # 마지막 값은 직전 장 마감일 종가 (실시간 아님)
@@ -53,5 +56,17 @@ def get_price_history(stock_code: str, period: Period, today: date | None = None
         closes.append(price)
     closes.reverse()
 
-    points = [PricePoint(date=d, close=round(c)) for d, c in zip(days, closes, strict=True)]
+    # 시가는 전날 종가 근처에서, 고가·저가는 시가·종가 바깥으로 조금씩 벌려 만든다.
+    points = []
+    prev = closes[0] / (1 + rng.gauss(0, volatility))
+    for d, close in zip(days, closes, strict=True):
+        open_ = prev * (1 + rng.gauss(0, volatility * 0.3))
+        high = max(open_, close) * (1 + abs(rng.gauss(0, volatility * 0.5)))
+        low = min(open_, close) * (1 - abs(rng.gauss(0, volatility * 0.5)))
+        points.append(
+            PricePoint(
+                date=d, open=round(open_), high=round(high), low=round(low), close=round(close)
+            )
+        )
+        prev = close
     return PriceHistory(stock_code=stock_code, period=period, is_sample=True, points=points)
