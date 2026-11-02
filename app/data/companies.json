@@ -2969,5 +2969,3965 @@
     },
     "one_liner": "강원도에서 리조트와 카지노를 운영하는 회사예요",
     "market_alert": null
+  },
+  {
+    "stock_code": "402340",
+    "corp_code": "01596425",
+    "name": "SK스퀘어",
+    "name_en": "SK Square",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 948000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.69,
+      "is_sample": true
+    },
+    "one_liner": "IT와 반도체 관련 여러 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 124.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sksquare.com"
+  },
+  {
+    "stock_code": "000150",
+    "corp_code": "00117212",
+    "name": "두산",
+    "name_en": "DOOSAN",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 899000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "one_liner": "기계와 에너지 사업을 하는 여러 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 12.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.doosancorp.co.kr"
+  },
+  {
+    "stock_code": "272210",
+    "corp_code": "00339391",
+    "name": "한화시스템",
+    "name_en": "HANWHA SYSTEMS",
+    "sector": "방산",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 65200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 7.77,
+      "is_sample": true
+    },
+    "one_liner": "방위산업과 IT 시스템을 개발하고 공급하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 12.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://hanwhasystems.com"
+  },
+  {
+    "stock_code": "278470",
+    "corp_code": "01190568",
+    "name": "에이피알",
+    "name_en": "APR",
+    "sector": "화장품",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 262500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.57,
+      "is_sample": true
+    },
+    "one_liner": "뷰티 기기와 화장품을 만들어 파는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 9.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://apr-in.com"
+  },
+  {
+    "stock_code": "180640",
+    "corp_code": "00983040",
+    "name": "한진칼",
+    "name_en": "HANJINKAL",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 135700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 9.52,
+      "is_sample": true
+    },
+    "one_liner": "항공과 물류 관련 여러 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 9.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hanjinkal.co.kr"
+  },
+  {
+    "stock_code": "047050",
+    "corp_code": "00124504",
+    "name": "포스코인터내셔널",
+    "name_en": "POSCO INTERNATIONAL",
+    "sector": "건설·상사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 51200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.24,
+      "is_sample": true
+    },
+    "one_liner": "다양한 물품을 무역하고 자원 개발과 사업을 하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 9.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.poscointl.com"
+  },
+  {
+    "stock_code": "005940",
+    "corp_code": "00120182",
+    "name": "NH투자증권",
+    "name_en": "NH INVESTMENT & SECURITIES",
+    "sector": "증권",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 24150,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.42,
+      "is_sample": true
+    },
+    "one_liner": "주식 거래와 다양한 투자 서비스를 제공하는 증권사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 8.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.nhqv.com"
+  },
+  {
+    "stock_code": "064400",
+    "corp_code": "00139834",
+    "name": "LG씨엔에스",
+    "name_en": "LG CNS",
+    "sector": "IT 서비스",
+    "sector_group": "internet",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 79000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 9.42,
+      "is_sample": true
+    },
+    "one_liner": "기업에 필요한 시스템을 만들어 주는 IT 서비스 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 7.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lgcns.com"
+  },
+  {
+    "stock_code": "443060",
+    "corp_code": "01194689",
+    "name": "HD현대마린솔루션",
+    "name_en": "HD Hyundai Marine Solution",
+    "sector": "조선",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 167900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.19,
+      "is_sample": true
+    },
+    "one_liner": "선박을 관리하고 부품을 공급하는 해양 종합 서비스 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 7.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hd-marinesolution.com/"
+  },
+  {
+    "stock_code": "000500",
+    "corp_code": "00104768",
+    "name": "가온전선",
+    "name_en": "GAON CABLE",
+    "sector": "전력 기기",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 240000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.26,
+      "is_sample": true
+    },
+    "one_liner": "다양한 전선과 전력 관련 제품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 7.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.gaoncable.com"
+  },
+  {
+    "stock_code": "277810",
+    "corp_code": "01261644",
+    "name": "레인보우로보틱스",
+    "name_en": "Rainbow Robotics",
+    "sector": "로봇",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 363000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.0,
+      "is_sample": true
+    },
+    "one_liner": "사람처럼 움직이는 로봇과 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 7.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.rainbow-robotics.com"
+  },
+  {
+    "stock_code": "007660",
+    "corp_code": "00107613",
+    "name": "이수페타시스",
+    "name_en": "ISUPETASYS",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 88100,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.63,
+      "is_sample": true
+    },
+    "one_liner": "반도체 회로 기판을 전문으로 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 6.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.petasys.com"
+  },
+  {
+    "stock_code": "353200",
+    "corp_code": "01478712",
+    "name": "대덕전자",
+    "name_en": "DAEDUCK ELECTRONICS",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 115900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -2.93,
+      "is_sample": true
+    },
+    "one_liner": "반도체 성능을 높여주는 인쇄회로기판을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 5.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.daeduck.com"
+  },
+  {
+    "stock_code": "062040",
+    "corp_code": "00366438",
+    "name": "산일전기",
+    "name_en": "SANIL ELECTRIC",
+    "sector": "전력 기기",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 156700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 6.82,
+      "is_sample": true
+    },
+    "one_liner": "변압기와 전력 기기를 만들어 공급하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 4.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sanil.co.kr"
+  },
+  {
+    "stock_code": "175330",
+    "corp_code": "00980122",
+    "name": "JB금융지주",
+    "name_en": "JB FINANCIAL GROUP",
+    "sector": "금융",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 25450,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.74,
+      "is_sample": true
+    },
+    "one_liner": "지방은행을 중심으로 여러 금융회사를 거느린 금융그룹이에요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 4.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.jbfg.com"
+  },
+  {
+    "stock_code": "047040",
+    "corp_code": "00124540",
+    "name": "대우건설",
+    "name_en": "DAEWOO ENGINEERING & CONSTRUCTION",
+    "sector": "건설",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 11550,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.77,
+      "is_sample": true
+    },
+    "one_liner": "아파트와 커다란 건물을 짓는 건설 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 4.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://daewooenc.com"
+  },
+  {
+    "stock_code": "222800",
+    "corp_code": "01095722",
+    "name": "심텍",
+    "name_en": "SIMMTECH",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 120000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.73,
+      "is_sample": true
+    },
+    "one_liner": "메모리 반도체용 기판을 전문으로 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 4.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.simmtech.co.kr"
+  },
+  {
+    "stock_code": "088980",
+    "corp_code": "00435297",
+    "name": "맥쿼리인프라",
+    "name_en": "Macquarie Korea Infrastructure Fund",
+    "sector": "금융",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 9650,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.31,
+      "is_sample": true
+    },
+    "one_liner": "도로와 철도 같은 사회 기반 시설에 투자하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 4.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.macquarie.com/kr/kr/mkif/index.html"
+  },
+  {
+    "stock_code": "000250",
+    "corp_code": "00128546",
+    "name": "삼천당제약",
+    "name_en": "SAM CHUN DANG PHARM",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 183500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.44,
+      "is_sample": true
+    },
+    "one_liner": "다양한 의약품과 안과 관련 약을 만드는 제약회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 4.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.scd.co.kr"
+  },
+  {
+    "stock_code": "138930",
+    "corp_code": "00858364",
+    "name": "BNK금융지주",
+    "name_en": "BNK Financial Group",
+    "sector": "금융",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 13110,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.91,
+      "is_sample": true
+    },
+    "one_liner": "지방은행을 중심으로 여러 금융회사를 거느린 금융그룹이에요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 4.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.bnkfg.com"
+  },
+  {
+    "stock_code": "001440",
+    "corp_code": "00113207",
+    "name": "대한전선",
+    "name_en": "Taihan Cable & Solution",
+    "sector": "전력 기기",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 20500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.59,
+      "is_sample": true
+    },
+    "one_liner": "전기를 나르는 전선과 케이블을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 4.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.taihan.com"
+  },
+  {
+    "stock_code": "031980",
+    "corp_code": "00208444",
+    "name": "피에스케이홀딩스",
+    "name_en": "PSK HOLDINGS",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 182600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.72,
+      "is_sample": true
+    },
+    "one_liner": "반도체 제조에 필요한 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.pskholding.com"
+  },
+  {
+    "stock_code": "267270",
+    "corp_code": "01205842",
+    "name": "HD건설기계",
+    "name_en": "HD Construction Equipment",
+    "sector": "건설 기계",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 80900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.79,
+      "is_sample": true
+    },
+    "one_liner": "굴착기 등 공사에 필요한 건설 기계를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hd-hyundaice.com"
+  },
+  {
+    "stock_code": "108490",
+    "corp_code": "00946030",
+    "name": "로보티즈",
+    "name_en": "ROBOTIS",
+    "sector": "로봇",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 255000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.39,
+      "is_sample": true
+    },
+    "one_liner": "로봇에 들어가는 구동 장치와 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.robotis.com"
+  },
+  {
+    "stock_code": "012750",
+    "corp_code": "00158501",
+    "name": "에스원",
+    "name_en": "S-1 CORPORATION",
+    "sector": "보안 서비스",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 96000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.74,
+      "is_sample": true
+    },
+    "one_liner": "건물 보안과 시스템 경비 서비스를 제공하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.s1.co.kr"
+  },
+  {
+    "stock_code": "454910",
+    "corp_code": "01105153",
+    "name": "두산로보틱스",
+    "name_en": "Doosan Robotics",
+    "sector": "로봇",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 55900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.76,
+      "is_sample": true
+    },
+    "one_liner": "사람과 함께 일하는 협동로봇을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.doosanrobotics.com"
+  },
+  {
+    "stock_code": "066970",
+    "corp_code": "00398701",
+    "name": "엘앤에프",
+    "name_en": "L&F",
+    "sector": "2차전지 소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 84900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.54,
+      "is_sample": true
+    },
+    "one_liner": "배터리에 들어가는 양극재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.landf.co.kr/"
+  },
+  {
+    "stock_code": "002380",
+    "corp_code": "00105271",
+    "name": "KCC",
+    "name_en": "KCC Corporation",
+    "sector": "화학·소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 400000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.7,
+      "is_sample": true
+    },
+    "one_liner": "건축 자재와 실리콘을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kccworld.co.kr"
+  },
+  {
+    "stock_code": "010060",
+    "corp_code": "00148896",
+    "name": "OCI홀딩스",
+    "name_en": "OCI Holdings Company",
+    "sector": "화학·태양광",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 183800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 10.32,
+      "is_sample": true
+    },
+    "one_liner": "태양광 폴리실리콘과 화학 제품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.oci-holdings.co.kr"
+  },
+  {
+    "stock_code": "052690",
+    "corp_code": "00159209",
+    "name": "한전기술",
+    "name_en": "KEPCO Engineering & Construction Company",
+    "sector": "플랜트 건설",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 88900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.01,
+      "is_sample": true
+    },
+    "one_liner": "원자력 발전소와 플랜트를 설계하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kepco-enc.com"
+  },
+  {
+    "stock_code": "001040",
+    "corp_code": "00148540",
+    "name": "CJ",
+    "name_en": "CJ Corp.",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 114600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.24,
+      "is_sample": true
+    },
+    "one_liner": "식품·엔터테인먼트 등 여러 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cj.net"
+  },
+  {
+    "stock_code": "319660",
+    "corp_code": "01365825",
+    "name": "피에스케이",
+    "name_en": "PSK",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 113000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.4,
+      "is_sample": true
+    },
+    "one_liner": "반도체 제조 공정에 쓰이는 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.pskinc.com"
+  },
+  {
+    "stock_code": "028670",
+    "corp_code": "00122737",
+    "name": "팬오션",
+    "name_en": "Pan Ocean",
+    "sector": "해운",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 5850,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.34,
+      "is_sample": true
+    },
+    "one_liner": "배로 화물을 전 세계에 실어 나르는 해운 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.panocean.com"
+  },
+  {
+    "stock_code": "111770",
+    "corp_code": "00776820",
+    "name": "영원무역",
+    "name_en": "Youngone Corporation",
+    "sector": "패션·의류",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 69000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.14,
+      "is_sample": true
+    },
+    "one_liner": "유명 아웃도어 브랜드의 옷을 대신 만들어 주는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://-"
+  },
+  {
+    "stock_code": "031210",
+    "corp_code": "00112998",
+    "name": "서울보증보험",
+    "name_en": "Seoul Guarantee Insurance Company",
+    "sector": "보험",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 42950,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.35,
+      "is_sample": true
+    },
+    "one_liner": "다양한 보증 서비스를 제공하는 보험회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sgic.co.kr"
+  },
+  {
+    "stock_code": "008930",
+    "corp_code": "00161426",
+    "name": "한미사이언스",
+    "name_en": "Hanmi Science",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 43350,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.58,
+      "is_sample": true
+    },
+    "one_liner": "제약·바이오 관련 회사들을 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 3.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hanmiscience.co.kr"
+  },
+  {
+    "stock_code": "022100",
+    "corp_code": "00155212",
+    "name": "포스코DX",
+    "name_en": "POSCO DX COMPANY",
+    "sector": "IT 서비스",
+    "sector_group": "internet",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 19360,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.64,
+      "is_sample": true
+    },
+    "one_liner": "공장 자동화와 물류 시스템을 구축하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.poscodx.com/kor/"
+  },
+  {
+    "stock_code": "192820",
+    "corp_code": "01009789",
+    "name": "코스맥스",
+    "name_en": "COSMAX",
+    "sector": "화장품 제조",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 254000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.83,
+      "is_sample": true
+    },
+    "one_liner": "여러 브랜드의 화장품을 대신 만들어 주는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cosmax.com"
+  },
+  {
+    "stock_code": "026960",
+    "corp_code": "00144395",
+    "name": "동서",
+    "name_en": "DONG SUH COMPANIES",
+    "sector": "식품",
+    "sector_group": "food",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 27950,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.76,
+      "is_sample": true
+    },
+    "one_liner": "커피와 음료, 식품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.dongsuh.com"
+  },
+  {
+    "stock_code": "103590",
+    "corp_code": "00683469",
+    "name": "일진전기",
+    "name_en": "ILJIN ELECTRIC",
+    "sector": "전력 기기",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 56600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 7.4,
+      "is_sample": true
+    },
+    "one_liner": "전선과 전력 기기를 만들고 공급하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://-"
+  },
+  {
+    "stock_code": "017800",
+    "corp_code": "00164724",
+    "name": "현대엘리베이터",
+    "name_en": "HYUNDAI ELEVATOR",
+    "sector": "건설 기계",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 68400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.4,
+      "is_sample": true
+    },
+    "one_liner": "엘리베이터와 에스컬레이터를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hyundaielevator.co.kr"
+  },
+  {
+    "stock_code": "085620",
+    "corp_code": "00112332",
+    "name": "미래에셋생명",
+    "name_en": "MIRAE ASSET Life Insurance CO.",
+    "sector": "보험",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 19890,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.27,
+      "is_sample": true
+    },
+    "one_liner": "생명보험 서비스를 제공하는 금융회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://life.miraeasset.com"
+  },
+  {
+    "stock_code": "082740",
+    "corp_code": "00361008",
+    "name": "한화엔진",
+    "name_en": "Hanwha Engine",
+    "sector": "발전 설비",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 32100,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 9.18,
+      "is_sample": true
+    },
+    "one_liner": "선박에 들어가는 대형 엔진을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hanwha-engine.com"
+  },
+  {
+    "stock_code": "489790",
+    "corp_code": "01867758",
+    "name": "한화비전",
+    "name_en": "Hanwha Vision",
+    "sector": "보안 장비",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 51200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.19,
+      "is_sample": true
+    },
+    "one_liner": "CCTV와 보안 카메라 시스템을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hanwhavision.com"
+  },
+  {
+    "stock_code": "030530",
+    "corp_code": "00216647",
+    "name": "원익홀딩스",
+    "name_en": "WONIK HOLDINGS",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 32450,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 10.0,
+      "is_sample": true
+    },
+    "one_liner": "반도체 장비와 IT 관련 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.wonikholdings.kr"
+  },
+  {
+    "stock_code": "131290",
+    "corp_code": "00372226",
+    "name": "티에스이",
+    "name_en": "TSE CO.",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 222500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.23,
+      "is_sample": true
+    },
+    "one_liner": "반도체와 디스플레이 검사장비와 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.tse21.com"
+  },
+  {
+    "stock_code": "139130",
+    "corp_code": "00878915",
+    "name": "iM금융지주",
+    "name_en": "iM Financial Group",
+    "sector": "금융",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 15500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.71,
+      "is_sample": true
+    },
+    "one_liner": "은행과 증권 등 여러 금융회사를 거느린 금융그룹이에요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.imfngroup.com"
+  },
+  {
+    "stock_code": "004170",
+    "corp_code": "00136378",
+    "name": "신세계",
+    "name_en": "SHINSEGAE",
+    "sector": "유통",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 259500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.92,
+      "is_sample": true
+    },
+    "one_liner": "백화점과 다양한 쇼핑 공간을 운영하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.shinsegae.com"
+  },
+  {
+    "stock_code": "003690",
+    "corp_code": "00113191",
+    "name": "코리안리",
+    "name_en": "Korean Reinsurance Company",
+    "sector": "보험",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 13770,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.36,
+      "is_sample": true
+    },
+    "one_liner": "보험회사가 가입한 보험의 위험을 나누어 맡는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.koreanre.co.kr"
+  },
+  {
+    "stock_code": "018670",
+    "corp_code": "00144164",
+    "name": "SK가스",
+    "name_en": "SK GAS",
+    "sector": "가스",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 261000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.95,
+      "is_sample": true
+    },
+    "one_liner": "액화석유가스를 수입하고 공급하며 전기를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.skgas.co.kr/"
+  },
+  {
+    "stock_code": "383220",
+    "corp_code": "01568413",
+    "name": "F&F",
+    "name_en": "F&F CO.",
+    "sector": "패션·의류",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 62900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.48,
+      "is_sample": true
+    },
+    "one_liner": "여러 패션 브랜드를 기획하고 의류와 신발을 파는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.fnf.co.kr"
+  },
+  {
+    "stock_code": "084370",
+    "corp_code": "00531014",
+    "name": "유진테크",
+    "name_en": "EugeneTechnology",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 104100,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.29,
+      "is_sample": true
+    },
+    "one_liner": "반도체 전공정에 필요한 장비와 소재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.eugenetech.co.kr"
+  },
+  {
+    "stock_code": "007340",
+    "corp_code": "00116949",
+    "name": "DN오토모티브",
+    "name_en": "DN AUTOMOTIVE CORPORATION",
+    "sector": "자동차 부품",
+    "sector_group": "auto",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 40300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.12,
+      "is_sample": true
+    },
+    "one_liner": "자동차용 부품과 공작기계, 배터리를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.dnautomotive.com"
+  },
+  {
+    "stock_code": "014680",
+    "corp_code": "00140955",
+    "name": "한솔케미칼",
+    "name_en": "Hansol Chemical",
+    "sector": "화학·소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 214000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.18,
+      "is_sample": true
+    },
+    "one_liner": "반도체와 제지 등에 쓰이는 정밀화학 소재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hansolchemical.com"
+  },
+  {
+    "stock_code": "214450",
+    "corp_code": "00970453",
+    "name": "파마리서치",
+    "name_en": "PharmaResearch",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 221000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.25,
+      "is_sample": true
+    },
+    "one_liner": "의약품과 의료기기, 화장품을 연구하고 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://pharmaresearch.com/"
+  },
+  {
+    "stock_code": "067310",
+    "corp_code": "00445054",
+    "name": "하나마이크론",
+    "name_en": "HanaMicron",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 34650,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.74,
+      "is_sample": true
+    },
+    "one_liner": "반도체 칩 조립과 검사, 실리콘 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hanamicron.co.kr"
+  },
+  {
+    "stock_code": "440110",
+    "corp_code": "01292291",
+    "name": "파두",
+    "name_en": "FADU",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 45300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.84,
+      "is_sample": true
+    },
+    "one_liner": "데이터센터에 쓰이는 저장장치 컨트롤러를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.fadu.io/"
+  },
+  {
+    "stock_code": "080220",
+    "corp_code": "00447487",
+    "name": "제주반도체",
+    "name_en": "Jeju Semiconductor Corp.",
+    "sector": "반도체",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 65400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.03,
+      "is_sample": true
+    },
+    "one_liner": "모바일 기기에 들어가는 메모리 반도체를 설계하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.jeju-semi.com"
+  },
+  {
+    "stock_code": "005850",
+    "corp_code": "00125521",
+    "name": "에스엘",
+    "name_en": "SL CORPORATION",
+    "sector": "자동차 부품",
+    "sector_group": "auto",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 48350,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.1,
+      "is_sample": true
+    },
+    "one_liner": "자동차용 램프와 전동화 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.slworld.com"
+  },
+  {
+    "stock_code": "000240",
+    "corp_code": "00160047",
+    "name": "한국앤컴퍼니",
+    "name_en": "HANKOOK & COMPANY",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 23400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.52,
+      "is_sample": true
+    },
+    "one_liner": "배터리와 축전지를 만들며 자회사들을 거느린 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.2,
+      "is_sample": true
+    },
+    "homepage_url": "http://www.hankook-technologygroup.com"
+  },
+  {
+    "stock_code": "457190",
+    "corp_code": "01762569",
+    "name": "이수스페셜티케미컬",
+    "name_en": "ISU SPECIALTY CHEMICAL",
+    "sector": "화학·소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 73600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.68,
+      "is_sample": true
+    },
+    "one_liner": "정밀화학 제품과 전고체 배터리 원료를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.isuspecialtychemical.com"
+  },
+  {
+    "stock_code": "004990",
+    "corp_code": "00120562",
+    "name": "롯데지주",
+    "name_en": "Lotte Corporation",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 22300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.48,
+      "is_sample": true
+    },
+    "one_liner": "유통과 화학, 식품 계열사들을 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lotte.co.kr"
+  },
+  {
+    "stock_code": "298380",
+    "corp_code": "01256864",
+    "name": "에이비엘바이오",
+    "name_en": "ABL Bio",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 39600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.02,
+      "is_sample": true
+    },
+    "one_liner": "항체 기반의 혁신 신약을 연구하고 개발하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.ablbio.com"
+  },
+  {
+    "stock_code": "087010",
+    "corp_code": "00415868",
+    "name": "펩트론",
+    "name_en": "Peptron",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 95000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.93,
+      "is_sample": true
+    },
+    "one_liner": "약물이 몸속에서 천천히 나오게 하는 기술을 가진 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.peptron.co.kr"
+  },
+  {
+    "stock_code": "020150",
+    "corp_code": "00113997",
+    "name": "롯데에너지머티리얼즈",
+    "name_en": "LOTTE ENERGY MATERIALS CORPORATION",
+    "sector": "2차전지 소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 42150,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.69,
+      "is_sample": true
+    },
+    "one_liner": "전기차 배터리에 들어가는 동박 등의 소재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lotteenergymaterials.com"
+  },
+  {
+    "stock_code": "064760",
+    "corp_code": "00245472",
+    "name": "티씨케이",
+    "name_en": "TOKAI CARBON KOREA",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 191600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.03,
+      "is_sample": true
+    },
+    "one_liner": "반도체 제조 장비에 쓰이는 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.tck.co.kr"
+  },
+  {
+    "stock_code": "375500",
+    "corp_code": "01524093",
+    "name": "DL이앤씨",
+    "name_en": "DL E&C",
+    "sector": "건설",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 55200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.85,
+      "is_sample": true
+    },
+    "one_liner": "아파트와 빌딩 등 여러 건물을 짓는 건설 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.dlenc.co.kr"
+  },
+  {
+    "stock_code": "010170",
+    "corp_code": "00113261",
+    "name": "대한광통신",
+    "name_en": "TAIHAN Fiberoptics Co.",
+    "sector": "통신",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 13730,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.51,
+      "is_sample": true
+    },
+    "one_liner": "광케이블과 통신용 케이블을 만들어 파는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.taihanfiber.com"
+  },
+  {
+    "stock_code": "226950",
+    "corp_code": "01113718",
+    "name": "올릭스",
+    "name_en": "OliX Pharmaceuticals",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 93300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.74,
+      "is_sample": true
+    },
+    "one_liner": "RNA 기술을 활용해 신약을 개발하는 바이오 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.olixpharma.com"
+  },
+  {
+    "stock_code": "005440",
+    "corp_code": "00105280",
+    "name": "현대지에프홀딩스",
+    "name_en": "HYUNDAI G.F. HOLDINGS",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 11590,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 6.04,
+      "is_sample": true
+    },
+    "one_liner": "현대백화점그룹의 여러 계열사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hyundaigfholdings.co.kr/web/html/ko/CI"
+  },
+  {
+    "stock_code": "095610",
+    "corp_code": "00524421",
+    "name": "테스",
+    "name_en": "TES",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 109800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "one_liner": "반도체 제조 공정에 필요한 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "http://www.hites.co.kr"
+  },
+  {
+    "stock_code": "279570",
+    "corp_code": "01203312",
+    "name": "케이뱅크",
+    "name_en": "Kbank",
+    "sector": "인터넷은행",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 5200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.16,
+      "is_sample": true
+    },
+    "one_liner": "지점 없이 인터넷으로만 서비스를 제공하는 은행이에요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kbanknow.com"
+  },
+  {
+    "stock_code": "004800",
+    "corp_code": "00117188",
+    "name": "효성",
+    "name_en": "HYOSUNG CORPORATION",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 125300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.74,
+      "is_sample": true
+    },
+    "one_liner": "섬유와 화학 등 여러 사업 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hyosung.com"
+  },
+  {
+    "stock_code": "009970",
+    "corp_code": "00140964",
+    "name": "영원무역홀딩스",
+    "name_en": "Youngone Holdings",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 171000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.59,
+      "is_sample": true
+    },
+    "one_liner": "의류 제조와 유통 계열사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://-"
+  },
+  {
+    "stock_code": "450080",
+    "corp_code": "01311408",
+    "name": "에코프로머티",
+    "name_en": "ECOPRO MATERIALS",
+    "sector": "2차전지 소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 28950,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.84,
+      "is_sample": true
+    },
+    "one_liner": "전기차 배터리 핵심 소재인 전구체를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://ecopromaterials.com/"
+  },
+  {
+    "stock_code": "043260",
+    "corp_code": "00317210",
+    "name": "성호전자",
+    "name_en": "SUNGHO ELECTRONICS CORP.",
+    "sector": "전자 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 26800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.29,
+      "is_sample": true
+    },
+    "one_liner": "콘덴서와 전자 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sungho.net"
+  },
+  {
+    "stock_code": "002790",
+    "corp_code": "00154462",
+    "name": "아모레퍼시픽홀딩스",
+    "name_en": "AMOREPACIFIC Holdings Corp.",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 26250,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.35,
+      "is_sample": true
+    },
+    "one_liner": "아모레퍼시픽 등 화장품 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.apgroup.com"
+  },
+  {
+    "stock_code": "098460",
+    "corp_code": "00579999",
+    "name": "고영",
+    "name_en": "KohYoungTechnology",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 29200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.1,
+      "is_sample": true
+    },
+    "one_liner": "반도체 검사 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kohyoung.com"
+  },
+  {
+    "stock_code": "081660",
+    "corp_code": "00195229",
+    "name": "미스토홀딩스",
+    "name_en": "Misto Holdings Corporation",
+    "sector": "패션·의류",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 37500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.13,
+      "is_sample": true
+    },
+    "one_liner": "스포츠 브랜드 휠라(FILA)를 운영하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.mistoholdings.com"
+  },
+  {
+    "stock_code": "001720",
+    "corp_code": "00136721",
+    "name": "신영증권",
+    "name_en": "SHINYOUNG SECURITIES",
+    "sector": "증권",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 120800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.33,
+      "is_sample": true
+    },
+    "one_liner": "주식 거래와 투자 서비스를 제공하는 증권회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.shinyoung.com"
+  },
+  {
+    "stock_code": "336260",
+    "corp_code": "01412725",
+    "name": "두산퓨얼셀",
+    "name_en": "Doosan Fuel Cell",
+    "sector": "발전 설비",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 30200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.32,
+      "is_sample": true
+    },
+    "one_liner": "연료전지를 이용한 발전 설비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.doosanfuelcell.com"
+  },
+  {
+    "stock_code": "009420",
+    "corp_code": "00162586",
+    "name": "한올바이오파마",
+    "name_en": "HANALL BIOPHARMA",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 37550,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.13,
+      "is_sample": true
+    },
+    "one_liner": "다양한 의약품을 연구하고 만드는 제약회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 2.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hanall.co.kr"
+  },
+  {
+    "stock_code": "310210",
+    "corp_code": "01327746",
+    "name": "보로노이",
+    "name_en": "Voronoi",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 103700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -2.26,
+      "is_sample": true
+    },
+    "one_liner": "인공지능을 활용해 신약을 개발하는 바이오 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://voronoi.io"
+  },
+  {
+    "stock_code": "030000",
+    "corp_code": "00148276",
+    "name": "제일기획",
+    "name_en": "Cheil Worldwide",
+    "sector": "광고",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 18810,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.34,
+      "is_sample": true
+    },
+    "one_liner": "광고와 마케팅 서비스를 제공하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cheil.co.kr"
+  },
+  {
+    "stock_code": "319400",
+    "corp_code": "01358463",
+    "name": "현대무벡스",
+    "name_en": "HYUNDAI MOVEX",
+    "sector": "물류",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 17020,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.15,
+      "is_sample": true
+    },
+    "one_liner": "물류 자동화 설비와 시스템을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hyundaimovex.com/"
+  },
+  {
+    "stock_code": "347850",
+    "corp_code": "01376715",
+    "name": "디앤디파마텍",
+    "name_en": "D&D Pharmatech",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 41150,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.73,
+      "is_sample": true
+    },
+    "one_liner": "난치병 치료를 위한 혁신 신약을 개발하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.ddpharmatech.com"
+  },
+  {
+    "stock_code": "007070",
+    "corp_code": "00140177",
+    "name": "GS리테일",
+    "name_en": "GS Retail",
+    "sector": "편의점",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 22600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.0,
+      "is_sample": true
+    },
+    "one_liner": "편의점과 슈퍼마켓 체인을 운영하는 유통회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.gsretail.com"
+  },
+  {
+    "stock_code": "058610",
+    "corp_code": "00220686",
+    "name": "에스피지",
+    "name_en": "SPG",
+    "sector": "전력 기기",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 84900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.91,
+      "is_sample": true
+    },
+    "one_liner": "정밀 모터와 감속기를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.spg.co.kr"
+  },
+  {
+    "stock_code": "051600",
+    "corp_code": "00159218",
+    "name": "한전KPS",
+    "name_en": "KEPCO Plant Service & Engineering",
+    "sector": "발전 설비",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 41500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.85,
+      "is_sample": true
+    },
+    "one_liner": "발전 설비를 정비하고 유지 보수하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kps.co.kr"
+  },
+  {
+    "stock_code": "483650",
+    "corp_code": "01649204",
+    "name": "달바글로벌",
+    "name_en": "d'Alba Global",
+    "sector": "화장품",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 147700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.5,
+      "is_sample": true
+    },
+    "one_liner": "미스트와 기초 화장품을 만들어 파는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://dalbaglobal.com"
+  },
+  {
+    "stock_code": "089860",
+    "corp_code": "00545716",
+    "name": "롯데렌탈",
+    "name_en": "LOTTE rental co., ltd.",
+    "sector": "렌탈",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 50800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -3.42,
+      "is_sample": true
+    },
+    "one_liner": "자동차와 생활용품을 빌려주는 렌탈 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lotterental.com/"
+  },
+  {
+    "stock_code": "257720",
+    "corp_code": "00982023",
+    "name": "실리콘투",
+    "name_en": "SILICON 2",
+    "sector": "화장품",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 28000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.54,
+      "is_sample": true
+    },
+    "one_liner": "한국 화장품을 해외에 온라인으로 유통하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.siliconii.com"
+  },
+  {
+    "stock_code": "178320",
+    "corp_code": "00838005",
+    "name": "서진시스템",
+    "name_en": "SEOJIN SYSTEM",
+    "sector": "전자 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 28650,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.88,
+      "is_sample": true
+    },
+    "one_liner": "통신장비와 반도체 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://seojinsystem.net"
+  },
+  {
+    "stock_code": "462870",
+    "corp_code": "01384787",
+    "name": "시프트업",
+    "name_en": "SHIFT UP Corporation.",
+    "sector": "게임",
+    "sector_group": "internet",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 29700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.85,
+      "is_sample": true
+    },
+    "one_liner": "즐거운 모바일 게임을 개발하고 서비스하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://shiftup.co.kr"
+  },
+  {
+    "stock_code": "007810",
+    "corp_code": "00152686",
+    "name": "코리아써키트",
+    "name_en": "KOREA CIRCUIT",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 72500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 7.73,
+      "is_sample": true
+    },
+    "one_liner": "전자기기에 들어가는 인쇄회로기판을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kcg.co.kr"
+  },
+  {
+    "stock_code": "131970",
+    "corp_code": "00563545",
+    "name": "두산테스나",
+    "name_en": "DOOSAN TESNA",
+    "sector": "반도체 위탁생산",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 89900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.22,
+      "is_sample": true
+    },
+    "one_liner": "반도체 테스트를 대신 해주는 서비스 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.tesna.co.kr"
+  },
+  {
+    "stock_code": "112610",
+    "corp_code": "00670340",
+    "name": "씨에스윈드",
+    "name_en": "CS Wind Corporation",
+    "sector": "풍력 설비",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 41050,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 7.18,
+      "is_sample": true
+    },
+    "one_liner": "풍력 발전기에 들어가는 타워를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cswind.com"
+  },
+  {
+    "stock_code": "214150",
+    "corp_code": "01061327",
+    "name": "클래시스",
+    "name_en": "CLASSYS",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 26350,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.57,
+      "is_sample": true
+    },
+    "one_liner": "피부 미용 의료기기와 화장품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://classys.co.kr"
+  },
+  {
+    "stock_code": "281820",
+    "corp_code": "01261893",
+    "name": "케이씨텍",
+    "name_en": "KCTECH",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 86900,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.69,
+      "is_sample": true
+    },
+    "one_liner": "반도체 제조에 필요한 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kctech.co.kr"
+  },
+  {
+    "stock_code": "069960",
+    "corp_code": "00428251",
+    "name": "현대백화점",
+    "name_en": "HYUNDAI DEPARTMENT STORE",
+    "sector": "유통",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 78500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.8,
+      "is_sample": true
+    },
+    "one_liner": "백화점과 쇼핑몰을 운영하는 유통회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.7,
+      "is_sample": true
+    },
+    "homepage_url": "https://home.e-hyundai.com"
+  },
+  {
+    "stock_code": "068760",
+    "corp_code": "00541349",
+    "name": "셀트리온제약",
+    "name_en": "Celltrion Pharm",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 37050,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.09,
+      "is_sample": true
+    },
+    "one_liner": "다양한 의약품을 연구하고 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.celltrionph.com"
+  },
+  {
+    "stock_code": "103140",
+    "corp_code": "00684714",
+    "name": "풍산",
+    "name_en": "POONGSAN CORPORATION",
+    "sector": "비철금속",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 58700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.09,
+      "is_sample": true
+    },
+    "one_liner": "구리와 다양한 금속 제품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.poongsan.co.kr"
+  },
+  {
+    "stock_code": "294870",
+    "corp_code": "01310269",
+    "name": "IPARK현대산업개발",
+    "name_en": "IPARK HYUNDAI DEVELOPMENT COMPANY",
+    "sector": "건설",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 24950,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.31,
+      "is_sample": true
+    },
+    "one_liner": "아파트와 여러 건물을 짓는 건설 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.ipark-dvp.com"
+  },
+  {
+    "stock_code": "140860",
+    "corp_code": "00244747",
+    "name": "파크시스템스",
+    "name_en": "Park Systems Corp.",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 232000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.69,
+      "is_sample": true
+    },
+    "one_liner": "반도체 공정에 필요한 측정 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.parkafm.co.kr"
+  },
+  {
+    "stock_code": "140410",
+    "corp_code": "00808022",
+    "name": "메지온",
+    "name_en": "Mezzion Pharma",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 51400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.39,
+      "is_sample": true
+    },
+    "one_liner": "새로운 의약품을 연구하고 개발하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://-"
+  },
+  {
+    "stock_code": "001120",
+    "corp_code": "00120076",
+    "name": "LX인터내셔널",
+    "name_en": "LX INTERNATIONAL CORP.",
+    "sector": "건설·상사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 40650,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.87,
+      "is_sample": true
+    },
+    "one_liner": "여러 가지 상품을 무역하고 자원을 개발하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lxinternational.com"
+  },
+  {
+    "stock_code": "032820",
+    "corp_code": "00231044",
+    "name": "우리기술",
+    "name_en": "Woori Technology, Incorporation",
+    "sector": "발전 설비",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 9020,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.27,
+      "is_sample": true
+    },
+    "one_liner": "원자력 발전소 등에 필요한 설비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.wooritg.com"
+  },
+  {
+    "stock_code": "020560",
+    "corp_code": "00138792",
+    "name": "아시아나항공",
+    "name_en": "Asiana Airlines",
+    "sector": "항공",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 7550,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 6.64,
+      "is_sample": true
+    },
+    "one_liner": "비행기로 사람과 물건을 실어 나르는 항공사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.6,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.flyasiana.com"
+  },
+  {
+    "stock_code": "323280",
+    "corp_code": "01366000",
+    "name": "태성",
+    "name_en": "TAESUNG",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 50600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "one_liner": "반도체 기판을 만드는 데 쓰는 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.taesung2000.com"
+  },
+  {
+    "stock_code": "181710",
+    "corp_code": "00983271",
+    "name": "NHN",
+    "name_en": "NHN Corporation",
+    "sector": "인터넷 서비스",
+    "sector_group": "internet",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 47500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.93,
+      "is_sample": true
+    },
+    "one_liner": "게임과 간편결제 같은 인터넷 서비스를 제공하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.nhn.com"
+  },
+  {
+    "stock_code": "006040",
+    "corp_code": "00118026",
+    "name": "동원산업",
+    "name_en": "DONGWON INDUSTRIES",
+    "sector": "식품",
+    "sector_group": "food",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 34650,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.43,
+      "is_sample": true
+    },
+    "one_liner": "참치를 잡고 다양한 식품을 만들고 파는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.dongwon.com"
+  },
+  {
+    "stock_code": "096530",
+    "corp_code": "00788773",
+    "name": "씨젠",
+    "name_en": "SEEGENE",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 32550,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -2.11,
+      "is_sample": true
+    },
+    "one_liner": "질병을 진단하는 시약과 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.seegene.co.kr"
+  },
+  {
+    "stock_code": "237690",
+    "corp_code": "00871833",
+    "name": "에스티팜",
+    "name_en": "ST PHARM",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 72400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.14,
+      "is_sample": true
+    },
+    "one_liner": "의약품의 원료를 연구하고 대신 만들어 주는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.stpharm.co.kr"
+  },
+  {
+    "stock_code": "229640",
+    "corp_code": "01093007",
+    "name": "LS에코에너지",
+    "name_en": "LS Eco Energy",
+    "sector": "화학·소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 48850,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.2,
+      "is_sample": true
+    },
+    "one_liner": "전력 케이블과 통신 케이블 소재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lsecoenergy.com"
+  },
+  {
+    "stock_code": "395400",
+    "corp_code": "01535150",
+    "name": "SK리츠",
+    "name_en": "SK REIT",
+    "sector": "금융",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 4920,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -6.29,
+      "is_sample": true
+    },
+    "one_liner": "부동산에 투자하고 임대 수익을 나누어 주는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://skreit.co.kr"
+  },
+  {
+    "stock_code": "214370",
+    "corp_code": "00549891",
+    "name": "케어젠",
+    "name_en": "CAREGEN",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 27300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -17.65,
+      "is_sample": true
+    },
+    "one_liner": "바이오 기술로 화장품과 건강기능식품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.5,
+      "is_sample": true
+    },
+    "homepage_url": "https://caregen.co.kr"
+  },
+  {
+    "stock_code": "078600",
+    "corp_code": "00177816",
+    "name": "대주전자재료",
+    "name_en": "DaejooElectronicMaterials",
+    "sector": "2차전지 소재",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 91400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.24,
+      "is_sample": true
+    },
+    "one_liner": "배터리에 들어가는 핵심 소재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.daejoo.co.kr"
+  },
+  {
+    "stock_code": "007390",
+    "corp_code": "00117276",
+    "name": "네이처셀",
+    "name_en": "NATURECELL",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 22050,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.15,
+      "is_sample": true
+    },
+    "one_liner": "줄기세포를 활용한 의약품을 연구하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.naturecell.co.kr"
+  },
+  {
+    "stock_code": "001800",
+    "corp_code": "00117577",
+    "name": "오리온홀딩스",
+    "name_en": "ORION Holdings Corp.",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 23600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.16,
+      "is_sample": true
+    },
+    "one_liner": "여러 식품과 사업 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.oriongroup.co.kr"
+  },
+  {
+    "stock_code": "071970",
+    "corp_code": "00406046",
+    "name": "HD현대마린엔진",
+    "name_en": "HD-Hyundai Marine Engine",
+    "sector": "조선",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 41150,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 15.75,
+      "is_sample": true
+    },
+    "one_liner": "배에 들어가는 엔진과 기계를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hd-marineengine.com"
+  },
+  {
+    "stock_code": "439260",
+    "corp_code": "00182696",
+    "name": "대한조선",
+    "name_en": "DAEHAN SHIPBUILDING",
+    "sector": "조선",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 36250,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.32,
+      "is_sample": true
+    },
+    "one_liner": "원유운반선과 컨테이너선 같은 다양한 배를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.daehanship.com"
+  },
+  {
+    "stock_code": "218410",
+    "corp_code": "01078178",
+    "name": "RFHIC",
+    "name_en": "RFHIC CORPORATION",
+    "sector": "전자 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 51800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.65,
+      "is_sample": true
+    },
+    "one_liner": "통신 장비에 들어가는 반도체 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.rfhic.com"
+  },
+  {
+    "stock_code": "023590",
+    "corp_code": "00176914",
+    "name": "다우기술",
+    "name_en": "DAOU TECHNOLOGY",
+    "sector": "인터넷 서비스",
+    "sector_group": "internet",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 31800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.4,
+      "is_sample": true
+    },
+    "one_liner": "소프트웨어 솔루션과 다양한 인터넷 서비스를 제공하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.daou.co.kr"
+  },
+  {
+    "stock_code": "089030",
+    "corp_code": "00535676",
+    "name": "테크윙",
+    "name_en": "Techwing",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 36750,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.94,
+      "is_sample": true
+    },
+    "one_liner": "반도체 칩의 불량 여부를 검사하는 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://techwing.co.kr"
+  },
+  {
+    "stock_code": "060370",
+    "corp_code": "00225742",
+    "name": "LS마린솔루션",
+    "name_en": "LS Marine Solution",
+    "sector": "물류",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 26050,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.76,
+      "is_sample": true
+    },
+    "one_liner": "바다 아래 전력과 통신 케이블을 설치하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://lsmarinesolution.co.kr"
+  },
+  {
+    "stock_code": "039200",
+    "corp_code": "00263654",
+    "name": "오스코텍",
+    "name_en": "OSCOTEC",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 35400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -2.88,
+      "is_sample": true
+    },
+    "one_liner": "새로운 의약품을 연구하고 개발하는 바이오 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.4,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.oscotec.com"
+  },
+  {
+    "stock_code": "437730",
+    "corp_code": "00262266",
+    "name": "삼현",
+    "name_en": "SAMHYUN",
+    "sector": "자동차 부품",
+    "sector_group": "auto",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 42150,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.96,
+      "is_sample": true
+    },
+    "one_liner": "자동차에 들어가는 구동 장치와 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.samhyun.co.kr"
+  },
+  {
+    "stock_code": "003380",
+    "corp_code": "00148364",
+    "name": "하림지주",
+    "name_en": "Harim Holdings",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 11940,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.01,
+      "is_sample": true
+    },
+    "one_liner": "하림그룹의 여러 식품 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.harimholdings.co.kr"
+  },
+  {
+    "stock_code": "083650",
+    "corp_code": "00409788",
+    "name": "비에이치아이",
+    "name_en": "BHI Co.",
+    "sector": "발전 설비",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 42800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.88,
+      "is_sample": true
+    },
+    "one_liner": "발전소에 들어가는 보일러와 설비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.bhi.co.kr"
+  },
+  {
+    "stock_code": "036540",
+    "corp_code": "00301246",
+    "name": "SFA반도체",
+    "name_en": "SFA Semicon",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 8020,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.99,
+      "is_sample": true
+    },
+    "one_liner": "반도체 칩을 만들고 테스트하는 반도체 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sfasemicon.com"
+  },
+  {
+    "stock_code": "012630",
+    "corp_code": "00164636",
+    "name": "HDC",
+    "name_en": "HDC HOLDINGS CO.",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 21550,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.36,
+      "is_sample": true
+    },
+    "one_liner": "건설과 개발 사업을 하는 여러 회사를 거느린 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hdc-holdings.com"
+  },
+  {
+    "stock_code": "053800",
+    "corp_code": "00298270",
+    "name": "안랩",
+    "name_en": "AHNLAB",
+    "sector": "IT 서비스",
+    "sector_group": "internet",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 115300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -2.37,
+      "is_sample": true
+    },
+    "one_liner": "컴퓨터 바이러스 백신과 보안 프로그램을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.ahnlab.com"
+  },
+  {
+    "stock_code": "475150",
+    "corp_code": "01817081",
+    "name": "SK이터닉스",
+    "name_en": "SK eternix",
+    "sector": "전력",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 37650,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.87,
+      "is_sample": true
+    },
+    "one_liner": "태양광과 풍력 같은 친환경 에너지를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sketernix.com"
+  },
+  {
+    "stock_code": "005070",
+    "corp_code": "00129989",
+    "name": "코스모신소재",
+    "name_en": "COSMO ADVANCED MATERIALS & TECHNOLOGY",
+    "sector": "2차전지 소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 38350,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.54,
+      "is_sample": true
+    },
+    "one_liner": "배터리에 들어가는 중요한 소재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cosmoamt.com"
+  },
+  {
+    "stock_code": "361610",
+    "corp_code": "01386916",
+    "name": "SK아이이테크놀로지",
+    "name_en": "SK ie technology",
+    "sector": "2차전지 소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 14960,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.07,
+      "is_sample": true
+    },
+    "one_liner": "배터리 성능을 높여주는 분리막을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.skietechnology.com/"
+  },
+  {
+    "stock_code": "415640",
+    "corp_code": "01880801",
+    "name": "KB발해인프라",
+    "name_en": "KB Balhae Infrastructure Fund",
+    "sector": "금융",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 9970,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.7,
+      "is_sample": true
+    },
+    "one_liner": "국내 여러 도로나 터널 같은 인프라에 투자하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": ""
+  },
+  {
+    "stock_code": "120110",
+    "corp_code": "00795135",
+    "name": "코오롱인더",
+    "name_en": "KOLON INDUSTRIES",
+    "sector": "화학·소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 40350,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.59,
+      "is_sample": true
+    },
+    "one_liner": "첨단 화학 제품과 산업용 소재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kolonindustries.com/"
+  },
+  {
+    "stock_code": "298020",
+    "corp_code": "01316227",
+    "name": "효성티앤씨",
+    "name_en": "Hyosung TNC Corporation",
+    "sector": "화학·소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 276500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.56,
+      "is_sample": true
+    },
+    "one_liner": "스판덱스 같은 섬유 원료와 화학 소재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hyosungtnc.com"
+  },
+  {
+    "stock_code": "300720",
+    "corp_code": "01319808",
+    "name": "한일시멘트",
+    "name_en": "HANILCEMENT",
+    "sector": "시멘트·건자재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 16240,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.63,
+      "is_sample": true
+    },
+    "one_liner": "건축에 쓰이는 시멘트를 튼튼하게 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hanilcement.com"
+  },
+  {
+    "stock_code": "950160",
+    "corp_code": "01245062",
+    "name": "코오롱티슈진",
+    "name_en": "Kolon TissueGene",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 13980,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.43,
+      "is_sample": true
+    },
+    "one_liner": "관절염 치료를 위한 바이오 의약품을 연구하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://tissuegene.com"
+  },
+  {
+    "stock_code": "183300",
+    "corp_code": "00997812",
+    "name": "코미코",
+    "name_en": "KoMi",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 23050,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.54,
+      "is_sample": true
+    },
+    "one_liner": "반도체 제조 장비와 세정 서비스를 제공하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.komico.com"
+  },
+  {
+    "stock_code": "069620",
+    "corp_code": "00427483",
+    "name": "대웅제약",
+    "name_en": "DAEWOONG PHARMA",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 102000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.89,
+      "is_sample": true
+    },
+    "one_liner": "다양한 질병 치료용 의약품을 만들고 파는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.daewoong.co.kr"
+  },
+  {
+    "stock_code": "001740",
+    "corp_code": "00131780",
+    "name": "SK네트웍스",
+    "name_en": "SKNetworksCompanyLimited",
+    "sector": "유통",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 5810,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.01,
+      "is_sample": true
+    },
+    "one_liner": "무역과 자동차 렌탈 등 다양한 사업을 하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sknetworks.co.kr"
+  },
+  {
+    "stock_code": "328130",
+    "corp_code": "01397620",
+    "name": "루닛",
+    "name_en": "Lunit",
+    "sector": "IT 서비스",
+    "sector_group": "internet",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 15580,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.7,
+      "is_sample": true
+    },
+    "one_liner": "인공지능으로 암을 진단하는 프로그램을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lunit.io"
+  },
+  {
+    "stock_code": "192080",
+    "corp_code": "01010110",
+    "name": "더블유게임즈",
+    "name_en": "DoubleUGames",
+    "sector": "게임",
+    "sector_group": "internet",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 54600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.55,
+      "is_sample": true
+    },
+    "one_liner": "소셜 카지노와 다양한 모바일 게임을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.2,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.doubleugames.com"
+  },
+  {
+    "stock_code": "003160",
+    "corp_code": "00118275",
+    "name": "디아이",
+    "name_en": "DI CORPORATION",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 40800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.62,
+      "is_sample": true
+    },
+    "one_liner": "반도체 검사 장비를 만들어 공급하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.di.co.kr"
+  },
+  {
+    "stock_code": "330590",
+    "corp_code": "01363818",
+    "name": "롯데리츠",
+    "name_en": "LOTTE REIT",
+    "sector": "금융",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 3955,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -4.58,
+      "is_sample": true
+    },
+    "one_liner": "상업용 건물에 투자하고 수익을 나누어 주는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lottereit.co.kr/"
+  },
+  {
+    "stock_code": "420770",
+    "corp_code": "00765569",
+    "name": "기가비스",
+    "name_en": "GigaVis",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 90200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -3.01,
+      "is_sample": true
+    },
+    "one_liner": "반도체 기판을 검사하고 수리하는 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.gigavis.com"
+  },
+  {
+    "stock_code": "089970",
+    "corp_code": "00544577",
+    "name": "브이엠",
+    "name_en": "VM",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 41800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.95,
+      "is_sample": true
+    },
+    "one_liner": "반도체 제조 공정에 쓰이는 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.vmsemi.com"
+  },
+  {
+    "stock_code": "082920",
+    "corp_code": "00154718",
+    "name": "비츠로셀",
+    "name_en": "VITZROCELL",
+    "sector": "전지",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 24500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.08,
+      "is_sample": true
+    },
+    "one_liner": "특수 목적에 쓰이는 고성능 전지를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.vitzrocell.com"
+  },
+  {
+    "stock_code": "097230",
+    "corp_code": "00633835",
+    "name": "HJ중공업",
+    "name_en": "HJ SHIPBUILDING & CONSTRUCTION",
+    "sector": "조선",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 12190,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.64,
+      "is_sample": true
+    },
+    "one_liner": "배를 만들고 건물을 짓는 중공업 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hjsc.co.kr"
+  },
+  {
+    "stock_code": "491000",
+    "corp_code": "01385005",
+    "name": "리브스메드",
+    "name_en": "LivsMed",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 42950,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 9.01,
+      "is_sample": true
+    },
+    "one_liner": "수술용 의료기기와 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.livsmed.com"
+  },
+  {
+    "stock_code": "001430",
+    "corp_code": "00106669",
+    "name": "세아베스틸지주",
+    "name_en": "SeAH Besteel Holdings Corporation",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 30100,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.99,
+      "is_sample": true
+    },
+    "one_liner": "특수강과 철강 제품을 만드는 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.seahbesteel.co.kr"
+  },
+  {
+    "stock_code": "003530",
+    "corp_code": "00148610",
+    "name": "한화투자증권",
+    "name_en": "HANWHA INVESTMENT&SECURITIES",
+    "sector": "증권",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 4075,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.24,
+      "is_sample": true
+    },
+    "one_liner": "주식 거래와 다양한 투자 서비스를 제공하는 증권사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.koreastock.co.kr"
+  },
+  {
+    "stock_code": "001820",
+    "corp_code": "00129350",
+    "name": "삼화콘덴서",
+    "name_en": "SAMWHA CAPACITOR",
+    "sector": "전자 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 103800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.48,
+      "is_sample": true
+    },
+    "one_liner": "전자기기에 들어가는 콘덴서 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.samwha.com"
+  },
+  {
+    "stock_code": "006120",
+    "corp_code": "00131832",
+    "name": "SK디스커버리",
+    "name_en": "SK Discovery",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 61800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.83,
+      "is_sample": true
+    },
+    "one_liner": "제약과 화학 관련 여러 회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.skdiscovery.com"
+  },
+  {
+    "stock_code": "086450",
+    "corp_code": "00114808",
+    "name": "동국제약",
+    "name_en": "DongKookPharmaceutical",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 23650,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.85,
+      "is_sample": true
+    },
+    "one_liner": "다양한 의약품과 건강 관련 제품을 만드는 제약회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.dkpharm.co.kr"
+  },
+  {
+    "stock_code": "093370",
+    "corp_code": "00595191",
+    "name": "후성",
+    "name_en": "FOOSUNG",
+    "sector": "화학",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 9990,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.2,
+      "is_sample": true
+    },
+    "one_liner": "냉매가스와 반도체용 특수가스를 만드는 화학 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.foosungchem.com"
+  },
+  {
+    "stock_code": "950260",
+    "corp_code": "02031369",
+    "name": "인제니아테라퓨틱스",
+    "name_en": "INGENIA Therapeutics",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 21300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -4.7,
+      "is_sample": true
+    },
+    "one_liner": "새로운 의약품을 연구하고 개발하는 바이오 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.1,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.ingeniatx.com"
+  },
+  {
+    "stock_code": "232140",
+    "corp_code": "01109539",
+    "name": "와이씨",
+    "name_en": "YC Corporation",
+    "sector": "반도체 장비",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 12780,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.62,
+      "is_sample": true
+    },
+    "one_liner": "반도체 칩을 검사하고 테스트하는 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://yikcorp.com"
+  },
+  {
+    "stock_code": "003540",
+    "corp_code": "00110893",
+    "name": "대신증권",
+    "name_en": "DAISHIN SECURITIES",
+    "sector": "증권",
+    "sector_group": "finance",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 22700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.22,
+      "is_sample": true
+    },
+    "one_liner": "주식 투자와 자산 관리 서비스를 제공하는 증권사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.daishin.com"
+  },
+  {
+    "stock_code": "241710",
+    "corp_code": "00763473",
+    "name": "코스메카코리아",
+    "name_en": "COSMECCA KOREA",
+    "sector": "화장품 제조",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 96600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.11,
+      "is_sample": true
+    },
+    "one_liner": "화장품을 대신 개발하고 만들어 주는 제조 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cosmecca.com"
+  },
+  {
+    "stock_code": "347700",
+    "corp_code": "01336762",
+    "name": "스피어",
+    "name_en": "Sphere Corp.",
+    "sector": "소재 유통",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 20050,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.37,
+      "is_sample": true
+    },
+    "one_liner": "우주산업에 쓰이는 특수합금을 구해서 공급하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://spherecorp.kr/"
+  },
+  {
+    "stock_code": "425420",
+    "corp_code": "01035368",
+    "name": "티에프이",
+    "name_en": "TFE",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 81700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -7.47,
+      "is_sample": true
+    },
+    "one_liner": "반도체 테스트에 필요한 소켓과 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.tfe.co.kr"
+  },
+  {
+    "stock_code": "030190",
+    "corp_code": "00158325",
+    "name": "NICE평가정보",
+    "name_en": "NICE Information Service",
+    "sector": "인터넷 서비스",
+    "sector_group": "internet",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 17260,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.69,
+      "is_sample": true
+    },
+    "one_liner": "개인의 신용 정보와 기업 평가 정보를 제공하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.niceinfo.co.kr"
   }
 ]
