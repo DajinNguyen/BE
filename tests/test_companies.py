@@ -133,15 +133,43 @@ def test_prices_unknown_company(client):
 
 
 def test_news(client):
-    news = client.get("/api/companies/005930/news").json()
-    assert any(not n["is_placeholder"] and n["url"] for n in news)
-    assert all(n["url"] is None for n in news if n["is_placeholder"])
+    page = client.get("/api/companies/005930/news").json()
+    assert (page["page"], page["size"], page["has_next"]) == (1, 10, False)
+    items = page["items"]
+    assert len(items) == 2  # 원문 링크가 없는 예시 자리는 보내지 않는다
+    first = items[0]
+    assert set(first) == {
+        "id",
+        "title",
+        "press",
+        "published_at",
+        "url",
+        "summary_short",
+        "summary_long",
+        "company_stock_code",
+        "related_metric",
+    }
+    assert first["url"] and first["press"] == "삼성전자 뉴스룸"
+    assert first["company_stock_code"] == "005930"
+    assert first["related_metric"] == {"label": "2025년 매출", "value": "333.6조 원"}
+
+
+def test_news_paging(client):
+    page = client.get("/api/companies/005930/news", params={"size": 1}).json()
+    assert (len(page["items"]), page["has_next"]) == (1, True)
+    page2 = client.get("/api/companies/005930/news", params={"size": 1, "page": 2}).json()
+    assert (len(page2["items"]), page2["has_next"]) == (1, False)
 
 
 def test_news_without_seed_data_is_empty_list(client):
     res = client.get("/api/companies/000660/news")
     assert res.status_code == 200
-    assert res.json() == []
+    assert res.json() == {"items": [], "page": 1, "size": 10, "has_next": False}
+
+
+def test_news_unknown_company(client):
+    res = client.get("/api/companies/999999/news")
+    assert (res.status_code, res.json()["code"]) == (404, "COMPANY_NOT_FOUND")
 
 
 def test_terms(client):

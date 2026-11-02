@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from app.schemas.news import NewsArticle
 
 ReportStatus = Literal["none", "generating", "done", "failed"]
 KeyPointCategory = Literal["performance", "revenue_source", "recent_change", "risk", "strength"]
@@ -99,14 +101,6 @@ class FinancialsEvidence(BaseModel):
     base_date: str | None = None
 
 
-class NewsEvidence(BaseModel):
-    title: str
-    press: str
-    published_at: str
-    summary: str
-    url: str
-
-
 class RevenueMixItem(BaseModel):
     name: str
     amount: float
@@ -123,7 +117,7 @@ class VisionEvidence(BaseModel):
 
 class Evidence(BaseModel):
     financials: FinancialsEvidence | None = None
-    news: list[NewsEvidence] = []
+    news: list[NewsArticle] = []  # 뉴스 탭과 같은 형식
     vision: VisionEvidence | None = None
 
 
@@ -148,3 +142,31 @@ class CompanyReport(BaseModel):
     sources: list[str] = []
     failure_reason: str | None = None
     data_as_of: ReportDataAsOf | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _news_from_old_format(cls, data: Any) -> Any:
+        """예전에 저장한 리포트의 근거 뉴스({title, press, published_at, summary, url})를
+        뉴스 탭과 같은 형식으로 바꿔 읽는다."""
+        if not isinstance(data, dict) or not isinstance(data.get("evidence"), dict):
+            return data
+        news = data["evidence"].get("news")
+        if not isinstance(news, list):
+            return data
+        converted = [
+            (
+                {
+                    "id": n.get("title", ""),  # 원문 주소가 같은 기사가 있어서 제목으로
+                    "title": n.get("title", ""),
+                    "press": n.get("press", ""),
+                    "published_at": n.get("published_at", ""),
+                    "url": n.get("url", ""),
+                    "summary_short": n.get("summary", ""),
+                    "company_stock_code": data.get("stock_code"),
+                }
+                if isinstance(n, dict) and "summary_short" not in n
+                else n
+            )
+            for n in news
+        ]
+        return {**data, "evidence": {**data["evidence"], "news": converted}}

@@ -85,6 +85,7 @@ def test_evidence_numbers_come_from_data(client):
     assert len(evidence["news"]) == 2
     assert all(n["url"] for n in evidence["news"])
     assert evidence["news"][0]["press"] == "삼성전자 뉴스룸"
+    assert evidence["news"][0]["summary_short"]  # 뉴스 탭과 같은 형식
 
     vision = evidence["vision"]
     assert vision["summary"] == "스마트폰부터 반도체까지 만드는 회사예요."
@@ -200,3 +201,32 @@ def test_report_saved_with_old_evidence_format_still_reads(client):
         {"type": "financials", "label": "재무제표", "date": None}
     ]
     assert report["data_as_of"] is None
+
+
+def test_report_saved_with_old_news_format_still_reads(client):
+    """근거 뉴스가 예전 형식({press, summary})으로 저장된 리포트도 새 형식으로 읽는다 (홈 화면 포함)."""
+    client.post("/api/companies/005930/report")
+    with new_session() as session:
+        record = session.get(ReportRecord, "005930")
+        content = dict(record.content)
+        content["evidence"] = {
+            **content["evidence"],
+            "news": [
+                {
+                    "title": n["title"],
+                    "press": n["press"],
+                    "published_at": n["published_at"],
+                    "summary": n["summary_short"],
+                    "url": n["url"],
+                }
+                for n in content["evidence"]["news"]
+            ],
+        }
+        record.content = content
+        session.add(record)
+        session.commit()
+
+    news = client.get("/api/companies/005930/report").json()["evidence"]["news"]
+    assert news[0]["summary_short"] and news[0]["id"]
+    assert news[0]["company_stock_code"] == "005930"
+    assert client.get("/api/home").status_code == 200

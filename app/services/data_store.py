@@ -17,7 +17,7 @@ from app.schemas.common import SampleValue
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.crossword import CrosswordPuzzle, CrosswordSummary
 from app.schemas.financials import Financials, Segments
-from app.schemas.news import NewsItem
+from app.schemas.news import NewsArticle, NewsItem, NewsPage
 from app.schemas.term import Term
 from app.services import dart, dart_financials, naver
 from app.services.market_clock import last_close_date
@@ -158,6 +158,35 @@ def get_financials(stock_code: str) -> Financials:
 def get_news(stock_code: str) -> list[NewsItem]:
     get_company(stock_code)
     return [NewsItem(**n) for n in load_json("news.json").get(stock_code, [])]
+
+
+def to_articles(stock_code: str, news: list[NewsItem]) -> list[NewsArticle]:
+    """원문 링크가 있는 실제 뉴스만 응답 형식으로 바꾼다 (예시 자리는 보내지 않는다)."""
+    return [
+        NewsArticle(
+            id=n.id,
+            title=n.title,
+            press=n.source or "",
+            published_at=n.published_at or "",
+            url=n.url,
+            summary_short=n.summary,
+            company_stock_code=stock_code,
+            related_metric=n.financial_link,
+        )
+        for n in news
+        if not n.is_placeholder and n.url
+    ]
+
+
+def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
+    articles = to_articles(stock_code, get_news(stock_code))
+    start = (page - 1) * size
+    return NewsPage(
+        items=articles[start : start + size],
+        page=page,
+        size=size,
+        has_next=start + size < len(articles),
+    )
 
 
 @lru_cache

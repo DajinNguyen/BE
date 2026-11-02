@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query
 
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.financials import Financials
-from app.schemas.news import NewsItem
+from app.schemas.news import NewsPage
 from app.schemas.price import Period, PriceHistory
 from app.services import data_store, price_service
 
@@ -35,6 +35,11 @@ def get_prices(stock_code: str, period: Period = Query("3m")):
     return price_service.get_price_history(stock_code, period)
 
 
-@router.get("/{stock_code}/news", response_model=list[NewsItem])
-def get_news(stock_code: str):
-    return data_store.get_news(stock_code)
+@router.get("/{stock_code}/news", response_model=NewsPage)
+def get_news(
+    stock_code: str,
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=50),
+):
+    """최신순. 기사가 없으면 `items: []`."""
+    return data_store.get_news_page(stock_code, page, size)
