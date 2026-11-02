@@ -45,4 +45,4 @@ def test_crossword_words_fit_grid_and_link_to_terms(client):
 def test_crossword_not_found(client):
     res = client.get("/api/learn/crosswords/nope")
     assert res.status_code == 404
-    assert res.json()["code"] == "PUZZLE_NOT_FOUND"
+    assert res.json()["error"]["code"] == "PUZZLE_NOT_FOUND"

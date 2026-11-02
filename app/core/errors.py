@@ -4,7 +4,10 @@ from fastapi.responses import JSONResponse
 
 
 class AppError(Exception):
-    """명세서 공통 오류 형식 `{ "detail": ..., "code": ... }` 으로 응답되는 예외."""
+    """공통 오류 형식 `{ "error": { "code": ..., "message": ... } }` 으로 응답되는 예외.
+
+    `message` 는 화면에 그대로 보여줄 수 있는 쉬운 문장이다.
+    """
 
     def __init__(self, status_code: int, code: str, detail: str):
         self.status_code = status_code
@@ -75,16 +78,18 @@ def already_reported() -> AppError:
     return AppError(409, "ALREADY_REPORTED", "이미 신고했어요.")
 
 
+def _error_body(code: str, message: str) -> dict:
+    return {"error": {"code": code, "message": message}}
+
+
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(_: Request, exc: AppError) -> JSONResponse:
-        return JSONResponse(
-            status_code=exc.status_code, content={"detail": exc.detail, "code": exc.code}
-        )
+        return JSONResponse(status_code=exc.status_code, content=_error_body(exc.code, exc.detail))
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
         first = exc.errors()[0] if exc.errors() else {}
         field = ".".join(str(p) for p in first.get("loc", []) if p not in ("query", "body"))
         detail = f"요청 값이 올바르지 않아요. ({field})" if field else "요청 값이 올바르지 않아요."
-        return JSONResponse(status_code=422, content={"detail": detail, "code": "VALIDATION_ERROR"})
+        return JSONResponse(status_code=422, content=_error_body("VALIDATION_ERROR", detail))

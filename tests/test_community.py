@@ -69,7 +69,7 @@ def test_guest_can_read_but_not_write(client, login):
     ]:
         res = client.request(method, path, json=body)
         assert res.status_code == 401, (method, path)
-        assert res.json()["code"] == "LOGIN_REQUIRED"
+        assert res.json()["error"]["code"] == "LOGIN_REQUIRED"
 
 
 def test_write_post(client, login):
@@ -92,7 +92,7 @@ def test_write_post_unknown_company(client, login):
     login(1)
     res = client.post("/api/companies/999999/posts", json=POST)
     assert res.status_code == 404
-    assert res.json()["code"] == "COMPANY_NOT_FOUND"
+    assert res.json()["error"]["code"] == "COMPANY_NOT_FOUND"
 
 
 # --------------------------------------------------------------------------
@@ -137,7 +137,7 @@ def test_post_not_found(client):
     for post_id in ["999", "p1"]:
         res = client.get(f"/api/posts/{post_id}")
         assert res.status_code == 404
-        assert res.json()["code"] == "POST_NOT_FOUND"
+        assert res.json()["error"]["code"] == "POST_NOT_FOUND"
 
 
 # --------------------------------------------------------------------------
@@ -153,7 +153,7 @@ def test_post_length_rules(client, login, overrides):
     login(1)
     res = _write(client, **overrides)
     assert res.status_code == 400
-    assert res.json()["code"] == "INVALID_LENGTH"
+    assert res.json()["error"]["code"] == "INVALID_LENGTH"
 
 
 def test_post_length_limits_are_inclusive(client, login):
@@ -169,8 +169,8 @@ def test_banned_words(client, login, text):
     login(1)
     res = _write(client, body=text)
     assert res.status_code == 400
-    assert res.json()["code"] == "BANNED_WORD"
-    assert "쓸 수 없어요" in res.json()["detail"]
+    assert res.json()["error"]["code"] == "BANNED_WORD"
+    assert "쓸 수 없어요" in res.json()["error"]["message"]
 
 
 def test_post_spam_interval(client, login, monkeypatch):
@@ -179,7 +179,7 @@ def test_post_spam_interval(client, login, monkeypatch):
     assert _write(client).status_code == 201
     res = _write(client)
     assert res.status_code == 429
-    assert res.json()["code"] == "TOO_FREQUENT"
+    assert res.json()["error"]["code"] == "TOO_FREQUENT"
 
     login(2)  # 다른 사람은 바로 쓸 수 있다
     assert _write(client).status_code == 201
@@ -196,9 +196,9 @@ def test_only_author_can_edit_and_delete(client, login):
 
     login(2)
     edit = {**POST, "title": "남의 글"}
-    assert client.put(f"/api/posts/{post_id}", json=edit).json()["code"] == "NOT_OWNER"
+    assert client.put(f"/api/posts/{post_id}", json=edit).json()["error"]["code"] == "NOT_OWNER"
     res = client.delete(f"/api/posts/{post_id}")
-    assert (res.status_code, res.json()["code"]) == (403, "NOT_OWNER")
+    assert (res.status_code, res.json()["error"]["code"]) == (403, "NOT_OWNER")
 
     login(1)
     res = client.put(f"/api/posts/{post_id}", json={**edit, "category": "free"})
@@ -215,7 +215,7 @@ def test_delete_post_removes_comments(client, login):
     assert client.delete(f"/api/posts/{post_id}").status_code == 204
     assert client.get(f"/api/posts/{post_id}").status_code == 404
     assert (
-        client.delete(f"/api/comments/{comment_id}").json()["code"] == "COMMENT_NOT_FOUND"
+        client.delete(f"/api/comments/{comment_id}").json()["error"]["code"] == "COMMENT_NOT_FOUND"
     )
 
 
@@ -242,7 +242,7 @@ def test_comments(client, login):
 
     login(1)  # 남의 댓글은 못 지운다
     res = client.delete(f"/api/comments/{first.json()['id']}")
-    assert (res.status_code, res.json()["code"]) == (403, "NOT_OWNER")
+    assert (res.status_code, res.json()["error"]["code"]) == (403, "NOT_OWNER")
 
     login(2)
     assert client.delete(f"/api/comments/{first.json()['id']}").status_code == 204
@@ -255,13 +255,13 @@ def test_comment_rules(client, login, body):
     post_id = _write(client).json()["id"]
     res = client.post(f"/api/posts/{post_id}/comments", json={"body": body})
     assert res.status_code == 400
-    assert res.json()["code"] in ("INVALID_LENGTH", "BANNED_WORD")
+    assert res.json()["error"]["code"] in ("INVALID_LENGTH", "BANNED_WORD")
 
 
 def test_comment_on_missing_post(client, login):
     login(1)
     res = client.post("/api/posts/999/comments", json={"body": "댓글"})
-    assert (res.status_code, res.json()["code"]) == (404, "POST_NOT_FOUND")
+    assert (res.status_code, res.json()["error"]["code"]) == (404, "POST_NOT_FOUND")
 
 
 # --------------------------------------------------------------------------
@@ -299,7 +299,7 @@ def test_report_once_and_hide_after_three(client, login):
     login(2)
     assert _report(client, "post", post_id).status_code == 204
     res = _report(client, "post", post_id)
-    assert (res.status_code, res.json()["code"]) == (409, "ALREADY_REPORTED")
+    assert (res.status_code, res.json()["error"]["code"]) == (409, "ALREADY_REPORTED")
     assert client.get(f"/api/posts/{post_id}").json()["reported_by_me"] is True
 
     login(3)
@@ -328,7 +328,7 @@ def test_report_comment_hides_it(client, login):
 def test_report_missing_target(client, login):
     login(1)
     res = _report(client, "comment", "999")
-    assert (res.status_code, res.json()["code"]) == (404, "TARGET_NOT_FOUND")
+    assert (res.status_code, res.json()["error"]["code"]) == (404, "TARGET_NOT_FOUND")
 
 
 def test_report_invalid_reason(client, login):
