@@ -10,6 +10,9 @@ os.environ["NAVER_CLIENT_SECRET"] = ""
 os.environ["GOOGLE_NEWS_ENABLED"] = "false"
 # AI 도 부르지 않는다 (.env 에 키가 있어도). 필요한 테스트는 가짜 작성자를 넣는다
 os.environ["GEMINI_API_KEY"] = ""
+os.environ["GEMINI_API_KEY_2"] = ""
+os.environ["GEMINI_API_KEY_3"] = ""
+os.environ["GEMINI_API_KEY_4"] = ""
 os.environ["ANTHROPIC_API_KEY"] = ""
 
 import pytest  # noqa: E402

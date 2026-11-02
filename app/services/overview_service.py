@@ -16,7 +16,6 @@ from datetime import UTC, date, datetime, timedelta
 from typing import Any, Protocol
 
 import anthropic
-from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types as genai_types
 from pydantic import BaseModel
@@ -26,6 +25,7 @@ from app.core.config import Settings
 from app.models.overview import CompanyOverviewRecord
 from app.schemas.company import BusinessSegment, CompanyDetail, TimelineItem
 from app.services import dart, data_store
+from app.services.gemini_keys import GeminiKeyPool
 
 logger = logging.getLogger(__name__)
 
@@ -96,27 +96,21 @@ class GeminiOverviewWriter:
 
     def __init__(self, settings: Settings):
         self._settings = settings
-        self._client: genai.Client | None = None
-
-    def _get_client(self) -> genai.Client:
-        if self._client is None:
-            self._client = genai.Client(
-                api_key=self._settings.gemini_api_key,
-                http_options=genai_types.HttpOptions(timeout=self._REQUEST_TIMEOUT_MS),
-            )
-        return self._client
+        self._keys = GeminiKeyPool(settings.gemini_api_keys, self._REQUEST_TIMEOUT_MS)
 
     async def write(self, context: dict[str, Any]) -> OverviewContent:
         for attempt in range(1, self._MAX_ATTEMPTS + 1):
             try:
-                response = await self._get_client().aio.models.generate_content(
-                    model=self._settings.gemini_model,
-                    contents=json.dumps(context, ensure_ascii=False),
-                    config=genai_types.GenerateContentConfig(
-                        system_instruction=SYSTEM_PROMPT,
-                        response_mime_type="application/json",
-                        response_schema=OverviewContent,
-                    ),
+                response = await self._keys.call(
+                    lambda client: client.aio.models.generate_content(
+                        model=self._settings.gemini_model,
+                        contents=json.dumps(context, ensure_ascii=False),
+                        config=genai_types.GenerateContentConfig(
+                            system_instruction=SYSTEM_PROMPT,
+                            response_mime_type="application/json",
+                            response_schema=OverviewContent,
+                        ),
+                    )
                 )
                 if isinstance(response.parsed, OverviewContent):
                     return response.parsed

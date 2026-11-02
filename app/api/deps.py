@@ -28,7 +28,7 @@ def get_report_writer() -> ReportWriter:
     settings = get_settings()
     if settings.anthropic_api_key:
         return ClaudeReportWriter(settings)
-    if settings.gemini_api_key:
+    if settings.gemini_api_keys:
         return GeminiReportWriter(settings)
     return FixtureReportWriter()
 
@@ -39,7 +39,7 @@ def get_overview_writer() -> OverviewWriter | None:
     settings = get_settings()
     if settings.anthropic_api_key:
         return ClaudeOverviewWriter(settings)
-    if settings.gemini_api_key:
+    if settings.gemini_api_keys:
         return GeminiOverviewWriter(settings)
     return None
 
