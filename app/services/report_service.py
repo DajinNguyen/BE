@@ -31,16 +31,19 @@ from app.schemas.news import NewsArticle
 from app.schemas.report import (
     KEY_POINT_ORDER,
     CompanyReport,
+    Disclosure,
     Evidence,
     EvidenceKind,
     EvidenceRef,
     FinancialHighlight,
     FinancialsEvidence,
     KeyPoint,
+    KeyPointDetail,
     ReportContent,
     ReportDataAsOf,
     RevenueMixItem,
     VisionEvidence,
+    YearlyFigure,
 )
 from app.services.data_store import find_financials, get_company, get_news, to_articles
 from app.services.market_clock import KST, last_close_date
@@ -301,6 +304,33 @@ def _financials_evidence(financials: Financials) -> FinancialsEvidence | None:
     )
 
 
+YEARLY_COUNT = 5  # 상세 시트 연도별 막대 개수 (최근 몇 년)
+DETAIL_NEWS_COUNT = 3
+
+
+def _key_point_detail(
+    kinds: list[EvidenceKind], financials: Financials, news: list[NewsArticle]
+) -> KeyPointDetail:
+    """상세 시트: 숫자는 서버가 공식 자료에서 넣는다 (AI가 숫자를 쓰지 않게)."""
+    annual = sorted(financials.annual, key=lambda a: a.fiscal_year)[-YEARLY_COUNT:]
+    perf = financials.recent_performance
+    return KeyPointDetail(
+        yearly=[
+            YearlyFigure(
+                year=str(a.fiscal_year),
+                revenue=a.revenue,
+                operating_income=a.operating_income,
+                unit=financials.unit,
+            )
+            for a in annual
+        ],
+        related_news=news[:DETAIL_NEWS_COUNT] if "news" in kinds else [],
+        related_disclosures=(
+            [Disclosure(**perf.source.model_dump())] if perf and "financials" in kinds else []
+        ),
+    )
+
+
 def _has_vision(company: CompanyDetail, financials: Financials) -> bool:
     return bool(company.business_description or company.timeline or financials.segments)
 
@@ -419,7 +449,11 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
         generated_at=generated_at,
         headline=content.headline,
         key_points=[
-            KeyPoint(**p.model_dump(exclude={"evidence"}), evidence=[refs[k] for k in p.evidence])
+            KeyPoint(
+                **p.model_dump(exclude={"evidence"}),
+                evidence=[refs[k] for k in p.evidence],
+                detail=_key_point_detail(p.evidence, financials, news),
+            )
             for p in content.key_points
         ],
         evidence=Evidence(

@@ -168,6 +168,9 @@ def find_financials(stock_code: str) -> Financials | None:
     if seed and seed.segments and live.segments is None and seed.unit == live.unit:
         # DART API에는 사업부문별 매출이 없어서 시드에 있으면 그대로 쓴다
         live = live.model_copy(update={"segments": seed.segments})
+    if seed and seed.recent_performance and live.recent_performance is None:
+        # 실적 발표 요약도 DART 재무제표 API에는 없어서 시드 값을 붙인다
+        live = live.model_copy(update={"recent_performance": seed.recent_performance})
     return live
 
 

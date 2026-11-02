@@ -50,8 +50,30 @@ class KeyPointDraft(_KeyPointBase):
     evidence: list[EvidenceKind]
 
 
+class YearlyFigure(BaseModel):
+    year: str
+    revenue: float
+    operating_income: float
+    unit: str
+
+
+class Disclosure(BaseModel):
+    title: str  # DART 공시명
+    date: str  # YYYY-MM-DD
+    url: str
+
+
+class KeyPointDetail(BaseModel):
+    """핵심 포인트를 누르면 열리는 상세 시트 (연도별 숫자 + 관련 뉴스·공시)."""
+
+    yearly: list[YearlyFigure] = []  # 3~5년, 오래된 해부터
+    related_news: list[NewsArticle] = []
+    related_disclosures: list[Disclosure] = []
+
+
 class KeyPoint(_KeyPointBase):
     evidence: list[EvidenceRef]
+    detail: KeyPointDetail | None = None  # 없으면 시트에 이유·근거만 보여준다
 
     @field_validator("evidence", mode="before")
     @classmethod

@@ -99,6 +99,15 @@ def test_financials(client):
     assert len(body["segments"]["items"]) == 4
     assert body["indicators"]["roe"] == {"value": 9.2, "is_sample": True}
     assert body["indicators_as_of"] == "2025년 사업보고서"
+    perf = body["recent_performance"]
+    assert perf["period_label"] == "2025년 4분기 실적"
+    assert perf["revenue"] == {
+        "value": 93.8,
+        "unit": "조 원",
+        "yoy_change_rate": 23.7,
+        "yoy_is_sample": True,
+    }
+    assert len(perf["segments"]) == 4 and perf["source"]["url"]
 
 
 def test_company_detail_industries(client):

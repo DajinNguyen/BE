@@ -56,6 +56,15 @@ def test_post_returns_generating_then_get_returns_done(client, fake_writer):
     assert report["data_as_of"]["news"] == "2026년 1월"
     assert report["key_points"][0]["after"] is None
 
+    # 상세 시트 숫자·공시는 서버가 붙인다. 뉴스는 근거에 뉴스가 있을 때만
+    performance = report["key_points"][0]["detail"]
+    assert [y["year"] for y in performance["yearly"]] == ["2023", "2024", "2025"]
+    assert performance["yearly"][-1]["unit"] == "조 원"
+    assert performance["related_news"] == []
+    assert performance["related_disclosures"][0]["date"] == "2026-01-29"
+    strength = report["key_points"][-1]["detail"]
+    assert strength["related_news"] and strength["related_disclosures"] == []
+
     # 정답 번호가 보기 범위를 벗어난 퀴즈는 걸러진다
     assert [q["question"] for q in report["quiz"]] == ["2025년 매출은?"]
 
