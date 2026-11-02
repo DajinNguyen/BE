@@ -27,7 +27,7 @@ from app.core.errors import AppError, report_generation_failed
 from app.models.report import ReportRecord
 from app.schemas.company import CompanyDetail
 from app.schemas.financials import Financials
-from app.schemas.news import NewsItem
+from app.schemas.news import NewsArticle
 from app.schemas.report import (
     KEY_POINT_ORDER,
     CompanyReport,
@@ -37,13 +37,12 @@ from app.schemas.report import (
     FinancialHighlight,
     FinancialsEvidence,
     KeyPoint,
-    NewsEvidence,
     ReportContent,
     ReportDataAsOf,
     RevenueMixItem,
     VisionEvidence,
 )
-from app.services.data_store import find_financials, get_company, get_news
+from app.services.data_store import find_financials, get_company, get_news, to_articles
 from app.services.market_clock import KST, last_close_date
 
 logger = logging.getLogger(__name__)
@@ -302,21 +301,6 @@ def _financials_evidence(financials: Financials) -> FinancialsEvidence | None:
     )
 
 
-def _news_evidence(news: list[NewsItem]) -> list[NewsEvidence]:
-    """원문 링크가 있는 실제 뉴스만 보낸다."""
-    return [
-        NewsEvidence(
-            title=n.title,
-            press=n.source or "",
-            published_at=n.published_at or "",
-            summary=n.summary,
-            url=n.url,
-        )
-        for n in news
-        if not n.is_placeholder and n.url
-    ]
-
-
 def _has_vision(company: CompanyDetail, financials: Financials) -> bool:
     return bool(company.business_description or company.timeline or financials.segments)
 
@@ -356,7 +340,7 @@ def _financials_basis(financials: Financials) -> str:
 
 
 def _data_as_of(
-    company: CompanyDetail, financials: Financials, news: list[NewsEvidence]
+    company: CompanyDetail, financials: Financials, news: list[NewsArticle]
 ) -> ReportDataAsOf:
     return ReportDataAsOf(
         financials=_financials_basis(financials),
@@ -425,7 +409,7 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
     context = build_context(company, financials)
     content = _sanitize(await writer.write(context), context["available_evidence"])
 
-    news = _news_evidence(get_news(stock_code))
+    news = to_articles(stock_code, get_news(stock_code))
     data_as_of = _data_as_of(company, financials, news)
     refs = _evidence_refs(data_as_of)
     generated_at = datetime.now(KST).replace(microsecond=0)

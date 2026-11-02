@@ -86,7 +86,7 @@ ruff check app tests && black --check app tests
 | GET | `/api/companies/{stock_code}` |
 | GET | `/api/companies/{stock_code}/financials` |
 | GET | `/api/companies/{stock_code}/prices?period=1m\|3m\|6m\|1y` |
-| GET | `/api/companies/{stock_code}/news` |
+| GET | `/api/companies/{stock_code}/news?page=1&size=10` |
 | GET / POST | `/api/companies/{stock_code}/report` |
 | GET | `/api/terms` |
 | GET | `/api/learn/crosswords` · `/api/learn/crosswords/{puzzle_id}` |
@@ -96,7 +96,7 @@ ruff check app tests && black --check app tests
 
 - 회사(41곳)·재무·뉴스·용어(70개)·낱말퀴즈(3개)·홈 목록은 `app/data/*.json` 시드 데이터예요. 프론트 목 데이터(`frontend/src/mocks`)와 같은 값이에요. OpenDART·pykrx 연동은 이후 파트에서 해요.
 - 재무는 DART 키가 있으면 DART 재무제표(금융회사 제외 36곳)를 쓰고, 없으면 시드(삼성전자 `005930`만)를 써요. 둘 다 없으면 `404 DATA_NOT_FOUND`예요.
-- 뉴스 자료는 지금 삼성전자만 있어요. 자료가 없는 회사의 뉴스는 `[]`예요.
+- 뉴스 자료는 지금 삼성전자만 있어요. 응답은 FE `docs/news-api-request.md` 형식(`{ items, page, size, has_next }`)이고, 원문 링크가 없는 예시 자리는 보내지 않아요. 자료가 없는 회사는 `items: []`예요. 리포트 근거 뉴스(`evidence.news`)도 같은 형식이고, 예전 형식으로 저장된 리포트도 읽을 때 바꿔서 돌려줘요.
 - 시세(현재가·등락률·시가총액·주가 흐름)와 홈 거래대금 순위는 네이버 시세를 써요. 떠오르는 기업·관심도 높은 기업은 기준이 정해질 때까지 예시 데이터(`is_sample: true`)예요.
 - 홈 거래대금 순위(최대 30개)는 다진이 다루는 41개 회사 안에서의 순위예요. 시장 전체 순위가 아니에요.
 - 시세 기준일(`price_as_of`, 홈 `base_time`)은 네이버가 준 마지막 체결 시각이에요. 장중이면 그 시각, 끝났으면 "그날 15:30"이에요. 시세를 받지 못하면 직전 장 마감일(평일 15:30 기준, 공휴일은 아직 빼지 않음)이에요.
