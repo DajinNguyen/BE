@@ -107,6 +107,29 @@ def test_overview_generated_in_background_then_filled(client, overview):
     assert body["timeline_source"] == SOURCE
 
 
+def test_new_annual_report_regenerates_but_keeps_old_meanwhile(client, overview, monkeypatch):
+    client.get("/api/companies/000660")
+    assert overview.calls == 1
+
+    newer = dart.AnnualReport(
+        rcept_no="20270316000111", report_nm="사업보고서", rcept_dt="20270316"
+    )
+    monkeypatch.setattr(dart, "latest_annual_report", lambda corp_code: newer)
+    overview.fail = True  # 새로 만들다 실패해도
+    body = client.get("/api/companies/000660").json()
+    assert overview.calls == 2  # 새 보고서가 나와서 다시 만들었다
+    assert body["business_segments"] and body["timeline_source"] == SOURCE  # 예전 개요는 보인다
+    assert client.get("/api/companies/000660").json()["business_segments"]
+
+
+def test_same_annual_report_is_not_regenerated(client, overview, monkeypatch):
+    client.get("/api/companies/000660")
+    same = dart.AnnualReport(rcept_no="20260317000635", report_nm="사업보고서", rcept_dt="20260317")
+    monkeypatch.setattr(dart, "latest_annual_report", lambda corp_code: same)
+    client.get("/api/companies/000660")
+    assert overview.calls == 1
+
+
 def test_company_with_seed_overview_is_not_generated(client, overview):
     body = client.get("/api/companies/005930").json()
     assert body["timeline_source"].startswith("삼성전자")

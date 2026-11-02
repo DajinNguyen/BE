@@ -1,6 +1,6 @@
 """시드에 개요가 없는 회사의 AI 개요를 미리 만든다.
 
-    python -m app.scripts.generate_overviews                  # 아직 없는 회사 전부
+    python -m app.scripts.generate_overviews                  # 아직 없거나 새 사업보고서가 나온 회사
     python -m app.scripts.generate_overviews 000660 035420    # 지정한 회사만 (이미 있어도 다시)
     python -m app.scripts.generate_overviews --limit 10       # 최대 10곳만
     python -m app.scripts.generate_overviews --interval 0     # 유료 키면 쉬지 않고
@@ -23,7 +23,8 @@ from app.services import data_store, overview_service
 
 
 def _targets(codes: list[str]) -> list[tuple[str, str]]:
-    """(종목코드, 회사명). 코드를 지정하지 않으면 아직 개요가 없는 회사만 (목록 순서 = 대략 시가총액 순)."""
+    """(종목코드, 회사명). 코드를 지정하지 않으면 개요가 없거나 새 사업보고서가 나온 회사만
+    (목록 순서 = 대략 시가총액 순)."""
     chosen = codes or [c.stock_code for c in data_store.all_companies()]
     targets = []
     with new_session() as session:
@@ -32,7 +33,12 @@ def _targets(codes: list[str]) -> list[tuple[str, str]]:
             if not overview_service.needs_overview(company) or not company.corp_code:
                 continue
             record = session.get(CompanyOverviewRecord, code)
-            if not codes and record is not None and record.status == "done":
+            if (
+                not codes
+                and record is not None
+                and record.status == "done"
+                and not overview_service.is_outdated(record, company.corp_code)
+            ):
                 continue
             targets.append((code, company.name))
     return targets
