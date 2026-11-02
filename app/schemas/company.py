@@ -3,6 +3,7 @@ from typing import Literal, get_args
 from pydantic import BaseModel
 
 from app.schemas.common import SampleValue
+from app.schemas.industry import IndustryRef
 
 # 메인 화면 업종 탭 묶음. 탭 이름·순서는 프론트 상수로 고정이고, 어디에도 안 맞으면 "etc".
 SectorGroup = Literal["semiconductor", "auto", "internet", "finance", "food", "etc"]
@@ -40,6 +41,7 @@ class CompanyDetail(CompanySummary):
     """원본 자료가 없는 회사는 검색 목록 정보만 있고 나머지는 빈 값이다."""
 
     market_cap: SampleValue | None = None
+    industries: list[IndustryRef] = []  # 소속 산업 (산업 페이지로 가는 칩)
     homepage_url: str = ""
     dart_url: str = "https://dart.fss.or.kr/"
     business_description: str = ""

@@ -98,6 +98,7 @@ ruff check app tests && black --check app tests
 | GET | `/api/companies/{stock_code}/prices?period=1m\|3m\|6m\|1y` |
 | GET | `/api/companies/{stock_code}/news?page=1&size=10` |
 | GET / POST | `/api/companies/{stock_code}/report` |
+| GET | `/api/industries/hot?period=1w\|1m` · `/api/industries/{industry_id}` · `/api/industries/{industry_id}/news?size=5` |
 | GET | `/api/terms` |
 | GET | `/api/learn/crosswords` · `/api/learn/crosswords/{puzzle_id}` |
 | GET / POST | `/api/auth/google/login` · `/api/auth/me` · `/api/auth/logout` |
@@ -105,11 +106,11 @@ ruff check app tests && black --check app tests
 
 ## 데이터
 
-- 회사(41곳)·재무·뉴스·용어(70개)·낱말퀴즈(3개)·홈 목록은 `app/data/*.json` 시드 데이터예요. 프론트 목 데이터(`frontend/src/mocks`)와 같은 값이에요. OpenDART·pykrx 연동은 이후 파트에서 해요.
+- 회사(135곳)·재무·뉴스·용어(70개)·낱말퀴즈(3개)·홈 목록은 `app/data/*.json` 시드 데이터예요. 프론트 목 데이터(`frontend/src/mocks`)와 같은 값이에요. OpenDART·pykrx 연동은 이후 파트에서 해요.
 - 재무는 DART 키가 있으면 DART 재무제표(금융회사 제외 36곳)를 쓰고, 없으면 시드(삼성전자 `005930`만)를 써요. 둘 다 없으면 `404 DATA_NOT_FOUND`예요.
 - 뉴스 자료는 지금 삼성전자만 있어요. 응답은 FE `docs/news-api-request.md` 형식(`{ items, page, size, has_next }`)이고, 원문 링크가 없는 예시 자리는 보내지 않아요. 자료가 없는 회사는 `items: []`예요. 리포트 근거 뉴스(`evidence.news`)도 같은 형식이고, 예전 형식으로 저장된 리포트도 읽을 때 바꿔서 돌려줘요.
 - 시세(현재가·등락률·시가총액·주가 흐름)와 홈 거래대금 순위는 네이버 시세를 써요. 떠오르는 기업·관심도 높은 기업은 기준이 정해질 때까지 예시 데이터(`is_sample: true`)예요.
-- 홈 거래대금 순위(최대 30개)는 다진이 다루는 41개 회사 안에서의 순위예요. 시장 전체 순위가 아니에요.
+- 홈 거래대금 순위(최대 30개)는 다진이 다루는 135개 회사 안에서의 순위예요. 시장 전체 순위가 아니에요.
 - 시세 기준일(`price_as_of`, 홈 `base_time`)은 네이버가 준 마지막 체결 시각이에요. 장중이면 그 시각, 끝났으면 "그날 15:30"이에요. 시세를 받지 못하면 직전 장 마감일(평일 15:30 기준, 공휴일은 아직 빼지 않음)이에요.
 - 업종 탭(`sector_companies`)은 회사마다 정한 `sector_group`으로 묶고, 탭 안은 시가총액 순이에요. 분류는 프론트 목 데이터와 같아요.
 - 홈 거래대금 목록의 `ai_headline`은 그 회사의 마지막 성공 리포트 `headline`이에요. 리포트가 없으면 `null`이에요.
@@ -135,6 +136,14 @@ FE `docs/community-api-request.md` 형식 그대로예요. **보기는 누구나
 - 인기순은 좋아요 많은 순(전체 기간), 같으면 최신순이에요.
 - 글을 지우면 댓글·좋아요·신고 기록도 함께 지워요.
 - 테이블: `community_posts`, `community_comments`, `community_likes`, `community_reports` (서버를 켤 때 자동으로 만들어요).
+
+## 산업
+
+- 산업 10개(AI·반도체·조선·방산·2차전지·바이오·인터넷·자동차·금융·게임)의 설명·관련 기업·기간별 변화율은 `app/data/industries.json` 시드예요. 프론트 목 데이터와 같은 값이에요.
+- 뜨는 산업 점수 = 주가 상승률 40% + 거래대금 증가율 30% + 뉴스 언급 증가율 30%, 상위 3개 `high`·다음 3개 `mid`·나머지 `low` (FE `config/industryHeat.ts`와 같은 임시값, PM 확정 필요).
+- 변화율·점수·흐름 그래프·산업 뉴스는 아직 집계하지 않아서 예시 값이에요(`is_sample: true`, 뉴스는 언론사 "예시 뉴스"·주소 example.com).
+- 산업 페이지 관련 기업의 시가총액·등락률은 네이버 시세를 받으면 실제 값이고, 못 받으면 시드 예시 값이에요. 시가총액 큰 순이에요.
+- 기업 상세 `industries`(소속 산업 칩)도 같은 시드에서 찾아요.
 
 ## AI 리포트
 

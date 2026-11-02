@@ -70,7 +70,9 @@ def test_company_detail(client):
 def test_company_detail_without_source_data_uses_empty_values(client):
     body = client.get("/api/companies/207940").json()
     assert body["name"] == "삼성바이오로직스"
-    assert body["market_cap"] is None
+    # 산업 페이지용 시가총액 예시 값만 있다
+    assert body["market_cap"] == {"value": 75.0, "is_sample": True}
+    assert body["industries"] == [{"industry_id": "bio", "name": "바이오"}]
     assert body["homepage_url"] == ""
     assert body["business_description"] == ""
     assert body["business_segments"] == [] and body["timeline"] == []
@@ -97,6 +99,12 @@ def test_financials(client):
     assert len(body["segments"]["items"]) == 4
     assert body["indicators"]["roe"] == {"value": 9.2, "is_sample": True}
     assert body["indicators_as_of"] == "2025년 사업보고서"
+
+
+def test_company_detail_industries(client):
+    body = client.get("/api/companies/005930").json()
+    assert {"industry_id": "semiconductor", "name": "반도체"} in body["industries"]
+    assert {"industry_id": "ai", "name": "AI"} in body["industries"]
 
 
 def test_financials_without_seed_data_is_data_not_found(client):
