@@ -69,6 +69,50 @@
         "is_sample": true
       }
     },
-    "indicators_as_of": "2025년 사업보고서"
+    "indicators_as_of": "2025년 사업보고서",
+    "recent_performance": {
+      "period_label": "2025년 4분기 실적",
+      "announced_at": "2026-01-29",
+      "revenue": {
+        "value": 93.8,
+        "unit": "조 원",
+        "yoy_change_rate": 23.7,
+        "yoy_is_sample": true
+      },
+      "operating_income": {
+        "value": 20.1,
+        "unit": "조 원",
+        "yoy_change_rate": 209.2,
+        "yoy_is_sample": true
+      },
+      "summary": "AI용 메모리(HBM) 판매가 늘면서 분기 기준 가장 많은 매출을 냈어요.",
+      "segments": [
+        {
+          "name": "DS(반도체)",
+          "revenue": 44,
+          "unit": "조 원"
+        },
+        {
+          "name": "MX·네트워크(스마트폰 등)",
+          "revenue": 29.3,
+          "unit": "조 원"
+        },
+        {
+          "name": "SDC(디스플레이)",
+          "revenue": 9.5,
+          "unit": "조 원"
+        },
+        {
+          "name": "하만(전장·오디오)",
+          "revenue": 4.6,
+          "unit": "조 원"
+        }
+      ],
+      "source": {
+        "title": "삼성전자 2025년 4분기 실적 발표",
+        "date": "2026-01-29",
+        "url": "https://dart.fss.or.kr/"
+      }
+    }
   }
 }
