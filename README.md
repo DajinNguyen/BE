@@ -99,6 +99,7 @@ ruff check app tests && black --check app tests
 | GET | `/api/companies/{stock_code}/news?page=1&size=10` |
 | GET / POST | `/api/companies/{stock_code}/report` |
 | GET | `/api/industries/hot?period=1w\|1m` · `/api/industries/{industry_id}` · `/api/industries/{industry_id}/news?size=5` |
+| GET | `/api/market/summary` · `/api/market/news?date=YYYY-MM-DD` |
 | GET | `/api/terms` |
 | GET | `/api/learn/crosswords` · `/api/learn/crosswords/{puzzle_id}` |
 | GET / POST | `/api/auth/google/login` · `/api/auth/me` · `/api/auth/logout` |
@@ -144,6 +145,12 @@ FE `docs/community-api-request.md` 형식 그대로예요. **보기는 누구나
 - 변화율·점수·흐름 그래프·산업 뉴스는 아직 집계하지 않아서 예시 값이에요(`is_sample: true`, 뉴스는 언론사 "예시 뉴스"·주소 example.com).
 - 산업 페이지 관련 기업의 시가총액·등락률은 네이버 시세를 받으면 실제 값이고, 못 받으면 시드 예시 값이에요. 시가총액 큰 순이에요.
 - 기업 상세 `industries`(소속 산업 칩)도 같은 시드에서 찾아요.
+
+## 오늘의 시장
+
+- 지수(코스피·코스닥)·한마디·움직인 이유·시장 뉴스는 아직 실제 자료(지수 시세, AI 정리)를 붙이지 않아서 `app/data/market.json` 예시 값이에요(`is_sample: true`).
+- `as_of`는 마지막 장 마감 시각(평일 15:30), `is_previous_session`은 오늘 장이 아직 안 끝났거나 휴장일이면 `true`예요.
+- `date`가 YYYY-MM-DD가 아니면 `400 INVALID_PARAM`이에요.
 
 ## AI 리포트
 
