@@ -2,9 +2,12 @@
 
 지수·한마디·이유는 아직 실제 자료(지수 시세, AI 정리)를 붙이지 않아서
 `app/data/market.json` 의 예시 값을 쓴다 (`is_sample: true`). 예측·투자 권유 표현은 넣지 않는다.
+이유에 붙는 기사는 예시 기사마다 정해 둔 검색어(`query`)로 실제 뉴스를 찾아
+가장 잘 맞는 기사로 바꾼다 (받지 못하면 예시 기사). 시장 뉴스 목록도 실제 뉴스 검색을 먼저 쓴다.
 """
 
 import math
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from app.schemas.market import (
@@ -15,10 +18,13 @@ from app.schemas.market import (
     ReasonIndustry,
 )
 from app.schemas.news import NewsArticle
+from app.services import news_search
 from app.services.data_store import load_json
 from app.services.market_clock import last_close
 from app.services.sample_news import latest_first, sample_article
 
+MARKET_NEWS_QUERY = "증시"
+MARKET_NEWS_COUNT = 10
 INTRADAY_STEPS = 39  # 09:00 ~ 15:30, 10분 간격
 
 
@@ -56,10 +62,25 @@ def market_news(now: datetime | None = None) -> list[NewsArticle]:
     )
 
 
+def latest_market_news(now: datetime | None = None) -> list[NewsArticle]:
+    """시장 뉴스 목록. 실제 뉴스를 받지 못하면 예시 기사."""
+    live = news_search.latest(MARKET_NEWS_QUERY, MARKET_NEWS_COUNT)
+    return live if live is not None else market_news(now)
+
+
+def reason_news(now: datetime | None = None) -> dict[str, NewsArticle]:
+    """예시 기사 id → 이유 카드에 붙일 기사. 검색은 동시에 한다."""
+    samples = market_news(now)
+    queries = {n["id"]: n.get("query") or n["title"] for n in load_json("market.json")["news"]}
+    with ThreadPoolExecutor(max_workers=len(samples) or 1) as pool:
+        found = list(pool.map(news_search.most_relevant, [queries[s.id] for s in samples]))
+    return {sample.id: live or sample for sample, live in zip(samples, found, strict=True)}
+
+
 def get_summary(now: datetime | None = None) -> MarketSummary:
     data = load_json("market.json")
     as_of, is_previous = last_close(now)
-    news = {n.id: n for n in market_news(now)}
+    news = reason_news(now)
     return MarketSummary(
         as_of=as_of,
         is_previous_session=is_previous,

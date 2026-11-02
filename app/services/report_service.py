@@ -45,7 +45,7 @@ from app.schemas.report import (
     VisionEvidence,
     YearlyFigure,
 )
-from app.services.data_store import find_financials, get_company, get_news, to_articles
+from app.services.data_store import find_financials, get_company, latest_company_news
 from app.services.market_clock import KST, last_close_date
 
 logger = logging.getLogger(__name__)
@@ -306,6 +306,7 @@ def _financials_evidence(financials: Financials) -> FinancialsEvidence | None:
 
 YEARLY_COUNT = 5  # 상세 시트 연도별 막대 개수 (최근 몇 년)
 DETAIL_NEWS_COUNT = 3
+REPORT_NEWS_COUNT = 10  # AI에게 주고 근거로 붙이는 최근 뉴스 개수
 
 
 def _key_point_detail(
@@ -369,13 +370,21 @@ def _financials_basis(financials: Financials) -> str:
     return f"{latest.fiscal_year}년 연간" if latest else financials.basis
 
 
+def _news_date(published_at: str) -> str | None:
+    """실제 기사 시각(ISO)은 날짜만, 시드 값("2026년 1월")은 그대로."""
+    try:
+        return datetime.fromisoformat(published_at).date().isoformat()
+    except ValueError:
+        return published_at or None
+
+
 def _data_as_of(
     company: CompanyDetail, financials: Financials, news: list[NewsArticle]
 ) -> ReportDataAsOf:
     return ReportDataAsOf(
         financials=_financials_basis(financials),
         price=company.price_as_of or last_close_date().isoformat(),
-        news=(news[0].published_at or None) if news else None,  # 뉴스는 최신 순
+        news=_news_date(news[0].published_at) if news else None,  # 뉴스는 최신 순
     )
 
 
@@ -388,8 +397,9 @@ def _evidence_refs(data_as_of: ReportDataAsOf) -> dict[EvidenceKind, EvidenceRef
     }
 
 
-def build_context(company: CompanyDetail, financials: Financials) -> dict[str, Any]:
-    news = [n.model_dump() for n in get_news(company.stock_code) if not n.is_placeholder]
+def build_context(
+    company: CompanyDetail, financials: Financials, news: list[NewsArticle]
+) -> dict[str, Any]:
     available = ["financials"]
     if news:
         available.append("news")
@@ -409,7 +419,12 @@ def build_context(company: CompanyDetail, financials: Financials) -> dict[str, A
         ),
         "financials": financials.model_dump(exclude={"indicators"}),
         "derived": _derived_metrics(financials),
-        "news": news,
+        "news": [
+            n.model_dump(
+                include={"title", "press", "published_at", "summary_short", "related_metric"}
+            )
+            for n in news
+        ],
         "available_evidence": available,
     }
 
@@ -436,10 +451,10 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
     financials = find_financials(stock_code)
     if financials is None:
         raise report_generation_failed(NO_FINANCIALS_REASON)
-    context = build_context(company, financials)
+    news = latest_company_news(stock_code, REPORT_NEWS_COUNT)
+    context = build_context(company, financials, news)
     content = _sanitize(await writer.write(context), context["available_evidence"])
 
-    news = to_articles(stock_code, get_news(stock_code))
     data_as_of = _data_as_of(company, financials, news)
     refs = _evidence_refs(data_as_of)
     generated_at = datetime.now(KST).replace(microsecond=0)

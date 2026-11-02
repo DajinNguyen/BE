@@ -72,7 +72,7 @@ def test_post_returns_generating_then_get_returns_done(client, fake_writer):
     assert context["company"]["stock_code"] == "005930"
     assert context["derived"]["operating_margin_percent"]["2025"] == 13.1
     assert context["available_evidence"] == ["financials", "news", "vision"]
-    assert all(not n["is_placeholder"] for n in context["news"])
+    assert context["news"] and all(n["summary_short"] for n in context["news"])
 
 
 def test_evidence_numbers_come_from_data(client):

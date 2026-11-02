@@ -2,6 +2,7 @@
 
 기간별 변화율(주가·거래대금·뉴스 언급)은 아직 집계하지 않아서 `app/data/industries.json` 의
 예시 값을 쓴다 (`is_sample: true`). 관련 기업의 시가총액·등락률은 네이버 시세를 받으면 실제 값이다.
+산업 뉴스는 실제 뉴스 검색("산업 이름 산업")을 먼저 쓰고, 받지 못하면 예시 기사를 쓴다.
 점수 기준은 프론트 `src/config/industryHeat.ts` 와 같은 임시값이다 (PM 확정 필요).
 """
 
@@ -22,7 +23,7 @@ from app.schemas.industry import (
     TrendPoint,
 )
 from app.schemas.news import NewsArticle
-from app.services import data_store
+from app.services import data_store, news_search
 from app.services.market_clock import last_close, last_close_date
 from app.services.sample_news import latest_first, sample_article
 
@@ -88,9 +89,16 @@ def hot_industries(period: HeatPeriod, now: datetime | None = None) -> list[Indu
     ]
 
 
+def _news_query(record: dict[str, Any]) -> str:
+    return record.get("news_query") or f"{record['name'].replace('·', ' ')} 산업"
+
+
 def industry_news(industry_id: str, size: int, now: datetime | None = None) -> list[NewsArticle]:
     """산업 관련 기사 (최신순)."""
     record = _record(industry_id)
+    live = news_search.latest(_news_query(record), size)
+    if live is not None:
+        return live
     articles = [
         sample_article(
             article_id=f"{industry_id}-news-{i + 1}",
