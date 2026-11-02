@@ -130,6 +130,8 @@ def test_prices(client):
     assert body["points"][-1]["close"] == 128500
     dates = [p["date"] for p in body["points"]]
     assert dates == sorted(dates)
+    for p in body["points"]:
+        assert p["low"] <= min(p["open"], p["close"]) <= max(p["open"], p["close"]) <= p["high"]
 
 
 def test_prices_one_year_is_weekly(client):

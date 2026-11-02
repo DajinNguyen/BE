@@ -24,9 +24,27 @@ QUOTES = {
 }
 
 CHART = [
-    {"localDate": "20261016", "closePrice": 218000.0},
-    {"localDate": "20261019", "closePrice": 218000.0},
-    {"localDate": "20261020", "closePrice": 210750.0},
+    {
+        "localDate": "20261016",
+        "openPrice": 216000.0,
+        "highPrice": 219500.0,
+        "lowPrice": 215000.0,
+        "closePrice": 218000.0,
+    },
+    {
+        "localDate": "20261019",
+        "openPrice": 218500.0,
+        "highPrice": 220000.0,
+        "lowPrice": 217000.0,
+        "closePrice": 218000.0,
+    },
+    {
+        "localDate": "20261020",
+        "openPrice": 217000.0,
+        "highPrice": 217500.0,
+        "lowPrice": 209000.0,
+        "closePrice": 210750.0,
+    },
 ]
 
 
@@ -135,16 +153,22 @@ def test_prices_use_live_chart(client, use_naver):
     use_naver(api)
     body = client.get("/api/companies/005930/prices", params={"period": "1m"}).json()
     assert body["is_sample"] is False
-    assert body["points"][-1] == {"date": "2026-10-20", "close": 210750}
+    assert body["points"][-1] == {
+        "date": "2026-10-20",
+        "open": 217000,
+        "high": 217500,
+        "low": 209000,
+        "close": 210750,
+    }
     assert any(url.endswith("/005930/day") for url in api.calls)
 
     client.get("/api/companies/005930/prices", params={"period": "1y"})
     assert any(url.endswith("/005930/week") for url in api.calls)
 
 
-def test_closes_failure_returns_none(use_naver):
+def test_candles_failure_returns_none(use_naver):
     client = use_naver(FakeNaverApi(fail=True))
-    assert client.closes("005930", date(2026, 9, 20), date(2026, 10, 20), weekly=False) is None
+    assert client.candles("005930", date(2026, 9, 20), date(2026, 10, 20), weekly=False) is None
 
 
 def test_report_price_as_of_uses_live_date(client, use_naver):
