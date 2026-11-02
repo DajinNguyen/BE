@@ -107,7 +107,55 @@ def test_full_login_flow(client, google):
 
     me = client.get("/api/auth/me")
     assert me.status_code == 200
-    assert me.json() == {"email": "student@example.com", "name": "김다진"}
+    body = me.json()
+    assert body["id"].isdigit()
+    assert (body["email"], body["name"]) == ("student@example.com", "김다진")
+    assert body["nickname"] and body["nickname"] != "김다진"  # 실명 대신 닉네임
+
+
+def _start_login_with_path(client, redirect, referer=None):
+    headers = {"referer": referer} if referer else {}
+    res = client.get(
+        "/api/auth/google/login",
+        params={"redirect": redirect},
+        headers=headers,
+        follow_redirects=False,
+    )
+    assert res.status_code == 302
+    return parse_qs(urlsplit(res.headers["location"]).query)["state"][0]
+
+
+def test_login_with_redirect_path_returns_to_referring_frontend(client, google):
+    google()
+    state = _start_login_with_path(
+        client, "/companies/005930?tab=community", referer="http://localhost:5174/companies/005930"
+    )
+    res = _callback(client, code="auth-code", state=state)
+    assert res.headers["location"] == "http://localhost:5174/companies/005930?tab=community"
+
+
+def test_login_with_redirect_path_defaults_to_first_frontend(client, google):
+    google()
+    state = _start_login_with_path(client, "/terms", referer="https://evil.example.com/")
+    res = _callback(client, code="auth-code", state=state)
+    assert res.headers["location"] == "http://localhost:5173/terms"
+
+
+@pytest.mark.parametrize(
+    "redirect", ["//evil.example.com/x", "https://evil.example.com", "/\\evil"]
+)
+def test_login_redirect_must_be_our_path(client, google, redirect):
+    google()
+    state = _start_login_with_path(client, redirect)
+    res = _callback(client, code="auth-code", state=state)
+    assert res.headers["location"] == "http://localhost:5173/"
+
+
+def test_nickname_is_stable_and_unique():
+    a = User(id=1, google_sub="a", email="a@x", name="가", created_at=0, last_login_at=0)
+    b = User(id=2, google_sub="b", email="b@x", name="가", created_at=0, last_login_at=0)
+    assert auth_service.nickname_for(a) == auth_service.nickname_for(a)
+    assert auth_service.nickname_for(a) != auth_service.nickname_for(b)
 
 
 def test_second_login_updates_same_user(client, google):
@@ -166,7 +214,7 @@ def test_google_token_error(client, google):
 def test_me_requires_login(client):
     res = client.get("/api/auth/me")
     assert res.status_code == 401
-    assert res.json() == {"detail": "로그인이 필요해요.", "code": "NOT_LOGGED_IN"}
+    assert res.json() == {"detail": "로그인이 필요해요.", "code": "LOGIN_REQUIRED"}
 
     client.cookies.set(auth_service.SESSION_COOKIE, "not-a-jwt")
     assert client.get("/api/auth/me").status_code == 401

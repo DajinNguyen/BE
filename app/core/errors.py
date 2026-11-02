@@ -24,8 +24,8 @@ def puzzle_not_found() -> AppError:
     return AppError(404, "PUZZLE_NOT_FOUND", "퍼즐을 찾지 못했어요.")
 
 
-def not_logged_in() -> AppError:
-    return AppError(401, "NOT_LOGGED_IN", "로그인이 필요해요.")
+def login_required() -> AppError:
+    return AppError(401, "LOGIN_REQUIRED", "로그인이 필요해요.")
 
 
 def auth_not_configured() -> AppError:

@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 from app.core.config import get_settings
 from app.core.db import get_session
-from app.core.errors import not_logged_in
+from app.core.errors import login_required
 from app.models.user import User
 from app.services import auth_service
 from app.services.auth_service import SESSION_COOKIE
@@ -37,7 +37,7 @@ def optional_user(
 
 
 def current_user(user: User | None = Depends(optional_user)) -> User:
-    """로그인이 필요한 API용. 로그인하지 않았으면 401 `NOT_LOGGED_IN`."""
+    """로그인이 필요한 API용. 로그인하지 않았으면 401 `LOGIN_REQUIRED`."""
     if user is None:
-        raise not_logged_in()
+        raise login_required()
     return user

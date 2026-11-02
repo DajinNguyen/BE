@@ -43,13 +43,14 @@ uvicorn app.main:app --reload
 
 ## Google 로그인
 
-FE `docs/API_SPEC.md`에 적힌 흐름 그대로예요: `GET /api/auth/google` → Google → 콜백 → JWT 쿠키 → `GET /api/auth/me`.
+FE `docs/auth-api-request.md`에 적힌 흐름 그대로예요: `GET /api/auth/google/login` → Google → 콜백 → JWT 쿠키 → `GET /api/auth/me`.
 
 | 메서드 | 경로 | 내용 |
 | --- | --- | --- |
-| GET | `/api/auth/google?next=<프론트 주소>` | Google 로그인 화면으로 이동해요. 프론트는 `window.location.href`로 이 주소로 보내면 돼요. |
+| GET | `/api/auth/google/login?redirect=<화면 경로>` | Google 로그인 화면으로 이동해요. 프론트는 이 주소로 페이지를 이동시키면 돼요. `redirect`는 `/`로 시작하는 우리 화면 경로만 받아요(`//evil.com`, `https://…`이면 `/`). 프론트 주소는 요청한 화면(Referer)이 `FRONTEND_ORIGINS`에 있으면 그 주소, 아니면 첫 번째 주소예요. |
+| GET | `/api/auth/google?next=<프론트 전체 주소>` | 예전 방식. 그대로 동작해요. |
 | GET | `/api/auth/google/callback` | Google이 돌려보내는 곳. 성공하면 로그인 쿠키를 심고 `next`로, 실패하면 `next?login_error=<이유>`로 보내요. |
-| GET | `/api/auth/me` | `{ "email", "name" }`. 로그인하지 않았으면 `401 NOT_LOGGED_IN` |
+| GET | `/api/auth/me` | `{ "id", "email", "name", "nickname" }`. 로그인하지 않았으면 `401 LOGIN_REQUIRED` |
 | POST | `/api/auth/logout` | 로그인 쿠키를 지워요 (`204`) |
 
 - 설정: `.env`에 `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `JWT_SECRET`을 넣어요. Google Cloud Console의 OAuth 클라이언트(웹 애플리케이션)에 승인된 리디렉션 URI로 `http://localhost:8000/api/auth/google/callback`을 등록해야 해요. 키가 없으면 `/api/auth/google`은 `503 AUTH_NOT_CONFIGURED`예요.
@@ -57,7 +58,8 @@ FE `docs/API_SPEC.md`에 적힌 흐름 그대로예요: `GET /api/auth/google` �
 - 로그인 쿠키 `dajin_session`: HttpOnly, SameSite=Lax, 기본 7일(`SESSION_DAYS`). 프론트는 요청에 `credentials: 'include'`만 있으면 돼요 (이미 그렇게 돼 있어요).
 - 보안: state 값으로 다른 사이트에서 위조한 로그인 요청을 막고, `next`는 허용한 프론트 주소(`FRONTEND_ORIGINS`)로만 돌려보내요.
 - `login_error` 값: `cancelled`(사용자가 취소), `state_mismatch`·`state_missing`·`state_invalid`(10분이 지났거나 위조), `email_not_verified`, `google_error`
-- 다른 API에서 로그인 사용자가 필요하면 `app/api/deps.py`의 `current_user`(필수) / `optional_user`(선택)를 쓰면 돼요.
+- 닉네임(`nickname`): 실명 대신 커뮤니티·상단 메뉴에 보여요(10대 사용자 보호). 사용자 번호로 자동으로 만들어서(예: `반짝이는다람쥐1`) 겹치지 않고, 따로 저장하지 않아요. 직접 정하게 할지는 아직 정하지 않았어요.
+- 다른 API에서 로그인 사용자가 필요하면 `app/api/deps.py`의 `current_user`(필수, 아니면 `401 LOGIN_REQUIRED`) / `optional_user`(선택)를 쓰면 돼요.
 
 ## 프론트와 연결
 
@@ -90,7 +92,7 @@ ruff check app tests && black --check app tests
 | GET / POST | `/api/companies/{stock_code}/report` |
 | GET | `/api/terms` |
 | GET | `/api/learn/crosswords` · `/api/learn/crosswords/{puzzle_id}` |
-| GET / POST | `/api/auth/google` · `/api/auth/me` · `/api/auth/logout` |
+| GET / POST | `/api/auth/google/login` · `/api/auth/me` · `/api/auth/logout` |
 
 ## 데이터
 
