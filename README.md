@@ -14,7 +14,6 @@ uvicorn app.main:app --reload
 - `DATABASE_URL`을 비워두면 로컬 SQLite(`dajin.db`)를 써요.
 - API 문서: http://localhost:8000/docs
 - AI 키(`ANTHROPIC_API_KEY` > `GEMINI_API_KEY`)가 하나도 없으면 삼성전자 예시 리포트(`app/data/report_samsung.json`)로 동작해요.
-- Gemini 키는 예비 키(`GEMINI_API_KEY_2`~`GEMINI_API_KEY_4`)를 더 넣을 수 있어요. 앞 키가 사용 한도(429)에 걸리면 다음 키로 넘어가고, 한도에 걸린 키는 10분 동안 건너뛰어요. 무료 한도는 키가 아니라 Google 프로젝트마다라서, 예비 키는 다른 프로젝트에서 받아야 해요.
 
 ## DART 연동
 
