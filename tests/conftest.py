@@ -5,6 +5,9 @@ os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["DART_API_KEY"] = ""
 # 네이버 시세도 부르지 않는다 (시드 예시 값으로 동작)
 os.environ["NAVER_PRICES_ENABLED"] = "false"
+os.environ["NAVER_CLIENT_ID"] = ""
+os.environ["NAVER_CLIENT_SECRET"] = ""
+os.environ["GOOGLE_NEWS_ENABLED"] = "false"
 # AI 도 부르지 않는다 (.env 에 키가 있어도). 필요한 테스트는 가짜 작성자를 넣는다
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["ANTHROPIC_API_KEY"] = ""

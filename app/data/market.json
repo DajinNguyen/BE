@@ -83,37 +83,43 @@
       "id": "market-chip",
       "title": "미국 빅테크, 데이터센터 투자 확대 발표",
       "summary": "AI 서버를 늘리겠다는 발표에 메모리 반도체 수요 기대가 커졌어요.",
-      "hours_ago": 2
+      "hours_ago": 2,
+      "query": "빅테크 데이터센터 투자"
     },
     {
       "id": "market-chip-2",
       "title": "반도체 수출 증가세 이어져",
       "summary": "이번 달 반도체 수출이 작년보다 늘었다는 통계가 나왔어요.",
-      "hours_ago": 4
+      "hours_ago": 4,
+      "query": "반도체 수출"
     },
     {
       "id": "market-fx",
       "title": "원·달러 환율 하락",
       "summary": "달러 대비 원화 가치가 올라 외국인 투자자의 부담이 줄었어요.",
-      "hours_ago": 3
+      "hours_ago": 3,
+      "query": "원달러 환율"
     },
     {
       "id": "market-foreign",
       "title": "외국인 투자자, 대형주 중심으로 순매수",
       "summary": "외국인 투자자가 판 것보다 산 주식이 더 많았어요.",
-      "hours_ago": 5
+      "hours_ago": 5,
+      "query": "외국인 순매수 코스피"
     },
     {
       "id": "market-bio",
       "title": "바이오 업종, 임상 결과 발표 앞두고 관망",
       "summary": "임상 결과 발표를 앞두고 거래가 줄었어요.",
-      "hours_ago": 6
+      "hours_ago": 6,
+      "query": "바이오 임상"
     },
     {
       "id": "market-battery",
       "title": "2차전지 업종, 원재료 가격 하락 영향",
       "summary": "배터리 원재료 가격이 내려 관련 기업 주가가 약했어요.",
-      "hours_ago": 7
+      "hours_ago": 7,
+      "query": "2차전지 리튬 가격"
     }
   ]
 }

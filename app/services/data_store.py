@@ -5,6 +5,7 @@
 DART 키가 있으면 회사마다 DART 고유번호·공식 회사명을 붙이고, 상세 화면에서는 기업개황으로 빈 값을 채운다.
 재무는 DART 재무제표를 먼저 쓰고, 받지 못하면 시드 재무를 쓴다.
 네이버 시세를 받으면 현재가·등락률·시가총액을 실제 값(`is_sample: false`)으로 바꾼다.
+뉴스는 실제 기사(네이버 검색 API, 키가 없으면 Google 뉴스 RSS)를 쓰고, 받지 못하면 시드 뉴스를 쓴다.
 """
 
 import json
@@ -20,7 +21,7 @@ from app.schemas.financials import Financials, Segments
 from app.schemas.industry import IndustryRef
 from app.schemas.news import NewsArticle, NewsItem, NewsPage
 from app.schemas.term import Term
-from app.services import dart, dart_financials, naver
+from app.services import dart, dart_financials, naver, news_search
 from app.services.market_clock import last_close_date
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -209,8 +210,7 @@ def to_articles(stock_code: str, news: list[NewsItem]) -> list[NewsArticle]:
     ]
 
 
-def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
-    articles = to_articles(stock_code, get_news(stock_code))
+def _seed_page(articles: list[NewsArticle], page: int, size: int) -> NewsPage:
     start = (page - 1) * size
     return NewsPage(
         items=articles[start : start + size],
@@ -218,6 +218,28 @@ def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
         size=size,
         has_next=start + size < len(articles),
     )
+
+
+def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
+    """실제 뉴스 검색(회사 이름, 최신순)을 먼저 쓰고, 받지 못하면 시드 뉴스."""
+    company = get_company(stock_code)
+    start = (page - 1) * size + 1
+    result = news_search.search(company.name, start, size, stock_code)
+    if result is None:
+        return _seed_page(to_articles(stock_code, get_news(stock_code)), page, size)
+    return NewsPage(
+        items=result.articles,
+        page=page,
+        size=size,
+        has_next=start - 1 + size < result.total,
+    )
+
+
+def latest_company_news(stock_code: str, size: int) -> list[NewsArticle]:
+    """리포트에 쓰는 최근 뉴스. 실제 뉴스를 받지 못하면 시드 뉴스."""
+    company = get_company(stock_code)
+    live = news_search.latest(company.name, size, stock_code)
+    return live if live is not None else to_articles(stock_code, get_news(stock_code))[:size]
 
 
 @lru_cache
