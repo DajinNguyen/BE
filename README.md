@@ -139,6 +139,18 @@ FE `docs/community-api-request.md` 형식 그대로예요. **보기는 누구나
 - 글을 지우면 댓글·좋아요·신고 기록도 함께 지워요.
 - 테이블: `community_posts`, `community_comments`, `community_likes`, `community_reports` (서버를 켤 때 자동으로 만들어요).
 
+## AI 기업 개요 (사업보고서 정리)
+
+시드에 사업부문·회사의 방향이 없는 회사는 DART 최신 사업보고서의 "II. 사업의 내용"을 AI가 쉬운 말로 정리해서 채워요.
+
+- 채우는 칸: `business_segments`(사업부문 2~5개), `timeline`(최근 흐름 + 계획 1개), `timeline_source`(예: "SK하이닉스 2025년 사업보고서 (2026년 3월 공시)"), 시드에 없으면 `business_description`.
+- 상세 화면(`GET /api/companies/{stock_code}`)을 처음 열면 백그라운드에서 만들기 시작하고, 다음 요청부터 채워져요. 결과는 `company_overviews` 테이블에 회사별로 저장해요.
+- 미리 한꺼번에 만들기: `python -m app.scripts.generate_overviews` (한 곳씩, 사이에 13초 쉬어요. 지정한 회사만 다시: `... generate_overviews 000660`, 최대 개수: `--limit 10`, 유료 키면 `--interval 0`)
+- Gemini 무료 등급은 분당 5회·하루 20회예요. AI 리포트와 한도를 같이 쓰니, 무료 키로는 하루에 몇 곳씩 나눠 만들어요. 한도(429)에 걸리면 멈추고, 다시 실행하면 이어서 만들어요.
+- 필요한 키: `DART_API_KEY` + `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY`. AI 키가 없으면 만들지 않고 시드 값만 보여줘요.
+- 숫자는 사업보고서 글과 DART 연도별 재무에 있는 값만 쓰게 하고, 회사의 방향의 지난 연도는 DART 재무가 있는 연도만 남겨요. 실패하면 1시간 뒤에 다시 시도해요.
+- 사업보고서 원문에서 잘라낸 글은 `.cache/dart/business_<접수번호>.txt`에 캐시해요.
+
 ## 산업
 
 - 산업 10개(AI·반도체·조선·방산·2차전지·바이오·인터넷·자동차·금융·게임)의 설명·관련 기업·기간별 변화율은 `app/data/industries.json` 시드예요. 프론트 목 데이터와 같은 값이에요.

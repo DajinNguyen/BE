@@ -3,13 +3,17 @@
 - 고유번호 목록(corpCode.xml): 상장 회사의 DART 고유번호·공식 회사명·영문명. 하루 한 번 받아서 파일로 캐시한다.
 - 기업개황(company.json): 홈페이지 등 회사 기본 정보. 회사별로 캐시한다.
 - 단일회사 주요계정(fnlttSinglAcnt.json): 매출·영업이익·순이익·부채·자본. 보고서별로 하루 캐시한다.
+- 사업보고서 원문(list.json → document.xml): 최신 사업보고서의 "II. 사업의 내용" 글자만 잘라 쓴다.
+  보고서 목록은 하루, 원문에서 잘라낸 글자는 바뀌지 않으므로 계속 캐시한다.
 
 키가 없거나 DART가 응답하지 않으면 빈 값을 돌려주고, 호출하는 쪽은 시드 데이터만으로 동작한다.
 """
 
+import html
 import io
 import json
 import logging
+import re
 import threading
 import time
 import zipfile
@@ -30,9 +34,41 @@ CORP_CODES_TTL = 24 * 60 * 60  # 하루
 OVERVIEW_TTL = 7 * 24 * 60 * 60  # 일주일
 ACCOUNTS_TTL = 24 * 60 * 60  # 하루 (새 보고서가 공시되면 다음 날 반영)
 TIMEOUT = 10.0
+DOCUMENT_TIMEOUT = 60.0  # 사업보고서 원문 zip 은 수백 KB~수 MB
+REPORT_LIST_TTL = 24 * 60 * 60  # 하루
+BUSINESS_SECTION = ("II. 사업의 내용", "III. 재무에 관한 사항")
 RETRY_AFTER = (
     10 * 60
 )  # 받기에 실패하면 이 시간 동안은 다시 시도하지 않는다 (검색이 매번 막히지 않게)
+
+
+@dataclass(frozen=True)
+class AnnualReport:
+    rcept_no: str  # 접수번호 (원문 주소에 쓴다)
+    report_nm: str  # 예: "사업보고서 (2025.12)"
+    rcept_dt: str  # 공시일 YYYYMMDD
+
+
+def _section_text(document: str, start: str, end: str) -> str:
+    """공시 원문(XML)에서 start 제목부터 end 제목 전까지를 글자만 남겨 돌려준다. 없으면 ""."""
+    title = r"<TITLE[^>]*>\s*{}\s*</TITLE>"
+    head = re.search(title.format(re.escape(start)), document)
+    if head is None:
+        return ""
+    tail = re.search(title.format(re.escape(end)), document[head.end() :])
+    chunk = document[head.start() : head.end() + tail.start()] if tail else document[head.start() :]
+    chunk = re.sub(r"<(TR|P|TITLE|BR)[^>]*>", "\n", chunk, flags=re.I)
+    chunk = re.sub(r"<T[DHE][^>]*>", " | ", chunk, flags=re.I)  # 표 칸
+    chunk = re.sub(r"<[^>]+>", "", chunk)
+    chunk = html.unescape(chunk)
+    chunk = re.sub(r"[ \t\u00a0]+", " ", chunk)
+    chunk = re.sub(r"\n\s*\n+", "\n", chunk)
+    return chunk.strip()
+
+
+def business_section_text(document: str) -> str:
+    """사업보고서 원문에서 "II. 사업의 내용"만."""
+    return _section_text(document, *BUSINESS_SECTION)
 
 
 @dataclass(frozen=True)
@@ -184,6 +220,75 @@ class DartClient:
         self._accounts[key] = (time.time(), rows)
         return rows
 
+    # ------------------------------------------------------------------ 사업보고서 원문
+
+    def latest_annual_report(self, corp_code: str) -> AnnualReport | None:
+        """가장 최근 사업보고서. 없거나 받지 못하면 None."""
+        name = f"annual_{corp_code}.json"
+        data = self._read_cache(name, REPORT_LIST_TTL)
+        if data is None:
+            begin = time.strftime("%Y%m%d", time.localtime(time.time() - 3 * 365 * 24 * 60 * 60))
+            try:
+                res = httpx.get(
+                    f"{BASE_URL}/list.json",
+                    params={
+                        "crtfc_key": self._key,
+                        "corp_code": corp_code,
+                        "bgn_de": begin,
+                        "pblntf_detail_ty": "A001",  # 정기공시 > 사업보고서
+                        "page_count": 10,
+                    },
+                    timeout=TIMEOUT,
+                )
+                res.raise_for_status()
+                body = res.json()
+            except (httpx.HTTPError, ValueError) as e:
+                logger.warning("DART 사업보고서 목록을 받지 못했어요 (%s): %s", corp_code, e)
+                return None
+            if body.get("status") not in ("000", "013"):
+                logger.warning("DART 공시 목록 오류 (%s): %s", corp_code, body.get("message"))
+                return None
+            reports = [
+                r for r in body.get("list") or [] if r.get("report_nm", "").startswith("사업보고서")
+            ]
+            data = (
+                {k: reports[0][k] for k in ("rcept_no", "report_nm", "rcept_dt")} if reports else {}
+            )
+            self._write_cache(name, data)
+        return AnnualReport(**data) if data else None
+
+    def business_section(self, rcept_no: str) -> str | None:
+        """사업보고서 원문의 "II. 사업의 내용" 글자. 받지 못하거나 찾지 못하면 None."""
+        path = self._cache_dir / f"business_{rcept_no}.txt"
+        try:
+            return path.read_text(encoding="utf-8")
+        except OSError:
+            pass
+        try:
+            res = httpx.get(
+                f"{BASE_URL}/document.xml",
+                params={"crtfc_key": self._key, "rcept_no": rcept_no},
+                timeout=DOCUMENT_TIMEOUT,
+            )
+            res.raise_for_status()
+            archive = zipfile.ZipFile(io.BytesIO(res.content))
+            # 본문은 가장 큰 파일 (나머지는 감사보고서 등 첨부)
+            main = max(archive.infolist(), key=lambda info: info.file_size)
+            document = archive.read(main).decode("utf-8", errors="replace")
+        except (httpx.HTTPError, zipfile.BadZipFile, ValueError) as e:
+            logger.warning("DART 사업보고서 원문을 받지 못했어요 (%s): %s", rcept_no, e)
+            return None
+        text = business_section_text(document)
+        if not text:
+            logger.warning("사업보고서에서 사업의 내용을 찾지 못했어요 (%s)", rcept_no)
+            return None
+        try:
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+        except OSError:
+            logger.warning("DART 캐시 파일을 쓰지 못했어요: %s", path.name)
+        return text
+
 
 @lru_cache
 def get_dart() -> DartClient | None:
@@ -206,6 +311,16 @@ def company_overview(corp_code: str) -> dict[str, Any] | None:
 def single_accounts(corp_code: str, year: int, reprt_code: str) -> list[dict] | None:
     client = get_dart()
     return client.single_accounts(corp_code, year, reprt_code) if client else None
+
+
+def latest_annual_report(corp_code: str) -> AnnualReport | None:
+    client = get_dart()
+    return client.latest_annual_report(corp_code) if client else None
+
+
+def business_section(rcept_no: str) -> str | None:
+    client = get_dart()
+    return client.business_section(rcept_no) if client else None
 
 
 def warm_up() -> None:
