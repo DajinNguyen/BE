@@ -354,52 +354,6 @@
     }
   },
   {
-    "stock_code": "105560",
-    "corp_code": null,
-    "name": "KB금융",
-    "name_en": "KB Financial Group",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 112300,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.81,
-      "is_sample": true
-    },
-    "one_liner": "KB국민은행 등 여러 금융회사를 거느린 금융그룹이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 45.0,
-      "is_sample": true
-    }
-  },
-  {
-    "stock_code": "055550",
-    "corp_code": null,
-    "name": "신한지주",
-    "name_en": "Shinhan Financial Group",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 68900,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.44,
-      "is_sample": true
-    },
-    "one_liner": "신한은행 등 여러 금융회사를 거느린 금융그룹이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 35.0,
-      "is_sample": true
-    }
-  },
-  {
     "stock_code": "012330",
     "corp_code": null,
     "name": "현대모비스",
@@ -440,29 +394,6 @@
     },
     "one_liner": "건물을 짓고 무역·패션·리조트 사업도 하는 회사예요",
     "market_alert": null
-  },
-  {
-    "stock_code": "032830",
-    "corp_code": null,
-    "name": "삼성생명",
-    "name_en": "Samsung Life Insurance",
-    "sector": "보험",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 121000,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -0.33,
-      "is_sample": true
-    },
-    "one_liner": "생명보험을 파는 보험회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 24.0,
-      "is_sample": true
-    }
   },
   {
     "stock_code": "003670",
@@ -600,52 +531,6 @@
     },
     "one_liner": "LG그룹의 여러 회사를 거느린 지주회사예요",
     "market_alert": null
-  },
-  {
-    "stock_code": "086790",
-    "corp_code": null,
-    "name": "하나금융지주",
-    "name_en": "Hana Financial Group",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 72100,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.98,
-      "is_sample": true
-    },
-    "one_liner": "하나은행 등 여러 금융회사를 거느린 금융그룹이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 20.0,
-      "is_sample": true
-    }
-  },
-  {
-    "stock_code": "316140",
-    "corp_code": null,
-    "name": "우리금융지주",
-    "name_en": "Woori Financial Group",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 22350,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.45,
-      "is_sample": true
-    },
-    "one_liner": "우리은행 등 여러 금융회사를 거느린 금융그룹이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 16.0,
-      "is_sample": true
-    }
   },
   {
     "stock_code": "096770",
@@ -1540,94 +1425,6 @@
     }
   },
   {
-    "stock_code": "000810",
-    "corp_code": null,
-    "name": "삼성화재",
-    "name_en": "Samsung Fire & Marine Insurance",
-    "sector": "보험",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 412000,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.24,
-      "is_sample": true
-    },
-    "one_liner": "자동차·화재·건강보험을 파는 손해보험 회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 19.0,
-      "is_sample": true
-    }
-  },
-  {
-    "stock_code": "005830",
-    "corp_code": null,
-    "name": "DB손해보험",
-    "name_en": "DB Insurance",
-    "sector": "보험",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 112500,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -0.18,
-      "is_sample": true
-    },
-    "one_liner": "자동차·건강보험을 파는 손해보험 회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 6.8,
-      "is_sample": true
-    }
-  },
-  {
-    "stock_code": "001450",
-    "corp_code": null,
-    "name": "현대해상",
-    "name_en": "Hyundai Marine & Fire Insurance",
-    "sector": "보험",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 24850,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.4,
-      "is_sample": true
-    },
-    "one_liner": "자동차·건강보험을 파는 손해보험 회사예요",
-    "market_alert": null
-  },
-  {
-    "stock_code": "088350",
-    "corp_code": null,
-    "name": "한화생명",
-    "name_en": "Hanwha Life Insurance",
-    "sector": "보험",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 3150,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -0.32,
-      "is_sample": true
-    },
-    "one_liner": "생명보험을 파는 보험회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 2.7,
-      "is_sample": true
-    }
-  },
-  {
     "stock_code": "138040",
     "corp_code": null,
     "name": "메리츠금융지주",
@@ -1647,29 +1444,6 @@
     "market_alert": null,
     "market_cap": {
       "value": 21.0,
-      "is_sample": true
-    }
-  },
-  {
-    "stock_code": "024110",
-    "corp_code": null,
-    "name": "기업은행",
-    "name_en": "Industrial Bank of Korea",
-    "sector": "은행",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 16420,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.24,
-      "is_sample": true
-    },
-    "one_liner": "중소기업에 돈을 빌려주는 일을 많이 하는 은행이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 13.0,
       "is_sample": true
     }
   },
@@ -1716,29 +1490,6 @@
     "market_alert": null,
     "market_cap": {
       "value": 11.0,
-      "is_sample": true
-    }
-  },
-  {
-    "stock_code": "016360",
-    "corp_code": null,
-    "name": "삼성증권",
-    "name_en": "Samsung Securities",
-    "sector": "증권",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 61200,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.66,
-      "is_sample": true
-    },
-    "one_liner": "주식 거래와 자산 관리 서비스를 하는 증권사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 5.5,
       "is_sample": true
     }
   },
@@ -3115,30 +2866,6 @@
     "homepage_url": "https://www.poscointl.com"
   },
   {
-    "stock_code": "005940",
-    "corp_code": "00120182",
-    "name": "NH투자증권",
-    "name_en": "NH INVESTMENT & SECURITIES",
-    "sector": "증권",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 24150,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.42,
-      "is_sample": true
-    },
-    "one_liner": "주식 거래와 다양한 투자 서비스를 제공하는 증권사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 8.9,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.nhqv.com"
-  },
-  {
     "stock_code": "064400",
     "corp_code": "00139834",
     "name": "LG씨엔에스",
@@ -3307,30 +3034,6 @@
     "homepage_url": "https://www.sanil.co.kr"
   },
   {
-    "stock_code": "175330",
-    "corp_code": "00980122",
-    "name": "JB금융지주",
-    "name_en": "JB FINANCIAL GROUP",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 25450,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -1.74,
-      "is_sample": true
-    },
-    "one_liner": "지방은행을 중심으로 여러 금융회사를 거느린 금융그룹이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 4.7,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.jbfg.com"
-  },
-  {
     "stock_code": "047040",
     "corp_code": "00124540",
     "name": "대우건설",
@@ -3379,30 +3082,6 @@
     "homepage_url": "https://www.simmtech.co.kr"
   },
   {
-    "stock_code": "088980",
-    "corp_code": "00435297",
-    "name": "맥쿼리인프라",
-    "name_en": "Macquarie Korea Infrastructure Fund",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 9650,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.31,
-      "is_sample": true
-    },
-    "one_liner": "도로와 철도 같은 사회 기반 시설에 투자하는 회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 4.6,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.macquarie.com/kr/kr/mkif/index.html"
-  },
-  {
     "stock_code": "000250",
     "corp_code": "00128546",
     "name": "삼천당제약",
@@ -3425,30 +3104,6 @@
       "is_sample": true
     },
     "homepage_url": "https://www.scd.co.kr"
-  },
-  {
-    "stock_code": "138930",
-    "corp_code": "00858364",
-    "name": "BNK금융지주",
-    "name_en": "BNK Financial Group",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 13110,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -0.91,
-      "is_sample": true
-    },
-    "one_liner": "지방은행을 중심으로 여러 금융회사를 거느린 금융그룹이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 4.0,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.bnkfg.com"
   },
   {
     "stock_code": "001440",
@@ -3787,30 +3442,6 @@
     "homepage_url": "https://-"
   },
   {
-    "stock_code": "031210",
-    "corp_code": "00112998",
-    "name": "서울보증보험",
-    "name_en": "Seoul Guarantee Insurance Company",
-    "sector": "보험",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 42950,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -0.35,
-      "is_sample": true
-    },
-    "one_liner": "다양한 보증 서비스를 제공하는 보험회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 3.0,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.sgic.co.kr"
-  },
-  {
     "stock_code": "008930",
     "corp_code": "00161426",
     "name": "한미사이언스",
@@ -3955,30 +3586,6 @@
     "homepage_url": "https://www.hyundaielevator.co.kr"
   },
   {
-    "stock_code": "085620",
-    "corp_code": "00112332",
-    "name": "미래에셋생명",
-    "name_en": "MIRAE ASSET Life Insurance CO.",
-    "sector": "보험",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 19890,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 1.27,
-      "is_sample": true
-    },
-    "one_liner": "생명보험 서비스를 제공하는 금융회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 2.7,
-      "is_sample": true
-    },
-    "homepage_url": "https://life.miraeasset.com"
-  },
-  {
     "stock_code": "082740",
     "corp_code": "00361008",
     "name": "한화엔진",
@@ -4075,30 +3682,6 @@
     "homepage_url": "https://www.tse21.com"
   },
   {
-    "stock_code": "139130",
-    "corp_code": "00878915",
-    "name": "iM금융지주",
-    "name_en": "iM Financial Group",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 15500,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -1.71,
-      "is_sample": true
-    },
-    "one_liner": "은행과 증권 등 여러 금융회사를 거느린 금융그룹이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 2.5,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.imfngroup.com"
-  },
-  {
     "stock_code": "004170",
     "corp_code": "00136378",
     "name": "신세계",
@@ -4121,30 +3704,6 @@
       "is_sample": true
     },
     "homepage_url": "https://www.shinsegae.com"
-  },
-  {
-    "stock_code": "003690",
-    "corp_code": "00113191",
-    "name": "코리안리",
-    "name_en": "Korean Reinsurance Company",
-    "sector": "보험",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 13770,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -1.36,
-      "is_sample": true
-    },
-    "one_liner": "보험회사가 가입한 보험의 위험을 나누어 맡는 회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 2.4,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.koreanre.co.kr"
   },
   {
     "stock_code": "018670",
@@ -4603,30 +4162,6 @@
     "homepage_url": "https://www.taihanfiber.com"
   },
   {
-    "stock_code": "226950",
-    "corp_code": "01113718",
-    "name": "올릭스",
-    "name_en": "OliX Pharmaceuticals",
-    "sector": "바이오·제약",
-    "sector_group": "etc",
-    "market": "KOSDAQ",
-    "current_price": {
-      "value": 93300,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -0.74,
-      "is_sample": true
-    },
-    "one_liner": "RNA 기술을 활용해 신약을 개발하는 바이오 회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 2.1,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.olixpharma.com"
-  },
-  {
     "stock_code": "005440",
     "corp_code": "00105280",
     "name": "현대지에프홀딩스",
@@ -4673,30 +4208,6 @@
       "is_sample": true
     },
     "homepage_url": "http://www.hites.co.kr"
-  },
-  {
-    "stock_code": "279570",
-    "corp_code": "01203312",
-    "name": "케이뱅크",
-    "name_en": "Kbank",
-    "sector": "인터넷은행",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 5200,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 2.16,
-      "is_sample": true
-    },
-    "one_liner": "지점 없이 인터넷으로만 서비스를 제공하는 은행이에요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 2.1,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.kbanknow.com"
   },
   {
     "stock_code": "004800",
@@ -5467,30 +4978,6 @@
     "homepage_url": "https://www.parkafm.co.kr"
   },
   {
-    "stock_code": "140410",
-    "corp_code": "00808022",
-    "name": "메지온",
-    "name_en": "Mezzion Pharma",
-    "sector": "바이오·제약",
-    "sector_group": "etc",
-    "market": "KOSDAQ",
-    "current_price": {
-      "value": 51400,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": 0.39,
-      "is_sample": true
-    },
-    "one_liner": "새로운 의약품을 연구하고 개발하는 회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 1.6,
-      "is_sample": true
-    },
-    "homepage_url": "https://-"
-  },
-  {
     "stock_code": "001120",
     "corp_code": "00120076",
     "name": "LX인터내셔널",
@@ -6211,30 +5698,6 @@
     "homepage_url": "https://www.skietechnology.com/"
   },
   {
-    "stock_code": "415640",
-    "corp_code": "01880801",
-    "name": "KB발해인프라",
-    "name_en": "KB Balhae Infrastructure Fund",
-    "sector": "금융",
-    "sector_group": "finance",
-    "market": "KOSPI",
-    "current_price": {
-      "value": 9970,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -0.7,
-      "is_sample": true
-    },
-    "one_liner": "국내 여러 도로나 터널 같은 인프라에 투자하는 회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 1.2,
-      "is_sample": true
-    },
-    "homepage_url": ""
-  },
-  {
     "stock_code": "120110",
     "corp_code": "00795135",
     "name": "코오롱인더",
@@ -6763,30 +6226,6 @@
     "homepage_url": "https://www.foosungchem.com"
   },
   {
-    "stock_code": "950260",
-    "corp_code": "02031369",
-    "name": "인제니아테라퓨틱스",
-    "name_en": "INGENIA Therapeutics",
-    "sector": "바이오·제약",
-    "sector_group": "etc",
-    "market": "KOSDAQ",
-    "current_price": {
-      "value": 21300,
-      "is_sample": true
-    },
-    "change_rate": {
-      "value": -4.7,
-      "is_sample": true
-    },
-    "one_liner": "새로운 의약품을 연구하고 개발하는 바이오 회사예요",
-    "market_alert": null,
-    "market_cap": {
-      "value": 1.1,
-      "is_sample": true
-    },
-    "homepage_url": "https://www.ingeniatx.com"
-  },
-  {
     "stock_code": "232140",
     "corp_code": "01109539",
     "name": "와이씨",
@@ -6929,5 +6368,581 @@
       "is_sample": true
     },
     "homepage_url": "https://www.niceinfo.co.kr"
+  },
+  {
+    "stock_code": "0126Z0",
+    "corp_code": "01965324",
+    "name": "삼성에피스홀딩스",
+    "name_en": "SAMSUNG EPIS HOLDINGS",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 314500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.62,
+      "is_sample": true
+    },
+    "one_liner": "바이오의약품 개발 및 투자를 하는 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 7.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.samsungepisholdings.com"
+  },
+  {
+    "stock_code": "0009K0",
+    "corp_code": "01781999",
+    "name": "에임드바이오",
+    "name_en": "Aimed Bio",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 19210,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.86,
+      "is_sample": true
+    },
+    "one_liner": "차세대 항암제인 ADC 치료제를 개발하는 바이오 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.3,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.aimedbio.com"
+  },
+  {
+    "stock_code": "204270",
+    "corp_code": "00447575",
+    "name": "제이앤티씨",
+    "name_en": "JNTC",
+    "sector": "전자 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 17120,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.57,
+      "is_sample": true
+    },
+    "one_liner": "스마트폰용 강화유리와 커넥터를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.thejnt.com"
+  },
+  {
+    "stock_code": "195940",
+    "corp_code": "01012066",
+    "name": "HK이노엔",
+    "name_en": "HK inno.N",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 34400,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.44,
+      "is_sample": true
+    },
+    "one_liner": "의약품과 숙취해소제를 만들고 파는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.inno-n.com"
+  },
+  {
+    "stock_code": "166090",
+    "corp_code": "00660750",
+    "name": "하나머티리얼즈",
+    "name_en": "Hana Materials",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 49300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.65,
+      "is_sample": true
+    },
+    "one_liner": "반도체 식각 공정에 쓰이는 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://hanamts.com"
+  },
+  {
+    "stock_code": "192400",
+    "corp_code": "00132354",
+    "name": "쿠쿠홀딩스",
+    "name_en": "Cuckoo Holdings",
+    "sector": "생활가전",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 27200,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -1.27,
+      "is_sample": true
+    },
+    "one_liner": "전기밥솥과 다양한 주방 가전제품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cuckoo.co.kr"
+  },
+  {
+    "stock_code": "252990",
+    "corp_code": "01199727",
+    "name": "샘씨엔에스",
+    "name_en": "SEMCNS",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 15990,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.27,
+      "is_sample": true
+    },
+    "one_liner": "반도체 테스트 장비에 쓰이는 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 1.0,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.semcns.com"
+  },
+  {
+    "stock_code": "009240",
+    "corp_code": "00161693",
+    "name": "한샘",
+    "name_en": "HANSSEM",
+    "sector": "가구·인테리어",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 40050,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 0.63,
+      "is_sample": true
+    },
+    "one_liner": "가구와 홈 인테리어 제품을 판매하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://company.hanssem.com"
+  },
+  {
+    "stock_code": "003240",
+    "corp_code": "00153393",
+    "name": "태광산업",
+    "name_en": "TAEKWANG INDUSTRIAL",
+    "sector": "화학",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 849000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.28,
+      "is_sample": true
+    },
+    "one_liner": "석유화학 제품과 섬유를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.taekwang.co.kr"
+  },
+  {
+    "stock_code": "035760",
+    "corp_code": "00265324",
+    "name": "CJ ENM",
+    "name_en": "CJ ENM",
+    "sector": "엔터테인먼트",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 43100,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.41,
+      "is_sample": true
+    },
+    "one_liner": "방송, 영화, 음악, 쇼핑 서비스를 하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cjmall.com"
+  },
+  {
+    "stock_code": "056190",
+    "corp_code": "00358271",
+    "name": "SFA",
+    "name_en": "SFA Engineering",
+    "sector": "자동화 설비",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 25850,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.17,
+      "is_sample": true
+    },
+    "one_liner": "물류시스템과 반도체 패키징 부품을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sfa.co.kr"
+  },
+  {
+    "stock_code": "356860",
+    "corp_code": "00920379",
+    "name": "티엘비",
+    "name_en": "TLB",
+    "sector": "반도체 부품",
+    "sector_group": "semiconductor",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 39000,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 5.69,
+      "is_sample": true
+    },
+    "one_liner": "메모리 반도체용 인쇄회로기판을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.tlbpcb.com"
+  },
+  {
+    "stock_code": "034230",
+    "corp_code": "00171265",
+    "name": "파라다이스",
+    "name_en": "PARADISE",
+    "sector": "카지노·호텔",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 9930,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.97,
+      "is_sample": true
+    },
+    "one_liner": "외국인 전용 카지노와 호텔을 운영하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.paradise.co.kr/ko/main"
+  },
+  {
+    "stock_code": "003090",
+    "corp_code": "00111810",
+    "name": "대웅",
+    "name_en": "DAEWOONG",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 15750,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 4.24,
+      "is_sample": true
+    },
+    "one_liner": "의약품과 바이오 자회사들을 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.daewoong.com/"
+  },
+  {
+    "stock_code": "322000",
+    "corp_code": "01199550",
+    "name": "HD현대에너지솔루션",
+    "name_en": "HD HYUNDAI ENERGY SOLUTIONS",
+    "sector": "태양광",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 81700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 10.11,
+      "is_sample": true
+    },
+    "one_liner": "태양광 셀과 모듈을 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.hd-hyundaies.co.kr"
+  },
+  {
+    "stock_code": "004000",
+    "corp_code": "00157681",
+    "name": "롯데정밀화학",
+    "name_en": "LOTTE Fine Chemical",
+    "sector": "화학",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 35250,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.42,
+      "is_sample": true
+    },
+    "one_liner": "화학제품과 건축용 첨가제를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.lottefinechem.com"
+  },
+  {
+    "stock_code": "445680",
+    "corp_code": "01498974",
+    "name": "큐리옥스바이오시스템즈",
+    "name_en": "Curiox Biosystems",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 52600,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 6.48,
+      "is_sample": true
+    },
+    "one_liner": "세포 분석 공정을 자동화하는 장비를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://curiox.co.kr/"
+  },
+  {
+    "stock_code": "000210",
+    "corp_code": "00109693",
+    "name": "DL",
+    "name_en": "DL Holdings",
+    "sector": "지주회사",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 41700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 3.47,
+      "is_sample": true
+    },
+    "one_liner": "화학 소재와 자동차 부품 자회사를 거느린 지주회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.dlholdings.co.kr"
+  },
+  {
+    "stock_code": "458870",
+    "corp_code": "01514227",
+    "name": "씨어스",
+    "name_en": "SEERS",
+    "sector": "바이오·제약",
+    "sector_group": "etc",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 22700,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.34,
+      "is_sample": true
+    },
+    "one_liner": "웨어러블 의료기기와 심전도 분석 서비스를 하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://seers.co.kr"
+  },
+  {
+    "stock_code": "009450",
+    "corp_code": "00101488",
+    "name": "경동나비엔",
+    "name_en": "KYUNG DONG NAVIEN",
+    "sector": "보일러·냉난방",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 59300,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 2.6,
+      "is_sample": true
+    },
+    "one_liner": "가스보일러와 온수기를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kdnavien.co.kr"
+  },
+  {
+    "stock_code": "093320",
+    "corp_code": "00603348",
+    "name": "케이아이엔엑스",
+    "name_en": "KINX",
+    "sector": "IT 서비스",
+    "sector_group": "internet",
+    "market": "KOSDAQ",
+    "current_price": {
+      "value": 175800,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -0.57,
+      "is_sample": true
+    },
+    "one_liner": "데이터센터와 인터넷 인프라 서비스를 제공하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.kinx.net"
+  },
+  {
+    "stock_code": "079160",
+    "corp_code": "00303873",
+    "name": "CJ CGV",
+    "name_en": "CJ CGV",
+    "sector": "영화관",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 5190,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 1.37,
+      "is_sample": true
+    },
+    "one_liner": "영화관을 운영하고 특별관 기술을 서비스하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.cgv.co.kr"
+  },
+  {
+    "stock_code": "032350",
+    "corp_code": "00231372",
+    "name": "롯데관광개발",
+    "name_en": "LOTTE TOUR DEVELOPMENT",
+    "sector": "카지노·호텔",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 10790,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": 7.47,
+      "is_sample": true
+    },
+    "one_liner": "카지노와 호텔, 리조트 사업을 운영하는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.9,
+      "is_sample": true
+    },
+    "homepage_url": "https://lottetour.com"
+  },
+  {
+    "stock_code": "006110",
+    "corp_code": "00126779",
+    "name": "삼아알미늄",
+    "name_en": "SAMA ALUMINIUM",
+    "sector": "화학·소재",
+    "sector_group": "etc",
+    "market": "KOSPI",
+    "current_price": {
+      "value": 54500,
+      "is_sample": true
+    },
+    "change_rate": {
+      "value": -6.36,
+      "is_sample": true
+    },
+    "one_liner": "배터리 소재인 알루미늄박과 포장재를 만드는 회사예요",
+    "market_alert": null,
+    "market_cap": {
+      "value": 0.8,
+      "is_sample": true
+    },
+    "homepage_url": "https://www.sama-al.com"
   }
 ]
