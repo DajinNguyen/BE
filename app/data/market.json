@@ -1,0 +1,119 @@
+{
+  "headline": "반도체 강세에 코스피가 1% 넘게 올랐어요",
+  "indices": [
+    {
+      "code": "KOSPI",
+      "open": 2661.37,
+      "value": 2684.32,
+      "change": 31.2,
+      "change_rate": 1.18
+    },
+    {
+      "code": "KOSDAQ",
+      "open": 816.8,
+      "value": 812.4,
+      "change": -2.1,
+      "change_rate": -0.26
+    }
+  ],
+  "reasons": [
+    {
+      "title": "AI 서버용 메모리 기대가 커졌어요",
+      "description": "빅테크 데이터센터 투자 소식에 메모리 반도체가 주목받았어요.",
+      "industries": [
+        {
+          "industry_id": "semiconductor",
+          "name": "반도체",
+          "change_rate": 2.1
+        },
+        {
+          "industry_id": "ai",
+          "name": "AI",
+          "change_rate": 1.8
+        }
+      ],
+      "news_ids": [
+        "market-chip",
+        "market-chip-2"
+      ]
+    },
+    {
+      "title": "외국인이 대형주를 샀어요",
+      "description": "환율이 내려 외국인 매수가 늘었어요.",
+      "industries": [
+        {
+          "industry_id": "finance",
+          "name": "금융",
+          "change_rate": 0.8
+        },
+        {
+          "industry_id": "auto",
+          "name": "자동차",
+          "change_rate": 0.6
+        }
+      ],
+      "news_ids": [
+        "market-fx",
+        "market-foreign"
+      ]
+    },
+    {
+      "title": "2차전지는 약했어요",
+      "description": "배터리 원재료 값이 내려 주가도 내렸어요.",
+      "industries": [
+        {
+          "industry_id": "battery",
+          "name": "2차전지",
+          "change_rate": -1.3
+        },
+        {
+          "industry_id": "bio",
+          "name": "바이오",
+          "change_rate": -0.4
+        }
+      ],
+      "news_ids": [
+        "market-battery",
+        "market-bio"
+      ]
+    }
+  ],
+  "news": [
+    {
+      "id": "market-chip",
+      "title": "미국 빅테크, 데이터센터 투자 확대 발표",
+      "summary": "AI 서버를 늘리겠다는 발표에 메모리 반도체 수요 기대가 커졌어요.",
+      "hours_ago": 2
+    },
+    {
+      "id": "market-chip-2",
+      "title": "반도체 수출 증가세 이어져",
+      "summary": "이번 달 반도체 수출이 작년보다 늘었다는 통계가 나왔어요.",
+      "hours_ago": 4
+    },
+    {
+      "id": "market-fx",
+      "title": "원·달러 환율 하락",
+      "summary": "달러 대비 원화 가치가 올라 외국인 투자자의 부담이 줄었어요.",
+      "hours_ago": 3
+    },
+    {
+      "id": "market-foreign",
+      "title": "외국인 투자자, 대형주 중심으로 순매수",
+      "summary": "외국인 투자자가 판 것보다 산 주식이 더 많았어요.",
+      "hours_ago": 5
+    },
+    {
+      "id": "market-bio",
+      "title": "바이오 업종, 임상 결과 발표 앞두고 관망",
+      "summary": "임상 결과 발표를 앞두고 거래가 줄었어요.",
+      "hours_ago": 6
+    },
+    {
+      "id": "market-battery",
+      "title": "2차전지 업종, 원재료 가격 하락 영향",
+      "summary": "배터리 원재료 가격이 내려 관련 기업 주가가 약했어요.",
+      "hours_ago": 7
+    }
+  ]
+}
