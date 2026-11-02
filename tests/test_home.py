@@ -35,7 +35,7 @@ def test_home_sector_companies(client):
     for group, companies in sectors.items():
         assert all(c["sector_group"] == group for c in companies)
     # 모든 회사가 정확히 한 탭에 들어간다
-    assert sum(len(c) for c in sectors.values()) == 135
+    assert sum(len(c) for c in sectors.values()) == 300
 
 
 def test_home_lists_generated_reports(client):
