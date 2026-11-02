@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from sqlmodel import Session
 
+from app.api.deps import get_overview_writer
+from app.core.db import get_session, new_session
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.financials import Financials
 from app.schemas.news import NewsPage
 from app.schemas.price import Period, PriceHistory
-from app.services import data_store, price_service
+from app.services import data_store, overview_service, price_service
+from app.services.overview_service import OverviewWriter
 
 router = APIRouter(prefix="/api/companies", tags=["companies"])
 
@@ -21,8 +25,20 @@ def search_companies(
 
 
 @router.get("/{stock_code}", response_model=CompanyDetail)
-def get_company(stock_code: str):
-    return data_store.get_company_detail(stock_code)
+def get_company(
+    stock_code: str,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+    writer: OverviewWriter | None = Depends(get_overview_writer),
+):
+    """시드에 개요가 없는 회사는 AI 개요(사업보고서 정리)를 채운다.
+
+    아직 없으면 백그라운드에서 만들기 시작하고, 다음 요청부터 채워진다.
+    """
+    company = overview_service.apply_overview(session, data_store.get_company_detail(stock_code))
+    if writer is not None and overview_service.start_generation(session, company):
+        background_tasks.add_task(overview_service.run_generation, stock_code, writer, new_session)
+    return company
 
 
 @router.get("/{stock_code}/financials", response_model=Financials)

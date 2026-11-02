@@ -9,6 +9,11 @@ from app.core.errors import login_required
 from app.models.user import User
 from app.services import auth_service
 from app.services.auth_service import SESSION_COOKIE
+from app.services.overview_service import (
+    ClaudeOverviewWriter,
+    GeminiOverviewWriter,
+    OverviewWriter,
+)
 from app.services.report_service import (
     ClaudeReportWriter,
     FixtureReportWriter,
@@ -26,6 +31,17 @@ def get_report_writer() -> ReportWriter:
     if settings.gemini_api_key:
         return GeminiReportWriter(settings)
     return FixtureReportWriter()
+
+
+@lru_cache
+def get_overview_writer() -> OverviewWriter | None:
+    """AI 개요 작성자: Anthropic > Gemini. 키가 없으면 None (개요를 만들지 않는다)."""
+    settings = get_settings()
+    if settings.anthropic_api_key:
+        return ClaudeOverviewWriter(settings)
+    if settings.gemini_api_key:
+        return GeminiOverviewWriter(settings)
+    return None
 
 
 def optional_user(
