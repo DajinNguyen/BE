@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-opus-5-5"
     anthropic_effort: str = "medium"
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-3.5-flash"
     dart_api_key: str | None = None
     dart_cache_dir: str = ".cache/dart"
     naver_prices_enabled: bool = True  # 네이버 금융 시세 (비공식, 키 없음)
