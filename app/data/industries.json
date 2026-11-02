@@ -1,0 +1,370 @@
+[
+  {
+    "industry_id": "ai",
+    "name": "AI",
+    "icon_key": "ai",
+    "description": "사람처럼 배우고 판단하는 컴퓨터 기술(AI)과, 그 기술에 필요한 반도체·서버·전력 설비를 만드는 산업이에요.",
+    "why": "미국 빅테크가 데이터센터 투자를 늘리겠다고 밝혔어요. AI 서버에 들어가는 메모리와 전력 설비를 만드는 회사들의 주문이 늘었다는 소식이 이어졌어요.",
+    "news_topics": [
+      "데이터센터 투자 확대 발표",
+      "AI 서버용 메모리 주문 늘어",
+      "전력 설비 수주 이어져",
+      "AI 서비스 이용자 증가",
+      "정부 AI 지원 계획 공개"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": 6.2,
+        "trading_value_change_rate": 48,
+        "news_mention_change_rate": 62
+      },
+      "1m": {
+        "price_change_rate": 12.4,
+        "trading_value_change_rate": 60,
+        "news_mention_change_rate": 80
+      }
+    },
+    "companies": [
+      "005930",
+      "000660",
+      "035420",
+      "018260",
+      "042700",
+      "035720",
+      "267260",
+      "010120"
+    ]
+  },
+  {
+    "industry_id": "semiconductor",
+    "name": "반도체",
+    "icon_key": "semiconductor",
+    "description": "컴퓨터·스마트폰의 두뇌와 기억 장치 역할을 하는 반도체를 설계하고, 만들고, 만드는 장비를 공급하는 산업이에요.",
+    "why": "이번 달 반도체 수출이 작년보다 늘었다는 통계가 나왔어요. AI용 고성능 메모리(HBM) 판매가 늘었다는 발표도 있었어요.",
+    "news_topics": [
+      "반도체 수출 증가세 이어져",
+      "HBM 판매 늘었다는 실적 발표",
+      "반도체 장비 주문 늘어",
+      "메모리 가격 올라",
+      "새 공장 짓는 계획 발표"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": 4.8,
+        "trading_value_change_rate": 35,
+        "news_mention_change_rate": 40
+      },
+      "1m": {
+        "price_change_rate": 10.1,
+        "trading_value_change_rate": 42,
+        "news_mention_change_rate": 55
+      }
+    },
+    "companies": [
+      "005930",
+      "000660",
+      "042700",
+      "000990",
+      "403870",
+      "058470",
+      "039030",
+      "240810",
+      "036930",
+      "095340",
+      "357780",
+      "005290",
+      "009150",
+      "011070"
+    ]
+  },
+  {
+    "industry_id": "shipbuilding",
+    "name": "조선",
+    "icon_key": "shipbuilding",
+    "description": "큰 배(LNG 운반선·컨테이너선)와 바다 위 설비를 만드는 산업이에요.",
+    "why": "친환경 연료를 쓰는 배 주문이 늘었다는 소식이 이어졌어요. 배 한 척을 짓는 가격도 오른 상태예요.",
+    "news_topics": [
+      "LNG 운반선 수주 이어져",
+      "선박 가격 지수 올라",
+      "친환경 선박 주문 늘어",
+      "해외 해군 함정 정비 계약",
+      "조선소 인력 채용 확대"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": 3.9,
+        "trading_value_change_rate": 28,
+        "news_mention_change_rate": 22
+      },
+      "1m": {
+        "price_change_rate": 7.2,
+        "trading_value_change_rate": 30,
+        "news_mention_change_rate": 25
+      }
+    },
+    "companies": [
+      "329180",
+      "009540",
+      "042660",
+      "010140"
+    ]
+  },
+  {
+    "industry_id": "defense",
+    "name": "방산",
+    "icon_key": "defense",
+    "description": "전차·자주포·전투기·미사일 같은 나라를 지키는 장비를 만드는 산업이에요.",
+    "why": "유럽과 중동 나라들과 방산 장비 수출 계약을 맺었다는 소식이 있었어요.",
+    "news_topics": [
+      "유럽에 자주포 수출 계약",
+      "중동과 방공 장비 계약",
+      "방산 수출액 늘어",
+      "새 훈련기 개발 계획",
+      "국방 예산 발표"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": 3.1,
+        "trading_value_change_rate": 30,
+        "news_mention_change_rate": 18
+      },
+      "1m": {
+        "price_change_rate": 8.7,
+        "trading_value_change_rate": 35,
+        "news_mention_change_rate": 30
+      }
+    },
+    "companies": [
+      "012450",
+      "064350",
+      "047810",
+      "079550",
+      "000880"
+    ]
+  },
+  {
+    "industry_id": "battery",
+    "name": "2차전지",
+    "icon_key": "battery",
+    "description": "전기차·휴대폰에 들어가는 배터리(2차전지)와 그 재료를 만드는 산업이에요.",
+    "why": "배터리 원재료(리튬) 가격이 내려가면서 관련 기업 주가는 내렸어요. 다만 새 배터리 기술 발표로 뉴스 언급은 늘었어요.",
+    "news_topics": [
+      "리튬 가격 내려",
+      "전기차 판매 증가세 둔화",
+      "새 배터리 기술 발표",
+      "해외 배터리 공장 가동",
+      "배터리 재활용 사업 시작"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": -1.3,
+        "trading_value_change_rate": 12,
+        "news_mention_change_rate": 15
+      },
+      "1m": {
+        "price_change_rate": -4.5,
+        "trading_value_change_rate": -8,
+        "news_mention_change_rate": 12
+      }
+    },
+    "companies": [
+      "373220",
+      "006400",
+      "051910",
+      "003670",
+      "247540",
+      "086520",
+      "011790",
+      "096770"
+    ]
+  },
+  {
+    "industry_id": "bio",
+    "name": "바이오",
+    "icon_key": "bio",
+    "description": "바이오 의약품과 신약을 개발하고, 다른 회사 약을 대신 만들어 주는 산업이에요.",
+    "why": "새 약의 임상 결과 발표를 앞두고 관심이 이어졌어요. 해외 제약사와 기술 계약을 맺었다는 소식도 있었어요.",
+    "news_topics": [
+      "신약 임상 결과 발표 예정",
+      "해외 제약사와 기술 계약",
+      "바이오시밀러 허가 받아",
+      "위탁생산 공장 증설",
+      "의약품 수출 늘어"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": 1.2,
+        "trading_value_change_rate": 8,
+        "news_mention_change_rate": 10
+      },
+      "1m": {
+        "price_change_rate": 3,
+        "trading_value_change_rate": 15,
+        "news_mention_change_rate": 18
+      }
+    },
+    "companies": [
+      "207940",
+      "068270",
+      "196170",
+      "000100",
+      "128940",
+      "326030",
+      "302440",
+      "006280",
+      "185750",
+      "028300",
+      "141080",
+      "145020"
+    ]
+  },
+  {
+    "industry_id": "internet",
+    "name": "인터넷·플랫폼",
+    "icon_key": "internet",
+    "description": "검색·메신저·쇼핑·결제 같은 인터넷 서비스를 운영하는 산업이에요.",
+    "why": "여러 회사가 AI 기능을 넣은 새 서비스를 내놓았다는 소식이 이어졌어요.",
+    "news_topics": [
+      "검색에 AI 기능 추가",
+      "간편결제 이용액 늘어",
+      "웹툰 해외 이용자 증가",
+      "광고 매출 발표",
+      "클라우드 사업 확대"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": 0.6,
+        "trading_value_change_rate": 5,
+        "news_mention_change_rate": 12
+      },
+      "1m": {
+        "price_change_rate": 1.1,
+        "trading_value_change_rate": 6,
+        "news_mention_change_rate": 10
+      }
+    },
+    "companies": [
+      "035420",
+      "035720",
+      "323410",
+      "377300",
+      "018260",
+      "307950"
+    ]
+  },
+  {
+    "industry_id": "auto",
+    "name": "자동차",
+    "icon_key": "auto",
+    "description": "자동차와 자동차 부품, 타이어를 만들고 실어 나르는 산업이에요.",
+    "why": "해외 판매량이 작년보다 늘었다는 발표가 있었어요. 환율 영향도 함께 이야기됐어요.",
+    "news_topics": [
+      "해외 판매량 늘어",
+      "전기차 신모델 공개",
+      "환율이 수출에 준 영향",
+      "부품 공급 계약",
+      "자율주행 시험 시작"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": 0.9,
+        "trading_value_change_rate": 10,
+        "news_mention_change_rate": 6
+      },
+      "1m": {
+        "price_change_rate": 1.8,
+        "trading_value_change_rate": 8,
+        "news_mention_change_rate": 4
+      }
+    },
+    "companies": [
+      "005380",
+      "000270",
+      "012330",
+      "086280",
+      "161390",
+      "204320",
+      "018880",
+      "011210",
+      "073240"
+    ]
+  },
+  {
+    "industry_id": "finance",
+    "name": "금융",
+    "icon_key": "finance",
+    "description": "은행·보험·증권·카드처럼 돈을 맡고 빌려주고 관리하는 산업이에요.",
+    "why": "여러 금융회사가 주주에게 이익을 더 돌려주겠다는 계획을 발표했어요.",
+    "news_topics": [
+      "주주환원 계획 발표",
+      "은행 대출 금리 변화",
+      "보험사 실적 발표",
+      "증권사 거래대금 늘어",
+      "카드 이용액 발표"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": 0.8,
+        "trading_value_change_rate": 4,
+        "news_mention_change_rate": 3
+      },
+      "1m": {
+        "price_change_rate": 2.5,
+        "trading_value_change_rate": 10,
+        "news_mention_change_rate": 5
+      }
+    },
+    "companies": [
+      "105560",
+      "055550",
+      "086790",
+      "316140",
+      "138040",
+      "032830",
+      "000810",
+      "024110",
+      "323410",
+      "006800",
+      "005830",
+      "039490",
+      "071050",
+      "016360",
+      "029780",
+      "088350"
+    ]
+  },
+  {
+    "industry_id": "game",
+    "name": "게임",
+    "icon_key": "game",
+    "description": "컴퓨터·스마트폰·콘솔 게임을 만들고 서비스하는 산업이에요.",
+    "why": "새 게임 출시 일정이 발표되면서 뉴스 언급은 늘었지만, 기존 게임 매출이 줄어 주가는 조금 내렸어요.",
+    "news_topics": [
+      "새 게임 출시 일정 발표",
+      "해외 게임쇼 참가",
+      "기존 게임 매출 줄어",
+      "게임 이용 시간 통계",
+      "모바일 게임 순위 발표"
+    ],
+    "factors": {
+      "1w": {
+        "price_change_rate": -0.5,
+        "trading_value_change_rate": -3,
+        "news_mention_change_rate": 8
+      },
+      "1m": {
+        "price_change_rate": -2.2,
+        "trading_value_change_rate": -5,
+        "news_mention_change_rate": 6
+      }
+    },
+    "companies": [
+      "259960",
+      "036570",
+      "251270",
+      "263750",
+      "293490",
+      "112040"
+    ]
+  }
+]

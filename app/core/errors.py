@@ -27,6 +27,10 @@ def puzzle_not_found() -> AppError:
     return AppError(404, "PUZZLE_NOT_FOUND", "퍼즐을 찾지 못했어요.")
 
 
+def industry_not_found() -> AppError:
+    return AppError(404, "INDUSTRY_NOT_FOUND", "찾는 산업이 없어요. 주소를 다시 확인해 주세요.")
+
+
 def login_required() -> AppError:
     return AppError(401, "LOGIN_REQUIRED", "로그인이 필요해요.")
 

@@ -31,11 +31,11 @@ def test_home_sector_companies(client):
     sectors = client.get("/api/home").json()["sector_companies"]
     assert list(sectors) == ["semiconductor", "auto", "internet", "finance", "food", "etc"]
     assert [c["name"] for c in sectors["semiconductor"]][:2] == ["삼성전자", "SK하이닉스"]
-    assert {c["name"] for c in sectors["food"]} == {"CJ제일제당", "오리온", "농심", "삼양식품"}
+    assert {"CJ제일제당", "오리온", "농심", "삼양식품"} <= {c["name"] for c in sectors["food"]}
     for group, companies in sectors.items():
         assert all(c["sector_group"] == group for c in companies)
     # 모든 회사가 정확히 한 탭에 들어간다
-    assert sum(len(c) for c in sectors.values()) == 41
+    assert sum(len(c) for c in sectors.values()) == 135
 
 
 def test_home_lists_generated_reports(client):

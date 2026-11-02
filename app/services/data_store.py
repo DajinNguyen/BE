@@ -17,6 +17,7 @@ from app.schemas.common import SampleValue
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.crossword import CrosswordPuzzle, CrosswordSummary
 from app.schemas.financials import Financials, Segments
+from app.schemas.industry import IndustryRef
 from app.schemas.news import NewsArticle, NewsItem, NewsPage
 from app.schemas.term import Term
 from app.services import dart, dart_financials, naver
@@ -66,6 +67,21 @@ def _companies() -> dict[str, CompanyDetail]:
     }
 
 
+@lru_cache
+def industry_records() -> list[dict[str, Any]]:
+    """산업 시드 (`app/data/industries.json`): 설명·관련 기업·기간별 변화율 예시 값."""
+    return load_json("industries.json")
+
+
+def industries_of(stock_code: str) -> list[IndustryRef]:
+    """이 회사가 속한 산업 (기업 상세 "소속 산업" 칩)."""
+    return [
+        IndustryRef(industry_id=r["industry_id"], name=r["name"])
+        for r in industry_records()
+        if stock_code in r["companies"]
+    ]
+
+
 def _normalize(text: str) -> str:
     return "".join(text.split()).lower()
 
@@ -107,6 +123,12 @@ def companies_by_codes(stock_codes: list[str]) -> list[CompanySummary]:
     return [to_summary(companies[code]) for code in stock_codes if code in companies]
 
 
+def company_details_by_codes(stock_codes: list[str]) -> list[CompanyDetail]:
+    """시세를 한 번만 받아서 여러 회사의 상세(시가총액 포함)를 돌려준다. 없는 종목코드는 건너뛴다."""
+    companies = _companies()
+    return [companies[code] for code in stock_codes if code in companies]
+
+
 def get_company(stock_code: str) -> CompanyDetail:
     company = _companies().get(stock_code)
     if company is None:
@@ -119,6 +141,7 @@ def get_company_detail(stock_code: str) -> CompanyDetail:
     company = get_company(stock_code)
     if company.price_as_of is None:  # 시세를 못 받았으면 예시 값의 기준일은 직전 장 마감일
         company = company.model_copy(update={"price_as_of": last_close_date().isoformat()})
+    company = company.model_copy(update={"industries": industries_of(stock_code)})
     if company.homepage_url or not company.corp_code:
         return company
     overview = dart.company_overview(company.corp_code)
