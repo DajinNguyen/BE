@@ -7,8 +7,9 @@ from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.financials import Financials
 from app.schemas.news import NewsPage
 from app.schemas.price import Period, PriceHistory
-from app.services import data_store, overview_service, price_service
+from app.services import data_store, overview_service, price_service, segment_service
 from app.services.overview_service import OverviewWriter
+from app.services.segment_service import SegmentWriter
 
 router = APIRouter(prefix="/api/companies", tags=["companies"])
 
@@ -42,8 +43,21 @@ def get_company(
 
 
 @router.get("/{stock_code}/financials", response_model=Financials)
-def get_financials(stock_code: str):
-    return data_store.get_financials(stock_code)
+def get_financials(
+    stock_code: str,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+    writer: SegmentWriter | None = Depends(segment_service.get_segment_writer),
+):
+    """시드에 사업별 매출이 없는 회사는 사업보고서 표에서 뽑은 값으로 채운다.
+
+    아직 없거나 새 사업보고서가 나왔으면 백그라운드에서 만들기 시작하고, 다음 요청부터 채워진다.
+    """
+    financials = data_store.get_financials(stock_code)
+    corp_code = data_store.get_company(stock_code).corp_code
+    if writer is not None and segment_service.start_generation(session, financials, corp_code):
+        background_tasks.add_task(segment_service.run_generation, stock_code, writer, new_session)
+    return segment_service.apply_segments(session, financials)
 
 
 @router.get("/{stock_code}/prices", response_model=PriceHistory)
