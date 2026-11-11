@@ -112,6 +112,8 @@ def test_drops_blogs_and_non_news(use_google):
     blog = '<source url="https://blog.naver.com">Naver Blog</source>'
     premium = '<source url="https://contents.premium.naver.com">네이버 프리미엄콘텐츠</source>'
     tistory = '<source url="https://abc.tistory.com">티스토리</source>'
+    deal = '<source url="https://zod.kr">조드</source>'  # 핫딜 게시판
+    small_press = '<source url="https://www.pinpointnews.co.kr">핀포인트뉴스</source>'
     body = _rss(
         [
             _item(1, 1),
@@ -119,10 +121,13 @@ def test_drops_blogs_and_non_news(use_google):
             _item(3, 3, premium),
             _item(4, 4, tistory),
             _item(5, 5, ""),
+            _item(6, 6, deal),
+            _item(7, 7, small_press),
         ]
     )
     client = use_google(FakeGoogle(body))
-    assert [a.title for a in client.search("삼성전자", 1, 10).articles] == ["삼성전자 기사 1"]
+    titles = [a.title for a in client.search("삼성전자", 1, 10).articles]
+    assert titles == ["삼성전자 기사 7", "삼성전자 기사 1"]
 
 
 def test_naver_news_searched_by_korean_name(client, use_google):

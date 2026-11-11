@@ -6,12 +6,14 @@
   최신순이 필요하면 받은 목록을 다시 정렬하고 페이지는 서버에서 나눈다.
 - 요약(본문 앞부분)은 주지 않아서 `summary_short` 는 빈 글자다 (화면은 제목·언론사만 보여준다).
 - 링크는 Google 뉴스 주소이고, 누르면 원문 기사로 넘어간다.
-- 블로그·카페·커뮤니티·회사 홍보 글은 뉴스가 아니라서 검색에서 빼고, 걸러지지 않고 온 것도 버린다.
+- 언론사 기사만 쓴다. 블로그·카페·커뮤니티·회사 홍보 글은 검색에서 빼고,
+  그래도 온 것 중 아는 언론사 주소도 아니고 이름도 언론사 같지 않은 곳(핫딜 게시판 등)은 버린다.
 - 같은 검색은 10분 캐시한다. 받지 못하면 None 을 돌려주고, 호출하는 쪽은 시드·예시 뉴스로 동작한다.
 """
 
 import hashlib
 import logging
+import re
 import threading
 import time
 import xml.etree.ElementTree as ET
@@ -24,7 +26,7 @@ import httpx
 from app.core.config import get_settings
 from app.schemas.news import NewsArticle
 from app.services.market_clock import KST
-from app.services.naver_news import SearchResult, Sort, drop_duplicates
+from app.services.naver_news import PRESS_BY_DOMAIN, SearchResult, Sort, drop_duplicates
 
 logger = logging.getLogger(__name__)
 
@@ -62,11 +64,26 @@ NOT_NEWS_DOMAINS = (
 )
 # 검색할 때부터 빼면 그만큼 기사가 더 들어온다 (검색어가 길어지지 않게 많이 섞여 오는 곳만)
 EXCLUDE_QUERY = " ".join(f"-site:{d}" for d in ("naver.com", "tistory.com", "daum.net"))
+# 언론사 이름에 흔히 들어가는 말. 아는 언론사 주소(PRESS_BY_DOMAIN)가 아니면 이름이 이래야 기사로 본다
+PRESS_NAME = re.compile(
+    r"뉴스|뉴시스|일보|신문|경제|데일리|타임스|타임즈|저널|방송|미디어|투데이|포스트|헤럴드|경향"
+    r"|동아|조선|팩트|인포맥스|비즈|프레스|코리아|통신|매일|이코노|주간|스포츠|공론|디일렉|로이슈"
+    r"|스펙테이터|news|times|journal|daily|herald|post"
+    r"|press|biz|KBS|MBC|SBS|YTN|JTBC|MBN|TV",
+    re.IGNORECASE,
+)
 
 
-def is_news(source_url: str) -> bool:
+def _matches(host: str, domains) -> bool:
+    return any(host == d or host.endswith("." + d) for d in domains)
+
+
+def is_news(source_url: str, source_name: str) -> bool:
+    """언론사 기사인지. 블로그·커뮤니티는 빼고, 아는 언론사 주소이거나 이름이 언론사 같아야 한다."""
     host = (urlparse(source_url).hostname or "").removeprefix("www.")
-    return bool(host) and not any(host == d or host.endswith("." + d) for d in NOT_NEWS_DOMAINS)
+    if not host or _matches(host, NOT_NEWS_DOMAINS):
+        return False
+    return _matches(host, PRESS_BY_DOMAIN) or bool(PRESS_NAME.search(source_name))
 
 
 def _parse_item(item: ET.Element, stock_code: str | None) -> NewsArticle:
@@ -128,7 +145,7 @@ class GoogleNewsClient:
             articles = []
             for item in items:
                 source = item.find("source")
-                if source is None or not is_news(source.get("url", "")):
+                if source is None or not is_news(source.get("url", ""), source.text or ""):
                     continue
                 try:
                     articles.append(_parse_item(item, stock_code))
