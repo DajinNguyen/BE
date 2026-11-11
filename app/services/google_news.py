@@ -6,23 +6,27 @@
   최신순이 필요하면 받은 목록을 다시 정렬하고 페이지는 서버에서 나눈다.
 - 요약(본문 앞부분)은 주지 않아서 `summary_short` 는 빈 글자다 (화면은 제목·언론사만 보여준다).
 - 링크는 Google 뉴스 주소이고, 누르면 원문 기사로 넘어간다.
+- 언론사 기사만 쓴다. 블로그·카페·커뮤니티·회사 홍보 글은 검색에서 빼고,
+  그래도 온 것 중 아는 언론사 주소도 아니고 이름도 언론사 같지 않은 곳(핫딜 게시판 등)은 버린다.
 - 같은 검색은 10분 캐시한다. 받지 못하면 None 을 돌려주고, 호출하는 쪽은 시드·예시 뉴스로 동작한다.
 """
 
 import hashlib
 import logging
+import re
 import threading
 import time
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 from functools import lru_cache
+from urllib.parse import urlparse
 
 import httpx
 
 from app.core.config import get_settings
 from app.schemas.news import NewsArticle
 from app.services.market_clock import KST
-from app.services.naver_news import SearchResult, Sort, drop_duplicates
+from app.services.naver_news import PRESS_BY_DOMAIN, SearchResult, Sort, drop_duplicates
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +36,54 @@ RECENT = "when:7d"  # 최근 7일 기사만
 TTL = 10 * 60  # 10분
 TIMEOUT = 3.0  # 화면이 기다리지 않도록 짧게
 RETRY_AFTER = 60  # 받기에 실패하면 이 시간 동안은 다시 시도하지 않는다
+
+# 언론사 기사가 아닌 곳 (블로그·카페·유료 구독 글·커뮤니티·영상·회사 홍보). 하위 도메인도 같이 뺀다.
+# naver.com 은 블로그·프리미엄콘텐츠·페이 머니스토리가 섞여 오고, 네이버 뉴스 기사는 원 언론사로 온다.
+NOT_NEWS_DOMAINS = (
+    "naver.com",
+    "navercorp.com",
+    "daum.net",
+    "tistory.com",
+    "brunch.co.kr",
+    "kakao.com",
+    "youtube.com",
+    "medium.com",
+    "velog.io",
+    "dcinside.com",
+    "fmkorea.com",
+    "clien.net",
+    "ppomppu.co.kr",
+    "theqoo.net",
+    "instiz.net",
+    "namu.wiki",
+    "wikipedia.org",
+    "instagram.com",
+    "facebook.com",
+    "x.com",
+    "twitter.com",
+)
+# 검색할 때부터 빼면 그만큼 기사가 더 들어온다 (검색어가 길어지지 않게 많이 섞여 오는 곳만)
+EXCLUDE_QUERY = " ".join(f"-site:{d}" for d in ("naver.com", "tistory.com", "daum.net"))
+# 언론사 이름에 흔히 들어가는 말. 아는 언론사 주소(PRESS_BY_DOMAIN)가 아니면 이름이 이래야 기사로 본다
+PRESS_NAME = re.compile(
+    r"뉴스|뉴시스|일보|신문|경제|데일리|타임스|타임즈|저널|방송|미디어|투데이|포스트|헤럴드|경향"
+    r"|동아|조선|팩트|인포맥스|비즈|프레스|코리아|통신|매일|이코노|주간|스포츠|공론|디일렉|로이슈"
+    r"|스펙테이터|news|times|journal|daily|herald|post"
+    r"|press|biz|KBS|MBC|SBS|YTN|JTBC|MBN|TV",
+    re.IGNORECASE,
+)
+
+
+def _matches(host: str, domains) -> bool:
+    return any(host == d or host.endswith("." + d) for d in domains)
+
+
+def is_news(source_url: str, source_name: str) -> bool:
+    """언론사 기사인지. 블로그·커뮤니티는 빼고, 아는 언론사 주소이거나 이름이 언론사 같아야 한다."""
+    host = (urlparse(source_url).hostname or "").removeprefix("www.")
+    if not host or _matches(host, NOT_NEWS_DOMAINS):
+        return False
+    return _matches(host, PRESS_BY_DOMAIN) or bool(PRESS_NAME.search(source_name))
 
 
 def _parse_item(item: ET.Element, stock_code: str | None) -> NewsArticle:
@@ -62,7 +114,12 @@ class GoogleNewsClient:
     def _fetch(self, query: str) -> bytes | None:
         res = httpx.get(
             RSS_URL,
-            params={"q": f"{query} {RECENT}", "hl": "ko", "gl": "KR", "ceid": "KR:ko"},
+            params={
+                "q": f"{query} {EXCLUDE_QUERY} {RECENT}",
+                "hl": "ko",
+                "gl": "KR",
+                "ceid": "KR:ko",
+            },
             headers=HEADERS,
             timeout=TIMEOUT,
         )
@@ -87,6 +144,9 @@ class GoogleNewsClient:
                 return hit[1] if hit else None
             articles = []
             for item in items:
+                source = item.find("source")
+                if source is None or not is_news(source.get("url", ""), source.text or ""):
+                    continue
                 try:
                     articles.append(_parse_item(item, stock_code))
                 except (TypeError, ValueError) as e:  # 한 건이 이상해도 나머지는 보여준다

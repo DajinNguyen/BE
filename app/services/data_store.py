@@ -220,11 +220,18 @@ def _seed_page(articles: list[NewsArticle], page: int, size: int) -> NewsPage:
     )
 
 
+# 뉴스가 영문 종목명이 아니라 한글 이름으로 쓰는 회사 ("NAVER" 로 찾으면 네이버 블로그·카페 글이 잡힌다)
+NEWS_QUERY_NAMES = {"035420": "네이버"}
+
+
+def news_query(stock_code: str) -> str:
+    return NEWS_QUERY_NAMES.get(stock_code) or get_company(stock_code).name
+
+
 def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
     """실제 뉴스 검색(회사 이름, 최신순)을 먼저 쓰고, 받지 못하면 시드 뉴스."""
-    company = get_company(stock_code)
     start = (page - 1) * size + 1
-    result = news_search.search(company.name, start, size, stock_code)
+    result = news_search.search(news_query(stock_code), start, size, stock_code)
     if result is None:
         return _seed_page(to_articles(stock_code, get_news(stock_code)), page, size)
     return NewsPage(
@@ -237,8 +244,7 @@ def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
 
 def latest_company_news(stock_code: str, size: int) -> list[NewsArticle]:
     """리포트에 쓰는 최근 뉴스. 실제 뉴스를 받지 못하면 시드 뉴스."""
-    company = get_company(stock_code)
-    live = news_search.latest(company.name, size, stock_code)
+    live = news_search.latest(news_query(stock_code), size, stock_code)
     return live if live is not None else to_articles(stock_code, get_news(stock_code))[:size]
 
 
