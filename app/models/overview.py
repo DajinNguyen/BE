@@ -21,3 +21,20 @@ class CompanyOverviewRecord(SQLModel, table=True):
     started_at: datetime | None = None
     updated_at: datetime | None = None
     failure_reason: str | None = None
+
+
+class CompanySegmentsRecord(SQLModel, table=True):
+    """회사별 사업부문 매출 1건 (사업보고서 "주요 제품"·"매출실적" 표에서 뽑은 것).
+
+    시드에 사업별 매출이 없는 회사만 만든다. content 는 `Segments` (조 원 단위).
+    """
+
+    __tablename__ = "company_segments"
+
+    stock_code: str = Field(primary_key=True, max_length=6)
+    status: str = Field(max_length=20)  # generating | done | failed
+    content: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON, nullable=True))
+    rcept_no: str | None = Field(default=None, max_length=20)  # 근거 사업보고서 접수번호
+    started_at: datetime | None = None
+    updated_at: datetime | None = None
+    failure_reason: str | None = None
