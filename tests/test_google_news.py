@@ -126,8 +126,8 @@ def test_drops_blogs_and_non_news(use_google):
         ]
     )
     client = use_google(FakeGoogle(body))
-    titles = [a.title for a in client.search("삼성전자", 1, 10).articles]
-    assert titles == ["삼성전자 기사 7", "삼성전자 기사 1"]
+    press = [a.press for a in client.search("삼성전자", 1, 10).articles]
+    assert press == ["핀포인트뉴스", "한국경제"]
 
 
 def test_naver_news_searched_by_korean_name(client, use_google):
