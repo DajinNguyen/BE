@@ -6,6 +6,7 @@
   최신순이 필요하면 받은 목록을 다시 정렬하고 페이지는 서버에서 나눈다.
 - 요약(본문 앞부분)은 주지 않아서 `summary_short` 는 빈 글자다 (화면은 제목·언론사만 보여준다).
 - 링크는 Google 뉴스 주소이고, 누르면 원문 기사로 넘어간다.
+- 블로그·카페·커뮤니티·회사 홍보 글은 뉴스가 아니라서 검색에서 빼고, 걸러지지 않고 온 것도 버린다.
 - 같은 검색은 10분 캐시한다. 받지 못하면 None 을 돌려주고, 호출하는 쪽은 시드·예시 뉴스로 동작한다.
 """
 
@@ -16,6 +17,7 @@ import time
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 from functools import lru_cache
+from urllib.parse import urlparse
 
 import httpx
 
@@ -32,6 +34,39 @@ RECENT = "when:7d"  # 최근 7일 기사만
 TTL = 10 * 60  # 10분
 TIMEOUT = 3.0  # 화면이 기다리지 않도록 짧게
 RETRY_AFTER = 60  # 받기에 실패하면 이 시간 동안은 다시 시도하지 않는다
+
+# 언론사 기사가 아닌 곳 (블로그·카페·유료 구독 글·커뮤니티·영상·회사 홍보). 하위 도메인도 같이 뺀다.
+# naver.com 은 블로그·프리미엄콘텐츠·페이 머니스토리가 섞여 오고, 네이버 뉴스 기사는 원 언론사로 온다.
+NOT_NEWS_DOMAINS = (
+    "naver.com",
+    "navercorp.com",
+    "daum.net",
+    "tistory.com",
+    "brunch.co.kr",
+    "kakao.com",
+    "youtube.com",
+    "medium.com",
+    "velog.io",
+    "dcinside.com",
+    "fmkorea.com",
+    "clien.net",
+    "ppomppu.co.kr",
+    "theqoo.net",
+    "instiz.net",
+    "namu.wiki",
+    "wikipedia.org",
+    "instagram.com",
+    "facebook.com",
+    "x.com",
+    "twitter.com",
+)
+# 검색할 때부터 빼면 그만큼 기사가 더 들어온다 (검색어가 길어지지 않게 많이 섞여 오는 곳만)
+EXCLUDE_QUERY = " ".join(f"-site:{d}" for d in ("naver.com", "tistory.com", "daum.net"))
+
+
+def is_news(source_url: str) -> bool:
+    host = (urlparse(source_url).hostname or "").removeprefix("www.")
+    return bool(host) and not any(host == d or host.endswith("." + d) for d in NOT_NEWS_DOMAINS)
 
 
 def _parse_item(item: ET.Element, stock_code: str | None) -> NewsArticle:
@@ -62,7 +97,12 @@ class GoogleNewsClient:
     def _fetch(self, query: str) -> bytes | None:
         res = httpx.get(
             RSS_URL,
-            params={"q": f"{query} {RECENT}", "hl": "ko", "gl": "KR", "ceid": "KR:ko"},
+            params={
+                "q": f"{query} {EXCLUDE_QUERY} {RECENT}",
+                "hl": "ko",
+                "gl": "KR",
+                "ceid": "KR:ko",
+            },
             headers=HEADERS,
             timeout=TIMEOUT,
         )
@@ -87,6 +127,9 @@ class GoogleNewsClient:
                 return hit[1] if hit else None
             articles = []
             for item in items:
+                source = item.find("source")
+                if source is None or not is_news(source.get("url", "")):
+                    continue
                 try:
                     articles.append(_parse_item(item, stock_code))
                 except (TypeError, ValueError) as e:  # 한 건이 이상해도 나머지는 보여준다

@@ -4,13 +4,13 @@ import pytest
 from app.services import google_news, naver_news
 
 
-def _item(n, hour):
+def _item(n, hour, source='<source url="https://www.hankyung.com">한국경제</source>'):
     return f"""<item>
 <title>삼성전자 기사 {n} - 한국경제</title>
 <link>https://news.google.com/rss/articles/A{n}?oc=5</link>
 <pubDate>Mon, 02 Nov 2026 {hour:02d}:00:00 GMT</pubDate>
 <description>&lt;a href="x"&gt;삼성전자 기사 {n}&lt;/a&gt;</description>
-<source url="https://www.hankyung.com">한국경제</source>
+{source}
 </item>"""
 
 
@@ -66,7 +66,9 @@ def test_paging_and_cache(use_google):
     assert [a.title for a in client.search("삼성전자", 2, 1).articles] == ["삼성전자 기사 3"]
     client.search("삼성전자", 3, 1)
     assert len(api.calls) == 1  # 페이지가 달라도 같은 검색은 한 번만 받는다
-    assert api.calls[0]["q"] == "삼성전자 when:7d"
+    assert api.calls[0]["q"] == (
+        "삼성전자 -site:naver.com -site:tistory.com -site:daum.net when:7d"
+    )
 
 
 def test_failure_returns_none_and_backs_off(use_google):
@@ -104,3 +106,27 @@ def test_relevance_sort_keeps_google_order(use_google):
     client = use_google(FakeGoogle())
     titles = [a.title for a in client.search("삼성전자", 1, 10, sort="sim").articles]
     assert titles == ["삼성전자 기사 1", "삼성전자 기사 2", "삼성전자 기사 3"]
+
+
+def test_drops_blogs_and_non_news(use_google):
+    blog = '<source url="https://blog.naver.com">Naver Blog</source>'
+    premium = '<source url="https://contents.premium.naver.com">네이버 프리미엄콘텐츠</source>'
+    tistory = '<source url="https://abc.tistory.com">티스토리</source>'
+    body = _rss(
+        [
+            _item(1, 1),
+            _item(2, 2, blog),
+            _item(3, 3, premium),
+            _item(4, 4, tistory),
+            _item(5, 5, ""),
+        ]
+    )
+    client = use_google(FakeGoogle(body))
+    assert [a.title for a in client.search("삼성전자", 1, 10).articles] == ["삼성전자 기사 1"]
+
+
+def test_naver_news_searched_by_korean_name(client, use_google):
+    api = FakeGoogle()
+    use_google(api)
+    client.get("/api/companies/035420/news")
+    assert api.calls[0]["q"].startswith("네이버 ")
