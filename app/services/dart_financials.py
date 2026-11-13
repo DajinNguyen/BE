@@ -143,7 +143,9 @@ def fetch_financials(
 
     def scale(won: int) -> float:
         # 프론트가 금액에 항상 "조 원"을 붙여 보여줘서 작은 회사도 조 단위로 보낸다
-        return round(won / TRILLION, 2)
+        # 1조 원이 안 되는 회사는 억 원 단위까지 남긴다 (매출 400억 원이 0.04 → 0.0378)
+        value = won / TRILLION
+        return round(value, 2) if abs(value) >= 1 else round(value, 4)
 
     source = f"DART {year}년 사업보고서"
     latest_quarter = None
