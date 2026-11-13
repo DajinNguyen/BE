@@ -17,11 +17,11 @@ def get_hot_industries(
 
 
 @router.get("/{industry_id}", response_model=IndustryDetail)
-def get_industry(industry_id: str):
-    return industry_service.get_industry(industry_id)
+async def get_industry(industry_id: str):
+    return await industry_service.get_industry(industry_id)
 
 
 @router.get("/{industry_id}/news", response_model=list[NewsArticle])
-def get_industry_news(industry_id: str, size: int = Query(5, ge=1, le=20)):
+async def get_industry_news(industry_id: str, size: int = Query(5, ge=1, le=20)):
     """최신순. 기사가 없으면 빈 배열."""
-    return industry_service.industry_news(industry_id, size)
+    return await industry_service.industry_news(industry_id, size)
