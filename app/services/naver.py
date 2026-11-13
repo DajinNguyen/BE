@@ -32,6 +32,15 @@ BATCH_SIZE = 50  # 한 번에 묻는 종목 수
 
 
 @dataclass(frozen=True)
+class DailyPrice:
+    date: date
+    open: int
+    high: int
+    low: int
+    close: int
+
+
+@dataclass(frozen=True)
 class Quote:
     stock_code: str
     price: int  # 원
@@ -56,7 +65,7 @@ class NaverClient:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._quotes: dict[str, tuple[float, Quote]] = {}
-        self._charts: dict[tuple[str, str, date], tuple[float, list[tuple[date, int]]]] = {}
+        self._charts: dict[tuple[str, str, date], tuple[float, list[DailyPrice]]] = {}
         self._retry_at = 0.0
 
     def _get(self, url: str, params: dict[str, str] | None = None) -> Any:
@@ -96,8 +105,8 @@ class NaverClient:
 
     def closes(
         self, stock_code: str, start: date, end: date, weekly: bool
-    ) -> list[tuple[date, int]] | None:
-        """(날짜, 종가) 목록. 받지 못하면 마지막으로 받은 값, 그것도 없으면 None."""
+    ) -> list[DailyPrice] | None:
+        """(날짜, 시가·고가·저가·종가) 목록. 받지 못하면 마지막으로 받은 값, 그것도 없으면 None."""
         timeframe = "week" if weekly else "day"
         key = (stock_code, timeframe, start)
         hit = self._charts.get(key)
@@ -111,7 +120,13 @@ class NaverClient:
                 {"startDateTime": f"{start:%Y%m%d}0000", "endDateTime": f"{end:%Y%m%d}2359"},
             )
             points = [
-                (datetime.strptime(r["localDate"], "%Y%m%d").date(), round(r["closePrice"]))
+                DailyPrice(
+                    date=datetime.strptime(r["localDate"], "%Y%m%d").date(),
+                    open=round(r["openPrice"]),
+                    high=round(r["highPrice"]),
+                    low=round(r["lowPrice"]),
+                    close=round(r["closePrice"]),
+                )
                 for r in rows
             ]
         except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
@@ -133,6 +148,6 @@ def quotes(stock_codes: list[str]) -> dict[str, Quote]:
     return client.quotes(stock_codes) if client else {}
 
 
-def closes(stock_code: str, start: date, end: date, weekly: bool) -> list[tuple[date, int]] | None:
+def closes(stock_code: str, start: date, end: date, weekly: bool) -> list[DailyPrice] | None:
     client = get_naver()
     return client.closes(stock_code, start, end, weekly) if client else None
