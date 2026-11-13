@@ -194,3 +194,13 @@ def test_terms(client):
     assert len(terms) == 70
     assert terms[0]["id"] == "stock"
     assert set(terms[0]) == {"id", "term", "aliases", "category", "level", "easy", "example"}
+
+
+def test_two_thousand_companies_each_with_intro_and_unique_code():
+    from app.services import data_store
+
+    seed = data_store._seed_companies()
+    assert len(seed) == 2000
+    assert all(c.one_liner and c.sector and c.name_en for c in seed.values())
+    known = {c for r in data_store.industry_records() for c in r["companies"]}
+    assert known <= set(seed)

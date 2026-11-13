@@ -38,6 +38,8 @@ HIGH_RANKS = 3
 MID_RANKS = 3
 PERIOD_LABELS: dict[HeatPeriod, str] = {"1w": "최근 1주", "1m": "최근 1개월"}
 WHY_NEWS_COUNT = 2  # "왜 관심이 몰리나요?" 근거 뉴스 개수
+# 관심도(주가·거래대금·뉴스 언급 변화율)를 아직 집계하지 않는 산업은 0으로 보여준다
+NO_FACTORS = {"price_change_rate": 0, "trading_value_change_rate": 0, "news_mention_change_rate": 0}
 NEWS_HOURS_AGO = [2, 5, 20, 30, 60]  # 예시 기사 시각 (최신순)
 
 
@@ -67,7 +69,11 @@ def hot_industries(period: HeatPeriod, now: datetime | None = None) -> list[Indu
     """점수 높은 순."""
     as_of, _ = last_close(now)
     scored = sorted(
-        ((heat_score(r["factors"][period]), r) for r in data_store.industry_records()),
+        (
+            (heat_score(r["factors"][period]), r)
+            for r in data_store.industry_records()
+            if "factors" in r  # 관심도를 집계하지 않는 산업은 순위에 넣지 않는다
+        ),
         key=lambda pair: pair[0],
         reverse=True,
     )
@@ -147,16 +153,15 @@ def get_industry(industry_id: str, now: datetime | None = None) -> IndustryDetai
     as_of, _ = last_close(now)
     news = industry_news(industry_id, WHY_NEWS_COUNT, now)
     seed = data_store.industry_records().index(record)
+    factors = record.get("factors") or {"1w": NO_FACTORS, "1m": NO_FACTORS}
     return IndustryDetail(
         industry_id=industry_id,
         name=record["name"],
         icon_key=record["icon_key"],
         description=record["description"],
         why=IndustryWhy(text=record["why"], news_ids=[n.id for n in news]),
-        trend=_weekly_trend(
-            record["factors"]["1m"]["price_change_rate"], seed, last_close_date(now)
-        ),
-        score_breakdown=ScoreBreakdown(**record["factors"]["1w"], period="1w"),
+        trend=_weekly_trend(factors["1m"]["price_change_rate"], seed, last_close_date(now)),
+        score_breakdown=ScoreBreakdown(**factors["1w"], period="1w"),
         news=news,
         companies=_companies(record["companies"]),
         as_of=as_of,

@@ -10,6 +10,7 @@
 import logging
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import date, datetime
 from functools import lru_cache
@@ -29,6 +30,7 @@ CHART_TTL = 60 * 60  # 1시간
 TIMEOUT = 3.0  # 화면이 기다리지 않도록 짧게
 RETRY_AFTER = 60  # 받기에 실패하면 이 시간 동안은 다시 시도하지 않는다
 BATCH_SIZE = 50  # 한 번에 묻는 종목 수
+QUOTE_WORKERS = 8  # 묶음을 동시에 받는 수
 
 
 @dataclass(frozen=True)
@@ -79,17 +81,26 @@ class NaverClient:
                 self._fetch_quotes(stale)
         return {c: self._quotes[c][1] for c in stock_codes if c in self._quotes}
 
+    def _fetch_batch(self, batch: list[str]) -> list[Quote] | Exception:
+        try:
+            items = self._get(f"{QUOTE_URL}/{','.join(batch)}")["datas"]
+            return [_parse_quote(item) for item in items]
+        except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
+            return e
+
     def _fetch_quotes(self, stock_codes: list[str]) -> None:
-        for i in range(0, len(stock_codes), BATCH_SIZE):
-            batch = stock_codes[i : i + BATCH_SIZE]
-            try:
-                items = self._get(f"{QUOTE_URL}/{','.join(batch)}")["datas"]
-                quotes = [_parse_quote(item) for item in items]
-            except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
-                self._failed("현재가", e)
-                return
-            fetched_at = time.time()
-            for q in quotes:
+        batches = [stock_codes[i : i + BATCH_SIZE] for i in range(0, len(stock_codes), BATCH_SIZE)]
+        if len(batches) == 1:
+            results = [self._fetch_batch(batches[0])]
+        else:  # 메인 화면은 전체 회사(2,000곳) 시세가 필요해서 묶음을 동시에 받는다
+            with ThreadPoolExecutor(max_workers=QUOTE_WORKERS) as pool:
+                results = list(pool.map(self._fetch_batch, batches))
+        fetched_at = time.time()
+        for result in results:
+            if isinstance(result, Exception):
+                self._failed("현재가", result)
+                continue
+            for q in result:
                 self._quotes[q.stock_code] = (fetched_at, q)
 
     # ------------------------------------------------------------------ 일별·주별 종가

@@ -188,7 +188,7 @@ def test_small_company_still_in_trillion_won(use_dart):
     assert f.unit == "조 원"
     # 영업이익이 없는 해는 빼요
     assert [(a.fiscal_year, a.revenue, a.operating_income) for a in f.annual] == [
-        (2025, 0.81, -0.03)
+        (2025, 0.8123, -0.0321)  # 1조 원이 안 되면 억 원 단위까지
     ]
 
 
