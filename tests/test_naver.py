@@ -24,9 +24,27 @@ QUOTES = {
 }
 
 CHART = [
-    {"localDate": "20261016", "closePrice": 218000.0},
-    {"localDate": "20261019", "closePrice": 218000.0},
-    {"localDate": "20261020", "closePrice": 210750.0},
+    {
+        "localDate": "20261016",
+        "openPrice": 217000.0,
+        "highPrice": 219500.0,
+        "lowPrice": 216500.0,
+        "closePrice": 218000.0,
+    },
+    {
+        "localDate": "20261019",
+        "openPrice": 218000.0,
+        "highPrice": 220000.0,
+        "lowPrice": 217500.0,
+        "closePrice": 218000.0,
+    },
+    {
+        "localDate": "20261020",
+        "openPrice": 218000.0,
+        "highPrice": 218500.0,
+        "lowPrice": 209000.0,
+        "closePrice": 210750.0,
+    },
 ]
 
 
@@ -135,7 +153,13 @@ def test_prices_use_live_chart(client, use_naver):
     use_naver(api)
     body = client.get("/api/companies/005930/prices", params={"period": "1m"}).json()
     assert body["is_sample"] is False
-    assert body["points"][-1] == {"date": "2026-10-20", "close": 210750}
+    assert body["points"][-1] == {
+        "date": "2026-10-20",
+        "open": 218000,
+        "high": 218500,
+        "low": 209000,
+        "close": 210750,
+    }
     assert any(url.endswith("/005930/day") for url in api.calls)
 
     client.get("/api/companies/005930/prices", params={"period": "1y"})
