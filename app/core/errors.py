@@ -52,16 +52,12 @@ def report_generation_failed(
 # 커뮤니티
 
 
-def post_not_found() -> AppError:
-    return AppError(404, "POST_NOT_FOUND", "글을 찾지 못했어요. 지워졌을 수 있어요.")
-
-
 def comment_not_found() -> AppError:
     return AppError(404, "COMMENT_NOT_FOUND", "댓글을 찾지 못했어요. 지워졌을 수 있어요.")
 
 
 def report_target_not_found() -> AppError:
-    return AppError(404, "TARGET_NOT_FOUND", "신고할 글이나 댓글을 찾지 못했어요.")
+    return AppError(404, "TARGET_NOT_FOUND", "신고할 댓글을 찾지 못했어요.")
 
 
 def not_owner(detail: str) -> AppError:
@@ -78,7 +74,9 @@ def banned_word(label: str) -> AppError:
 
 def too_frequent(seconds: int) -> AppError:
     return AppError(
-        429, "TOO_FREQUENT", f"글은 {seconds}초에 한 번만 쓸 수 있어요. 잠시 후 다시 시도해 주세요."
+        429,
+        "TOO_FREQUENT",
+        f"댓글은 {seconds}초에 한 번만 쓸 수 있어요. 잠시 후 다시 시도해 주세요.",
     )
 
 
