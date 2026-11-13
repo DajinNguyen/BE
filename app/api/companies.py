@@ -6,9 +6,11 @@ from app.core.db import get_session, new_session
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.financials import Financials
 from app.schemas.news import NewsPage
+from app.schemas.performance import PerformanceDetail
 from app.schemas.price import Period, PriceHistory
-from app.services import data_store, overview_service, price_service
+from app.services import data_store, overview_service, performance_service, price_service
 from app.services.overview_service import OverviewWriter
+from app.services.performance_service import ReasonWriter
 
 router = APIRouter(prefix="/api/companies", tags=["companies"])
 
@@ -44,6 +46,25 @@ def get_company(
 @router.get("/{stock_code}/financials", response_model=Financials)
 def get_financials(stock_code: str):
     return data_store.get_financials(stock_code)
+
+
+@router.get("/{stock_code}/performance", response_model=PerformanceDetail)
+def get_performance(
+    stock_code: str,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+    writer: ReasonWriter | None = Depends(performance_service.get_reason_writer),
+):
+    """재무 상세 "최근 사업 성과 분석". 실적 자료가 없으면 404 `DATA_NOT_FOUND`.
+
+    "왜 이렇게 됐나요?"는 백그라운드에서 만들고, 다음 요청부터 채워진다.
+    """
+    detail, rcept_no = performance_service.get_detail(session, stock_code)
+    if writer is not None and performance_service.start_generation(session, stock_code, rcept_no):
+        background_tasks.add_task(
+            performance_service.run_generation, stock_code, writer, new_session
+        )
+    return detail
 
 
 @router.get("/{stock_code}/prices", response_model=PriceHistory)

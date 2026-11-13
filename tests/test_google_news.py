@@ -135,3 +135,13 @@ def test_naver_news_searched_by_korean_name(client, use_google):
     use_google(api)
     client.get("/api/companies/035420/news")
     assert api.calls[0]["q"].startswith("네이버 ")
+
+
+def test_between_searches_that_period_instead_of_recent_week(use_google):
+    from datetime import date
+
+    api = FakeGoogle()
+    client = use_google(api)
+    client.search("삼성전자 2분기 실적", 1, 10, between=(date(2026, 6, 30), date(2026, 9, 13)))
+    assert api.calls[0]["q"].endswith("after:2026-06-30 before:2026-09-13")
+    assert "when:7d" not in api.calls[0]["q"]
