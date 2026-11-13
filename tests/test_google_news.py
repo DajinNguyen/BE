@@ -113,6 +113,8 @@ def test_drops_blogs_and_non_news(use_google):
     premium = '<source url="https://contents.premium.naver.com">네이버 프리미엄콘텐츠</source>'
     tistory = '<source url="https://abc.tistory.com">티스토리</source>'
     deal = '<source url="https://zod.kr">조드</source>'  # 핫딜 게시판
+    jobs = '<source url="https://www.jobkorea.co.kr">잡코리아</source>'  # 채용 공고
+    company_info = '<source url="https://allinfo.example">올인포 투데이</source>'  # 기업정보 조회
     small_press = '<source url="https://www.pinpointnews.co.kr">핀포인트뉴스</source>'
     body = _rss(
         [
@@ -123,6 +125,8 @@ def test_drops_blogs_and_non_news(use_google):
             _item(5, 5, ""),
             _item(6, 6, deal),
             _item(7, 7, small_press),
+            _item(8, 8, jobs),
+            _item(9, 9, company_info),
         ]
     )
     client = use_google(FakeGoogle(body))
@@ -134,7 +138,24 @@ def test_naver_news_searched_by_korean_name(client, use_google):
     api = FakeGoogle()
     use_google(api)
     client.get("/api/companies/035420/news")
-    assert api.calls[0]["q"].startswith("네이버 ")
+    assert all(c["q"].startswith('intitle:"네이버" ') for c in api.calls)
+
+
+def test_company_news_widens_to_a_month_when_recent_week_is_thin(client, use_google):
+    api = FakeGoogle()  # 최근 7일 기사가 3건뿐이면 같이 받아 둔 최근 30일 기사를 쓴다
+    use_google(api)
+    page = client.get("/api/companies/005930/news").json()
+    assert len(page["items"]) == 3
+    queries = [c["q"] for c in api.calls]
+    assert len(queries) == 2
+    assert any(q.endswith("when:7d") for q in queries) and any("after:" in q for q in queries)
+
+
+def test_company_news_drops_articles_without_name_in_title(client, use_google):
+    other = _item(9, 9).replace("삼성전자 기사 9", "반도체 업종 강세")
+    use_google(FakeGoogle(_rss([_item(1, 1), other])))
+    page = client.get("/api/companies/005930/news").json()
+    assert [a["title"] for a in page["items"]] == ["삼성전자 기사 1"]
 
 
 def test_between_searches_that_period_instead_of_recent_week(use_google):
