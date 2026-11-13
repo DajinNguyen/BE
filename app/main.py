@@ -3,17 +3,30 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.api import auth, community, companies, home, industries, learn, market, reports, terms
+from app.api import (
+    auth,
+    community,
+    companies,
+    home,
+    industries,
+    learn,
+    market,
+    reports,
+    terms,
+    uploads,
+)
 from app.core.config import get_settings
 from app.core.db import init_db
 from app.core.errors import register_error_handlers
-from app.services import dart
+from app.services import dart, upload_service
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    upload_service.upload_dir()  # 사진 폴더가 없으면 만든다
     if dart.get_dart() is not None:
         threading.Thread(target=dart.warm_up, daemon=True).start()
     yield
@@ -38,3 +51,10 @@ app.include_router(auth.router)
 app.include_router(community.router)
 app.include_router(market.router)
 app.include_router(industries.router)
+app.include_router(uploads.router)
+# 커뮤니티 사진 (POST /api/uploads 로 올린 파일)
+app.mount(
+    upload_service.URL_PATH.rstrip("/"),
+    StaticFiles(directory=get_settings().upload_dir, check_dir=False),
+    name="uploads",
+)
