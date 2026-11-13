@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, community, companies, home, industries, learn, market, reports, terms
+from app.api import auth, community, companies, home, industries, learn, market, me, reports, terms
 from app.core.config import get_settings
 from app.core.db import init_db
 from app.core.errors import register_error_handlers
@@ -38,3 +38,4 @@ app.include_router(auth.router)
 app.include_router(community.router)
 app.include_router(market.router)
 app.include_router(industries.router)
+app.include_router(me.router)
