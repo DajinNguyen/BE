@@ -17,6 +17,7 @@ import re
 import threading
 import time
 import xml.etree.ElementTree as ET
+from datetime import date
 from email.utils import parsedate_to_datetime
 from functools import lru_cache
 from urllib.parse import urlparse
@@ -111,11 +112,12 @@ class GoogleNewsClient:
         self._cache: dict[str, tuple[float, list[NewsArticle]]] = {}
         self._retry_at = 0.0
 
-    def _fetch(self, query: str) -> bytes | None:
+    def _fetch(self, query: str, between: tuple[date, date] | None = None) -> bytes | None:
+        period = f"after:{between[0]} before:{between[1]}" if between else RECENT
         res = httpx.get(
             RSS_URL,
             params={
-                "q": f"{query} {EXCLUDE_QUERY} {RECENT}",
+                "q": f"{query} {EXCLUDE_QUERY} {period}",
                 "hl": "ko",
                 "gl": "KR",
                 "ceid": "KR:ko",
@@ -126,9 +128,11 @@ class GoogleNewsClient:
         res.raise_for_status()
         return res.content
 
-    def _articles(self, query: str, stock_code: str | None) -> list[NewsArticle] | None:
+    def _articles(
+        self, query: str, stock_code: str | None, between: tuple[date, date] | None = None
+    ) -> list[NewsArticle] | None:
         """관련도순 기사 전체. 받지 못하면 마지막으로 받은 값, 그것도 없으면 None."""
-        key = f"{query}|{stock_code}"
+        key = f"{query}|{stock_code}|{between}"
         hit = self._cache.get(key)
         if hit and time.time() - hit[0] < TTL:
             return hit[1]
@@ -136,7 +140,7 @@ class GoogleNewsClient:
             return hit[1] if hit else None
         with self._lock:
             try:
-                channel = ET.fromstring(self._fetch(query)).find("channel")
+                channel = ET.fromstring(self._fetch(query, between)).find("channel")
                 items = channel.findall("item") if channel is not None else []
             except (httpx.HTTPError, ET.ParseError) as e:
                 logger.warning("Google 뉴스를 받지 못했어요 (%s): %s", query, e)
@@ -162,9 +166,10 @@ class GoogleNewsClient:
         display: int,
         stock_code: str | None = None,
         sort: Sort = "date",
+        between: tuple[date, date] | None = None,
     ) -> SearchResult | None:
         """기사 목록 (기본 최신순). start 는 1부터 (네이버 검색과 같은 방식)."""
-        articles = self._articles(query, stock_code)
+        articles = self._articles(query, stock_code, between)
         if articles is None:
             return None
         if sort == "date":
