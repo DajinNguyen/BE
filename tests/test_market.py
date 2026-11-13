@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 from app.services import market_service
@@ -53,7 +54,7 @@ def test_market_news(client):
 
 def test_market_news_hours_ago():
     now = datetime(2026, 10, 24, 18, 0, tzinfo=KST)
-    news = market_service.market_news(now)
+    news = asyncio.run(market_service.market_news(now))
     assert news[0].id == "market-chip" and news[0].published_at == "2026-10-24T16:00:00+09:00"
 
 

@@ -36,10 +36,10 @@ def get_prices(stock_code: str, period: Period = Query("3m")):
 
 
 @router.get("/{stock_code}/news", response_model=NewsPage)
-def get_news(
+async def get_news(
     stock_code: str,
     page: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=50),
 ):
     """최신순. 기사가 없으면 `items: []`."""
-    return data_store.get_news_page(stock_code, page, size)
+    return await data_store.get_news_page(stock_code, page, size)

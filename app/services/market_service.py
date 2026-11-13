@@ -17,6 +17,7 @@ from app.schemas.market import (
 from app.schemas.news import NewsArticle
 from app.services.data_store import load_json
 from app.services.market_clock import last_close
+from app.services.news_sentiment import classify_news_sentiment
 from app.services.sample_news import latest_first, sample_article
 
 INTRADAY_STEPS = 39  # 09:00 ~ 15:30, 10분 간격
@@ -39,9 +40,9 @@ def _intraday(open_value: float, close: float, seed: int) -> list[IntradayPoint]
     return points
 
 
-def market_news(now: datetime | None = None) -> list[NewsArticle]:
+async def market_news(now: datetime | None = None) -> list[NewsArticle]:
     """시장 기사 (최신순). 예시 기사라 날짜와 상관없이 같은 목록이다."""
-    return latest_first(
+    articles = latest_first(
         [
             sample_article(
                 article_id=n["id"],
@@ -54,12 +55,13 @@ def market_news(now: datetime | None = None) -> list[NewsArticle]:
             for n in load_json("market.json")["news"]
         ]
     )
+    return await classify_news_sentiment(articles)
 
 
-def get_summary(now: datetime | None = None) -> MarketSummary:
+async def get_summary(now: datetime | None = None) -> MarketSummary:
     data = load_json("market.json")
     as_of, is_previous = last_close(now)
-    news = {n.id: n for n in market_news(now)}
+    news = {n.id: n for n in await market_news(now)}
     return MarketSummary(
         as_of=as_of,
         is_previous_session=is_previous,

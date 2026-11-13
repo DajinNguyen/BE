@@ -22,6 +22,7 @@ from app.schemas.news import NewsArticle, NewsItem, NewsPage
 from app.schemas.term import Term
 from app.services import dart, dart_financials, naver
 from app.services.market_clock import last_close_date
+from app.services.news_sentiment import FALLBACK_REASON, FALLBACK_SENTIMENT, classify_news_sentiment
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -192,7 +193,11 @@ def get_news(stock_code: str) -> list[NewsItem]:
 
 
 def to_articles(stock_code: str, news: list[NewsItem]) -> list[NewsArticle]:
-    """원문 링크가 있는 실제 뉴스만 응답 형식으로 바꾼다 (예시 자리는 보내지 않는다)."""
+    """원문 링크가 있는 실제 뉴스만 응답 형식으로 바꾼다 (예시 자리는 보내지 않는다).
+
+    sentiment(호재/악재)는 아직 AI로 판단하기 전이라 임시값을 넣어 둔다.
+    실제 응답으로 나가기 전에 반드시 `classify_news_sentiment()` 로 채워야 한다.
+    """
     return [
         NewsArticle(
             id=n.id,
@@ -203,14 +208,17 @@ def to_articles(stock_code: str, news: list[NewsItem]) -> list[NewsArticle]:
             summary_short=n.summary,
             company_stock_code=stock_code,
             related_metric=n.financial_link,
+            sentiment=FALLBACK_SENTIMENT,
+            sentiment_reason=FALLBACK_REASON,
         )
         for n in news
         if not n.is_placeholder and n.url
     ]
 
 
-def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
-    articles = to_articles(stock_code, get_news(stock_code))
+async def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
+    """쪽(page)으로 자르기 전에 전체 목록을 한 번에 분류한다."""
+    articles = await classify_news_sentiment(to_articles(stock_code, get_news(stock_code)))
     start = (page - 1) * size
     return NewsPage(
         items=articles[start : start + size],

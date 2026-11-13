@@ -5,6 +5,10 @@ os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["DART_API_KEY"] = ""
 # 네이버 시세도 부르지 않는다 (시드 예시 값으로 동작)
 os.environ["NAVER_PRICES_ENABLED"] = "false"
+# 뉴스 호재/악재 판단도 실제 AI를 부르지 않는다 (.env에 키가 있어도) — 항상 "보통"으로 대체된다.
+# 리포트 생성은 각 테스트가 `fake_writer`/`get_report_writer` 오버라이드로 별도 제어한다.
+os.environ["ANTHROPIC_API_KEY"] = ""
+os.environ["GEMINI_API_KEY"] = ""
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
