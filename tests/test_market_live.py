@@ -131,7 +131,7 @@ def test_live_summary_uses_real_index_and_ai_brief(client, live_market):
 
     first = client.get("/api/market/summary").json()
     # 처음에는 AI 글을 만드는 동안 지수로 만든 기본 문장
-    assert first["headline"] == "코스피는 3.73% 내리고 있고, 코스닥은 3.73% 내리고 있어요"
+    assert first["headline"] == "코스피는 3.73% 떨어지고 있고, 코스닥은 3.73% 떨어지고 있어요"
     assert first["reasons"] == []
     kospi = first["indices"][0]
     assert kospi == {
@@ -169,15 +169,70 @@ def test_live_summary_uses_real_index_and_ai_brief(client, live_market):
 def test_live_summary_without_ai_key(client, live_market):
     live_market(None, is_open=False)
     body = client.get("/api/market/summary").json()
-    assert body["headline"] == "코스피는 3.73% 내렸고, 코스닥은 3.73% 내렸어요"
+    assert body["headline"] == "코스피는 3.73% 떨어졌고, 코스닥은 3.73% 떨어졌어요"
     assert body["reasons"] == []
     assert body["indices"][1]["is_sample"] is False
 
 
-def test_live_summary_ai_failure_keeps_plain_headline(client, live_market):
+def test_live_summary_ai_failure_tells_biggest_movers(client, live_market):
     writer = FakeBriefWriter(None)
     live_market(writer)
     client.get("/api/market/summary")
     body = client.get("/api/market/summary").json()
-    assert body["headline"].startswith("코스피는 3.73%")
+    # AI 글을 못 받아도 옆 숫자와 같은 말("코스피는 3.73% 내렸어요") 대신 많이 움직인 산업을 알려준다
+    assert body["headline"].endswith("회사 주가가 가장 많이 떨어지고 있어요")
+    assert "코스피" not in body["headline"] and body["reasons"] == []
     assert len(writer.contexts) == 1  # 실패하면 잠시 기다렸다가 다시 해 본다
+
+
+def test_only_direction_spots_headlines_without_a_reason():
+    only = market_service.only_direction
+    assert only("코스피는 내리고 코스닥은 올랐어요")
+    assert only("코스피가 1.2% 올랐어요")
+    assert only("코스피는 떨어지고 코스닥은 올랐어요")
+    assert only("코스피와 코스닥 모두 소폭 하락했어요")
+    assert not only("반도체가 약해서 코스피가 3% 넘게 내리고 있어요")
+    assert not only("미국 금리 인하 기대에 코스피가 올랐어요")
+
+
+def test_live_summary_replaces_result_only_headline_with_first_reason(client, live_market):
+    writer = FakeBriefWriter(
+        MarketBrief(
+            headline="코스피는 내리고 코스닥도 내리고 있어요",
+            reasons=[
+                BriefReason(
+                    title="반도체 수출이 줄었다는 소식에 내렸어요",
+                    description="반도체 회사 주가가 내렸어요.",
+                    industry_ids=["semiconductor"],
+                    news_numbers=[1],
+                )
+            ],
+        )
+    )
+    live_market(writer)
+    client.get("/api/market/summary")
+    body = client.get("/api/market/summary").json()
+    assert body["headline"] == "반도체 수출이 줄었다는 소식에 내렸어요"
+
+
+def test_live_summary_result_only_headline_without_reasons_uses_movers(client, live_market):
+    live_market(
+        FakeBriefWriter(MarketBrief(headline="코스피와 코스닥이 내렸어요", reasons=[])), False
+    )
+    client.get("/api/market/summary")
+    body = client.get("/api/market/summary").json()
+    assert body["headline"].endswith("회사 주가가 가장 많이 떨어졌어요")
+
+
+def test_live_summary_replaces_too_long_headline(client, live_market):
+    long = "SK하이닉스와 삼성바이오로직스 같은 큰 회사들의 주가가 떨어져서 코스피가 내렸어요"
+    reason = BriefReason(
+        title="큰 반도체 회사 주가가 떨어졌어요",
+        description="설명",
+        industry_ids=[],
+        news_numbers=[1],
+    )
+    live_market(FakeBriefWriter(MarketBrief(headline=long, reasons=[reason])))
+    client.get("/api/market/summary")
+    body = client.get("/api/market/summary").json()
+    assert body["headline"] == "큰 반도체 회사 주가가 떨어졌어요"
