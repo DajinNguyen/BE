@@ -186,6 +186,39 @@ def find_financials(stock_code: str) -> Financials | None:
     return live
 
 
+def in_readable_unit(financials: Financials) -> Financials:
+    """AI에게 줄 재무 숫자. 매출이 1조 원이 안 되는 회사는 억 원으로 바꾼다.
+
+    재무 탭은 프론트가 "조 원"으로 고정해 보여줘서 API 값은 조 원 그대로 두고, AI가 쓰는 글에서만
+    "0.0824조 원" 대신 "824억 원"으로 읽히게 한다.
+    """
+    if financials.unit != "조 원" or not financials.annual:
+        return financials
+    if max(abs(a.revenue) for a in financials.annual) >= 1:
+        return financials
+
+    def eok(value: float) -> float:
+        return round(value * 10_000)
+
+    update: dict[str, Any] = {
+        "unit": "억 원",
+        "annual": [
+            a.model_copy(
+                update={"revenue": eok(a.revenue), "operating_income": eok(a.operating_income)}
+            )
+            for a in financials.annual
+        ],
+    }
+    if q := financials.latest_quarter:
+        update["latest_quarter"] = q.model_copy(
+            update={"revenue": eok(q.revenue), "operating_income": eok(q.operating_income)}
+        )
+    if s := financials.segments:
+        items = [i.model_copy(update={"revenue": eok(i.revenue)}) for i in s.items]
+        update["segments"] = s.model_copy(update={"items": items})
+    return financials.model_copy(update=update)
+
+
 def get_financials(stock_code: str) -> Financials:
     """재무 API 응답용. 프론트는 segments가 항상 있다고 보므로 없으면 빈 목록으로 채운다."""
     financials = find_financials(stock_code)
