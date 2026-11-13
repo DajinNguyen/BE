@@ -275,3 +275,32 @@ def test_report_for_company_without_seed_uses_dart(client, use_dart, fake_writer
     assert fake_writer.calls[0]["financials"]["source"] == "DART 2025년 사업보고서"
     assert report["evidence"]["financials"]["years"] == ["2023", "2024", "2025"]
     assert "DART 2025년 사업보고서" in report["sources"]
+
+
+def test_small_company_numbers_are_given_to_ai_in_eok(use_dart):
+    from app.services import data_store
+
+    rows = _ok(
+        _rows(
+            "CFS",
+            {
+                "매출액": (82_400_000_000, 69_200_000_000),
+                "영업이익": (17_400_000_000, -5_600_000_000),
+            },
+        )
+    )
+    use_dart(FakeDartApi({(SMALL, "2025", "11011"): rows}))
+    f = data_store.in_readable_unit(fetch(SMALL))
+    assert f.unit == "억 원"
+    assert [(a.fiscal_year, a.revenue, a.operating_income) for a in f.annual] == [
+        (2024, 692, -56),
+        (2025, 824, 174),
+    ]
+
+
+def test_large_company_numbers_stay_in_trillion(use_dart):
+    from app.services import data_store
+
+    use_dart(FakeDartApi({(SAMSUNG, "2025", "11011"): SAMSUNG_2025}))
+    f = fetch(SAMSUNG)
+    assert data_store.in_readable_unit(f) is f
