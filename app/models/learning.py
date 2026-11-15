@@ -29,3 +29,13 @@ class UsageCreditsRecord(SQLModel, table=True):
         default_factory=list, sa_column=Column(JSON, nullable=False)
     )
     updated_at: datetime
+
+
+class PuzzleOpenRecord(SQLModel, table=True):
+    """로그인 사용자가 낱말퀴즈를 마지막으로 연 시각 (퀴즈를 열지 않고 보낸 완료 요청을 거르는 데 쓴다)."""
+
+    __tablename__ = "puzzle_open"
+
+    user_id: int = Field(primary_key=True, foreign_key="users.id")
+    puzzle_id: str = Field(primary_key=True, max_length=100)
+    opened_at: datetime
