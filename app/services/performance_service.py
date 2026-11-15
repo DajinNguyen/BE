@@ -15,6 +15,7 @@
 
 import json
 import logging
+import re
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -72,6 +73,7 @@ NEWS_WINDOW = timedelta(days=75)  # 분기가 끝난 뒤 이 기간 안에 나�
 NEWS_WORDS = ("분기", "실적", "영업이익", "영업익", "매출")  # 제목에 이 중 하나는 있어야 한다
 MAX_REASONS = 3
 MAX_EVIDENCE = 2
+MAX_SUMMARY_CHARS = 60  # 한 줄 요약이 이보다 길면 버린다
 BANNED_WORDS = ("매수", "매도", "추천", "목표가", "사세요", "파세요")
 GENERATION_TIMEOUT = timedelta(minutes=5)
 RETRY_AFTER = timedelta(hours=6)  # 실패했거나 기사가 없었으면 이만큼 뒤에 다시 해 본다
@@ -79,7 +81,7 @@ RETRY_AFTER = timedelta(hours=6)  # 실패했거나 기사가 없었으면 이�
 SYSTEM_PROMPT = """\
 당신은 주식을 처음 시작하는 10대 초보자에게 회사의 지난 분기 실적을 설명해 주는 선생님이에요.
 사용자 메시지로 회사 이름, 분기, 실적 숫자, 그 분기 실적을 다룬 기사 목록(JSON)이 주어져요.
-"왜 이렇게 됐나요?"에 들어갈 이유를 2~3개 써요.
+"왜 이렇게 됐나요?"에 들어갈 이유 2~3개와, 이번 분기를 한 문장으로 정리한 요약을 써요.
 
 반드시 지킬 규칙:
 - 주어진 숫자와 기사 제목·요약에 있는 내용만 써요. 없는 내용을 지어내지 마세요.
@@ -88,6 +90,10 @@ SYSTEM_PROMPT = """\
 - 지난 실적을 설명하기만 해요. 앞으로의 주가·실적 예측, 사라·팔라는 말, 목표 주가는 쓰지 마세요.
 - "~해요" 체로, 전문 용어 없이 써요. 꼭 필요한 용어는 괄호로 짧게 풀어 줘요.
 - title 은 30자 이내 한 문장, description 은 1~2문장이에요.
+- summary 는 이번 분기 실적을 한눈에 읽히게 정리한 한 문장(40자 이내)이에요.
+  숫자가 늘었다·줄었다는 결과만 쓰지 말고, 기사에서 확인되는 가장 큰 이유를 같이 써요.
+  예: "AI용 메모리가 많이 팔려서 매출과 이익이 함께 늘었어요"
+  퍼센트·금액 숫자는 쓰지 않아요. 기사에서 이유를 찾을 수 없으면 빈 문자열로 둬요.
 """
 
 
@@ -99,6 +105,7 @@ class ReasonDraft(BaseModel):
 
 class ReasonsDraft(BaseModel):
     reasons: list[ReasonDraft]
+    summary: str = ""
 
 
 class ReasonWriter(Protocol):
@@ -329,10 +336,31 @@ def get_detail(session: Session, stock_code: str) -> tuple[PerformanceDetail, st
     detail = build_detail(name, chain)
     rcept_no = chain[-1].rcept_no
     record = session.get(CompanyPerformanceRecord, stock_code)
-    if record is not None and record.content and record.rcept_no == rcept_no:
-        reasons = [PerformanceReason(**r) for r in record.content]
-        detail = detail.model_copy(update={"reasons": reasons})
+    if record is not None and record.rcept_no == rcept_no:
+        reasons, summary = saved(record)
+        detail = detail.model_copy(update={"reasons": reasons, "ai_summary": summary})
     return detail, rcept_no
+
+
+def saved(record: CompanyPerformanceRecord) -> tuple[list[PerformanceReason], str | None]:
+    """저장해 둔 (이유 목록, 한 줄 요약). 예전 기록은 이유 목록만 있다."""
+    content = record.content
+    if isinstance(content, list):
+        content = {"reasons": content}
+    if not isinstance(content, dict):
+        return [], None
+    reasons = [PerformanceReason(**r) for r in content.get("reasons") or []]
+    return reasons, content.get("summary") or None
+
+
+def to_summary(draft: ReasonsDraft, reasons: list[PerformanceReason]) -> str | None:
+    """한 줄 요약. 근거가 된 이유가 하나도 없거나 예측·권유 표현, 숫자가 있으면 버린다."""
+    text = " ".join(draft.summary.split())
+    if not text or not reasons or len(text) > MAX_SUMMARY_CHARS:
+        return None
+    if any(w in text for w in BANNED_WORDS) or re.search(r"\d", text):
+        return None
+    return text
 
 
 # --------------------------------------------------------------------------
@@ -396,8 +424,9 @@ def start_generation(
     now = now or datetime.now(UTC)
     record = session.get(CompanyPerformanceRecord, stock_code)
     if record is not None and record.rcept_no == rcept_no:
-        if record.status == "done" and record.content:
-            return False
+        reasons, summary = saved(record)
+        if record.status == "done" and reasons and summary:
+            return False  # 다 만들었다. 요약만 없으면(예전 기록 등) 아래 간격으로 다시 만들어 본다
         since = record.started_at if record.status == "generating" else record.updated_at
         wait = GENERATION_TIMEOUT if record.status == "generating" else RETRY_AFTER
         if since is not None and now - _as_utc(since) < wait:
@@ -415,7 +444,7 @@ def run_generation(
     stock_code: str, writer: ReasonWriter, session_factory: Callable[[], Session]
 ) -> str:
     """백그라운드 작업: 이유를 만들어 저장한다. "done" | "failed"."""
-    status, reasons, rcept_no = "failed", [], None
+    status, reasons, summary, rcept_no = "failed", [], None, None
     try:
         name, chain = _chain(stock_code)
         latest = chain[-1]
@@ -441,6 +470,7 @@ def run_generation(
             draft = writer.write(context)
             if draft is not None:
                 reasons = to_reasons(draft, news)
+                summary = to_summary(draft, reasons)
                 status = "done"
         else:
             status = "done"  # 기사가 없으면 비워 두고 나중에 다시 찾아본다
@@ -452,7 +482,7 @@ def run_generation(
         )
         record.status = status
         if status == "done" or record.rcept_no != rcept_no:
-            record.content = [r.model_dump() for r in reasons]
+            record.content = {"reasons": [r.model_dump() for r in reasons], "summary": summary}
         record.rcept_no = rcept_no
         record.started_at = None
         record.updated_at = datetime.now(UTC)
