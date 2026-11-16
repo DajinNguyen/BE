@@ -8,7 +8,7 @@
 """
 
 import re
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -23,7 +23,6 @@ from app.core.errors import (
     not_owner,
     post_not_found,
     report_target_not_found,
-    too_frequent,
 )
 from app.models.community import ContentReport, Post, PostComment, PostLike
 from app.models.user import User
@@ -47,10 +46,7 @@ AUTO_TITLE_MAX = 30  # 제목을 안 보내면 본문 첫 줄을 이만큼 잘�
 BODY_MAX = 500  # 화면 입력창(FE COMMUNITY_LIMITS.commentMax)과 같다
 COMMENT_MAX = 500
 NICKNAME_MAX = 30
-# 도배 방지: 같은 사람은 1분에 글 1개까지.
-# 댓글(글에 다는 답글)은 개수를 막지 않는다 (2026-11-16 클라이언트 미팅에서 없애기로 했다)
-RATE_WINDOW = timedelta(minutes=1)
-POSTS_PER_MINUTE = 1
+# 글·댓글을 1분에 몇 개까지만 쓰게 막던 제한은 없앴다 (2026-11-16 클라이언트 요청, 프론트 문서 8-3장)
 HIDE_AFTER_REPORTS = 3  # 서로 다른 사람의 신고가 이만큼 쌓이면 숨긴다
 
 # 띄어쓰기·대소문자를 무시하고 찾는다. 두 번째 값은 안내 문구에 보여줄 이름 (욕설은 그대로 보여주지 않는다)
@@ -189,18 +185,6 @@ def _reply_counts(session: Session, comment_ids: list[int]) -> dict[int, int]:
     return dict(rows)
 
 
-def _check_rate(session: Session, model, user: User, limit: int, message: str) -> None:
-    """최근 1분 동안 limit 개를 이미 썼으면 막는다."""
-    since = _now() - RATE_WINDOW
-    recent = session.exec(
-        select(func.count())
-        .select_from(model)
-        .where(model.user_id == user.id, model.created_at >= since)
-    ).one()
-    if recent >= limit:
-        raise too_frequent(message)
-
-
 # --------------------------------------------------------------------------
 # 글
 # --------------------------------------------------------------------------
@@ -258,9 +242,6 @@ def create_post(
     if not data_store.company_exists(stock_code):
         raise company_not_found()
     title, body, image_url = _clean_post(data, base_url)
-    _check_rate(
-        session, Post, user, POSTS_PER_MINUTE, f"댓글은 1분에 {POSTS_PER_MINUTE}개만 쓸 수 있어요."
-    )
 
     post = Post(
         stock_code=stock_code,
