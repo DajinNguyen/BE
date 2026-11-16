@@ -194,7 +194,7 @@ def test_fixture_writer_matches_frontend_sample(client):
 
 
 def test_report_saved_with_old_evidence_format_still_reads(client):
-    """근거가 종류 이름뿐이던 예전 리포트도 칩 형식으로 바꿔서 돌려준다."""
+    """근거가 종류 이름뿐이던 예전 리포트도 칩 형식으로 바꾸고 지금 자료로 기준일을 붙인다."""
     client.post("/api/companies/005930/report")
     with new_session() as session:
         record = session.get(ReportRecord, "005930")
@@ -209,9 +209,9 @@ def test_report_saved_with_old_evidence_format_still_reads(client):
 
     report = client.get("/api/companies/005930/report").json()
     assert report["key_points"][0]["evidence"] == [
-        {"type": "financials", "label": "재무제표", "date": None}
+        {"type": "financials", "label": "재무제표 2025년 사업보고서", "date": None}
     ]
-    assert report["data_as_of"] is None
+    assert report["data_as_of"]["financials"] == "2025년 사업보고서"
 
 
 def test_report_saved_with_old_news_format_still_reads(client):
@@ -241,3 +241,29 @@ def test_report_saved_with_old_news_format_still_reads(client):
     assert news[0]["summary_short"] and news[0]["id"]
     assert news[0]["company_stock_code"] == "005930"
     assert client.get("/api/home").status_code == 200
+
+
+def test_get_refreshes_values_but_keeps_written_text(client, fake_writer, monkeypatch):
+    """설명은 저장한 그대로, 숫자·뉴스는 볼 때마다 지금 자료로."""
+    from app.services import report_service
+
+    client.post("/api/companies/005930/report")
+    first = client.get("/api/companies/005930/report").json()
+
+    financials = report_service.find_financials("005930")
+    newer = financials.model_copy(
+        update={
+            "annual": [a.model_copy(update={"revenue": a.revenue + 1}) for a in financials.annual],
+            "source": "DART 2026년 사업보고서",
+        }
+    )
+    monkeypatch.setattr(report_service, "find_financials", lambda code: newer)
+    report = client.get("/api/companies/005930/report").json()
+
+    assert report["headline"] == first["headline"]
+    assert [p["title"] for p in report["key_points"]] == [p["title"] for p in first["key_points"]]
+    assert report["key_points"][0]["evidence"] == first["key_points"][0]["evidence"]
+    assert report["evidence"]["financials"]["revenue"] == [259.94, 301.9, 334.6]
+    assert "DART 2026년 사업보고서" in report["sources"]
+    assert report["generated_at"] == first["generated_at"]
+    assert len(fake_writer.calls) == 1  # AI는 다시 부르지 않는다
