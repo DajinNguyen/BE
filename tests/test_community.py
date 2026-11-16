@@ -1,7 +1,7 @@
 import pytest
 
 from app.core.db import new_session
-from app.services import auth_service, community_service
+from app.services import auth_service
 from app.services.auth_service import GoogleProfile
 
 STOCK = "005930"
@@ -30,13 +30,6 @@ def login(client):
         return users[n]
 
     return _login
-
-
-@pytest.fixture(autouse=True)
-def no_spam_limit(monkeypatch):
-    """도배 방지는 해당 테스트에서만 켠다."""
-    monkeypatch.setattr(community_service, "POSTS_PER_MINUTE", 1000)
-    monkeypatch.setattr(community_service, "COMMENTS_PER_MINUTE", 1000)
 
 
 def _write(client, **overrides):
@@ -157,7 +150,7 @@ def test_post_not_found(client):
 
 
 # --------------------------------------------------------------------------
-# 규칙: 글자 수 · 금지어 · 도배 방지
+# 규칙: 글자 수 · 금지어
 # --------------------------------------------------------------------------
 
 
@@ -189,27 +182,19 @@ def test_banned_words(client, login, text):
     assert "쓸 수 없어요" in res.json()["error"]["message"]
 
 
-def test_post_spam_limit(client, login, monkeypatch):
-    monkeypatch.setattr(community_service, "POSTS_PER_MINUTE", 1)
+def test_posts_have_no_per_minute_limit(client, login):
+    """기업 댓글(글)도 1분에 몇 개를 써도 막지 않는다."""
     login(1)
-    assert _write(client).status_code == 201
-    res = _write(client)
-    assert res.status_code == 429
-    assert res.json()["error"]["code"] == "TOO_FREQUENT"
-    assert "1분에 1개" in res.json()["error"]["message"]
-
-    login(2)  # 다른 사람은 바로 쓸 수 있다
-    assert _write(client).status_code == 201
+    for _ in range(4):
+        assert _write(client).status_code == 201
 
 
-def test_comment_spam_limit(client, login, monkeypatch):
-    monkeypatch.setattr(community_service, "COMMENTS_PER_MINUTE", 5)
+def test_comments_have_no_per_minute_limit(client, login):
+    """답글(댓글)도 1분에 몇 개를 써도 막지 않는다."""
     login(1)
     post_id = _write(client).json()["id"]
-    for i in range(5):
+    for i in range(12):
         assert _comment(client, post_id, f"답글 {i}").status_code == 201
-    res = _comment(client, post_id, "여섯 번째")
-    assert (res.status_code, res.json()["error"]["code"]) == (429, "TOO_FREQUENT")
 
 
 # --------------------------------------------------------------------------
