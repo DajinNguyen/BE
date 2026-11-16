@@ -14,3 +14,15 @@ class User(SQLModel, table=True):
     name: str = Field(max_length=255)
     created_at: datetime
     last_login_at: datetime
+
+
+class RevokedSession(SQLModel, table=True):
+    """로그아웃한 로그인 쿠키. 쿠키를 지워도 값을 따로 적어 둔 사람이 다시 쓰지 못하게 막는다.
+
+    토큰 자체가 아니라 해시만 저장하고, 토큰이 어차피 끝나는 시각이 지나면 지운다.
+    """
+
+    __tablename__ = "revoked_sessions"
+
+    token_hash: str = Field(primary_key=True, max_length=64)
+    expires_at: datetime

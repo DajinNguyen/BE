@@ -1,7 +1,7 @@
 import threading
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -22,6 +22,7 @@ from app.core.config import get_settings
 from app.core.db import init_db
 from app.core.errors import register_error_handlers
 from app.services import dart, upload_service
+from app.services.auth_service import SESSION_COOKIE
 
 
 @asynccontextmanager
@@ -35,6 +36,23 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="다진(dajin) API", version="0.1.0", lifespan=lifespan)
 register_error_handlers(app)
+
+# 사용자마다 다른 응답은 브라우저·중간 서버가 저장해 두지 못하게 한다.
+# (로그아웃하고 다른 계정으로 로그인했을 때 앞사람의 학습 기록·잔액이 보이면 안 된다)
+PERSONAL_PATHS = ("/api/me", "/api/auth")
+
+
+@app.middleware("http")
+async def no_store_for_personal_responses(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    personal = path.startswith(PERSONAL_PATHS)
+    if personal or (path.startswith("/api/") and SESSION_COOKIE in request.cookies):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers.add_vary_header("Cookie")
+    return response
+
+
 # 로컬 개발: 프론트(Vite) 개발 서버에서 쿠키 포함 요청을 보낼 수 있게 허용한다.
 app.add_middleware(
     CORSMiddleware,
