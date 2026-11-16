@@ -43,8 +43,8 @@ def login_required() -> AppError:
 def insufficient_adk(required: int, balance: int) -> AppError:
     """ADK가 모자라서 쓸 수 없다. 화면에서 숫자를 쓸 수 있게 `required`·`balance` 도 같이 준다."""
     return AppError(
-        402,
-        "INSUFFICIENT_ADK",
+        400,
+        "INSUFFICIENT_BALANCE",
         f"ADK가 모자라요. {required} ADK가 필요한데 지금 {balance} ADK가 있어요.",
         {"required": required, "balance": balance},
     )
