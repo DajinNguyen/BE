@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import (
     auth,
+    chat,
     community,
     companies,
     home,
@@ -74,6 +75,7 @@ app.include_router(industries.router)
 app.include_router(uploads.router)
 app.include_router(watchlist.router)
 app.include_router(me.router)
+app.include_router(chat.router)
 # 커뮤니티 사진 (POST /api/uploads 로 올린 파일)
 app.mount(
     upload_service.URL_PATH.rstrip("/"),

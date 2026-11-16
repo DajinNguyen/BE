@@ -48,6 +48,7 @@ from app.schemas.report import (
     VisionEvidence,
     YearlyFigure,
 )
+from app.services import wallet_service
 from app.services.data_store import (
     find_financials,
     get_company,
@@ -588,8 +589,14 @@ async def get_report(session: Session, stock_code: str) -> CompanyReport:
     return await refresh_values(_to_response(stock_code, record))
 
 
-def start_generation(session: Session, stock_code: str) -> tuple[CompanyReport, bool]:
-    """생성을 시작한다. (응답, 백그라운드 작업을 띄워야 하는지)를 돌려준다."""
+def start_generation(
+    session: Session, stock_code: str, reserve: Callable[[], None] | None = None
+) -> tuple[CompanyReport, bool]:
+    """생성을 시작한다. (응답, 백그라운드 작업을 띄워야 하는지)를 돌려준다.
+
+    `reserve` 는 실제로 새로 만들기 직전에만 부른다 (ADK 잡아 두기). 예외를 던지면 시작하지 않는다.
+    이미 만드는 중이거나 재무제표가 없어서 바로 실패하는 경우에는 부르지 않는다.
+    """
     get_company(stock_code)
     record = session.get(ReportRecord, stock_code)
     if record is not None:
@@ -606,6 +613,8 @@ def start_generation(session: Session, stock_code: str) -> tuple[CompanyReport, 
         record.started_at = None
         should_run = False
     else:
+        if reserve is not None:
+            reserve()
         record.status = "generating"
         record.failure_reason = None
         record.started_at = datetime.now(UTC)
@@ -615,18 +624,34 @@ def start_generation(session: Session, stock_code: str) -> tuple[CompanyReport, 
     return _to_response(stock_code, record), should_run
 
 
+def _close_hold(hold_id: int | None, ok: bool, session_factory: Callable[[], Session]) -> None:
+    """잡아 둔 ADK를 확정하거나(리포트가 나왔다) 돌려놓는다(실패했다)."""
+    if hold_id is None:
+        return
+    with session_factory() as session:
+        (wallet_service.settle if ok else wallet_service.release)(session, hold_id)
+
+
 async def run_generation(
-    stock_code: str, writer: ReportWriter, session_factory: Callable[[], Session]
+    stock_code: str,
+    writer: ReportWriter,
+    session_factory: Callable[[], Session],
+    hold_id: int | None = None,
 ) -> None:
-    """백그라운드 작업: 리포트를 만들어 저장하고, 실패하면 이유를 남긴다."""
+    """백그라운드 작업: 리포트를 만들어 저장하고, 실패하면 이유를 남긴다.
+
+    `hold_id` 는 이 리포트 값으로 잡아 둔 ADK. 리포트가 제대로 나왔을 때만 확정한다.
+    """
     try:
         report, generated_at = await write_report(stock_code, writer)
     except AppError as e:
         _save_failure(stock_code, e.detail, session_factory)
+        _close_hold(hold_id, False, session_factory)
         return
     except Exception:
         logger.exception("Report generation crashed: %s", stock_code)
         _save_failure(stock_code, report_generation_failed().detail, session_factory)
+        _close_hold(hold_id, False, session_factory)
         return
 
     with session_factory() as session:
@@ -640,6 +665,7 @@ async def run_generation(
         record.failure_reason = None
         session.add(record)
         session.commit()
+    _close_hold(hold_id, True, session_factory)
 
 
 def _save_failure(stock_code: str, reason: str, session_factory: Callable[[], Session]) -> None:

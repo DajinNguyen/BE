@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 TermStatus = Literal["new", "learning", "mastered"]
 
@@ -33,13 +33,22 @@ class TermProgress(BaseModel):
 
 
 class PuzzleCompletion(BaseModel):
+    """낱말퀴즈 완료 요청. 프론트는 `{ puzzle_id, used_reveal }` 를 보낸다.
+
+    예전 프론트가 보내던 `revealed`·`completed_at` 도 받는다.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
     puzzle_id: str = Field(max_length=100)
-    completed_at: str = Field(max_length=40)  # 기기 시각 (ISO). 받은 그대로 돌려준다
-    revealed: bool  # [정답 보기]를 썼는지 (썼으면 보상 개수에 넣지 않는다)
+    # 기기 시각 (ISO). 판단에는 쓰지 않고 기록만 한다. 안 보내면 서버가 받은 시각을 적는다
+    completed_at: str | None = Field(None, max_length=40)
+    # [정답 보기]를 썼는지 (썼으면 보상 개수에 넣지 않는다)
+    revealed: bool = Field(validation_alias=AliasChoices("used_reveal", "revealed"))
 
 
 class UsageCredits(BaseModel):
-    """낱말퀴즈 보상 (리포트 만들기 추가 횟수)."""
+    """낱말퀴즈 보상 기록 (예전 프론트용. 지금 프론트는 `GET /api/me/wallet` 을 쓴다)."""
 
     date: str  # rewards_today·counted_today 의 기준 날짜 (서버 날짜)
     rewards_today: int  # 오늘 받은 보상 횟수

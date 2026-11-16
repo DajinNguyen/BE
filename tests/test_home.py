@@ -1,3 +1,9 @@
+import pytest
+
+# 리포트 만들기는 로그인과 ADK가 필요하다
+pytestmark = pytest.mark.usefixtures("member")
+
+
 def test_home_dashboard(client):
     res = client.get("/api/home")
     assert res.status_code == 200

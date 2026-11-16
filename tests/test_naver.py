@@ -5,6 +5,9 @@ import pytest
 
 from app.services import naver
 
+# 리포트 만들기는 로그인과 ADK가 필요하다
+pytestmark = pytest.mark.usefixtures("member")
+
 
 def _item(code, price, rate, trading_value, market_cap, traded_at="2026-10-20T13:05:57.86+09:00"):
     return {

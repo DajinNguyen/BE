@@ -9,10 +9,11 @@ class AppError(Exception):
     `message` 는 화면에 그대로 보여줄 수 있는 쉬운 문장이다.
     """
 
-    def __init__(self, status_code: int, code: str, detail: str):
+    def __init__(self, status_code: int, code: str, detail: str, extra: dict | None = None):
         self.status_code = status_code
         self.code = code
         self.detail = detail
+        self.extra = extra or {}  # `error` 안에 같이 넣을 값 (예: 필요한 ADK, 지금 잔액)
 
 
 def company_not_found() -> AppError:
@@ -39,6 +40,16 @@ def login_required() -> AppError:
     return AppError(401, "LOGIN_REQUIRED", "로그인이 필요해요.")
 
 
+def insufficient_adk(required: int, balance: int) -> AppError:
+    """ADK가 모자라서 쓸 수 없다. 화면에서 숫자를 쓸 수 있게 `required`·`balance` 도 같이 준다."""
+    return AppError(
+        400,
+        "INSUFFICIENT_BALANCE",
+        f"ADK가 모자라요. {required} ADK가 필요한데 지금 {balance} ADK가 있어요.",
+        {"required": required, "balance": balance},
+    )
+
+
 def auth_not_configured() -> AppError:
     return AppError(503, "AUTH_NOT_CONFIGURED", "Google 로그인이 아직 설정되지 않았어요.")
 
@@ -47,6 +58,25 @@ def report_generation_failed(
     detail: str = "리포트를 만드는 중에 문제가 생겼어요. 잠시 후 다시 시도해 주세요.",
 ) -> AppError:
     return AppError(502, "REPORT_GENERATION_FAILED", detail)
+
+
+# 챗봇
+
+
+def chat_failed() -> AppError:
+    return AppError(
+        502,
+        "CHAT_FAILED",
+        "답변을 만들지 못했어요. ADK는 빠지지 않았어요. 잠시 후 다시 물어봐 주세요.",
+    )
+
+
+def chat_not_configured() -> AppError:
+    return AppError(503, "CHAT_NOT_CONFIGURED", "AI 챗봇이 아직 준비되지 않았어요.")
+
+
+def conversation_not_found() -> AppError:
+    return AppError(404, "CONVERSATION_NOT_FOUND", "대화를 찾지 못했어요.")
 
 
 # 커뮤니티
@@ -88,14 +118,16 @@ def invalid_image(detail: str) -> AppError:
     return AppError(400, "INVALID_IMAGE", detail)
 
 
-def _error_body(code: str, message: str) -> dict:
-    return {"error": {"code": code, "message": message}}
+def _error_body(code: str, message: str, extra: dict | None = None) -> dict:
+    return {"error": {"code": code, "message": message, **(extra or {})}}
 
 
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(_: Request, exc: AppError) -> JSONResponse:
-        return JSONResponse(status_code=exc.status_code, content=_error_body(exc.code, exc.detail))
+        return JSONResponse(
+            status_code=exc.status_code, content=_error_body(exc.code, exc.detail, exc.extra)
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
