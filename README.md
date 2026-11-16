@@ -121,6 +121,7 @@ ruff check app tests && black --check app tests
 ## 커뮤니티 (기업별 게시판)
 
 FE `docs/community-api-request.md` 형식 그대로예요. **보기는 누구나, 쓰기는 로그인한 사람만**이에요.
+화면(FE `CommunityTab`)에서는 글을 "기업 댓글", 글의 댓글을 "답글"로 보여줘요.
 
 | 메서드 | 경로 | 로그인 |
 | --- | --- | --- |
@@ -131,13 +132,19 @@ FE `docs/community-api-request.md` 형식 그대로예요. **보기는 누구나
 | POST | `/api/posts/{post_id}/comments` · DELETE `/api/comments/{comment_id}` | 필요 |
 | POST / DELETE | `/api/posts/{post_id}/like` (여러 번 보내도 결과가 같아요) | 필요 |
 | POST | `/api/reports` (글·댓글 신고) | 필요 |
+| POST | `/api/uploads` (사진 1장, multipart 칸 이름 `file` → `{ image_url }`) | 필요 |
 
 - 로그인하지 않고 쓰면 `401 LOGIN_REQUIRED`예요.
-- 서버 검사: 제목 1~50자·본문 1~2,000자·댓글 1~500자(`400 INVALID_LENGTH`), 금지어(`400 BANNED_WORD`, 목록은 FE `communityRules.ts`와 같아요), 같은 사람은 글을 30초에 한 번(`429 TOO_FREQUENT`), 같은 대상은 한 번만 신고(`409 ALREADY_REPORTED`), 남의 글·댓글 수정·삭제(`403 NOT_OWNER`).
+- 서버 검사: 제목 50자까지·글(기업 댓글)·댓글(답글) 모두 1~500자(사진이 있으면 본문은 비워도 돼요, `400 INVALID_LENGTH`), 금지어(`400 BANNED_WORD`, 목록은 FE `communityRules.ts`와 같아요), 같은 사람은 1분에 글 1개·댓글 5개까지(`429 TOO_FREQUENT`), 같은 대상은 한 번만 신고(`409 ALREADY_REPORTED`), 남의 글·댓글 수정·삭제(`403 NOT_OWNER`).
+- 제목(`title`)은 안 보내도 돼요. 비우면 본문 첫 줄(30자)로 채워요. 화면에서는 쓰지 않아요.
+- 답글: 댓글에 `parent_id`(원댓글 id)를 보내요. 답글은 한 단계만이라 답글에 단 답글도 원댓글에 붙고, 대상은 `reply_to_nickname`("@닉네임")으로 남겨요. 응답의 `reply_count`는 지우지 않은 답글 수예요.
+- 답글이 달린 댓글을 지우면 자리만 남겨요(`is_deleted: true`, 본문 빈 문자열 → "삭제된 댓글이에요"). 마지막 답글까지 지우면 그 자리도 지워요. 글의 `comment_count`는 지우지 않은 댓글 수예요.
+- 사진: jpg·png·webp, 5MB 이하만 받아요(파일 앞부분으로 형식을 확인해요, `400 INVALID_IMAGE`). `upload_dir`(기본 `uploads/`)에 저장하고 `/uploads/<이름>`으로 보여줘요. 글·댓글에는 이 서버에 올린 사진 주소(`image_url`)만 붙일 수 있어요.
+- 신고 사유: `solicitation`·`abuse`·`ad`·`privacy`·`image`(부적절한 사진)·`etc`.
 - 서로 다른 사람의 신고가 3건 쌓이면 숨겨요(`is_hidden: true`, 제목·본문은 빈 문자열). 숨긴 글을 다시 살리는 관리자 화면은 아직 없어요.
 - 인기순은 좋아요 많은 순(전체 기간), 같으면 최신순이에요.
 - 글을 지우면 댓글·좋아요·신고 기록도 함께 지워요.
-- 테이블: `community_posts`, `community_comments`, `community_likes`, `community_reports` (서버를 켤 때 자동으로 만들어요).
+- 테이블: `community_posts`, `community_comments`, `community_likes`, `community_reports` (서버를 켤 때 자동으로 만들어요). 예전 DB에 없던 칸(답글·사진·삭제 자리)도 켤 때 자동으로 붙여요.
 
 ## 산업
 

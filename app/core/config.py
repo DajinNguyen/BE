@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     dart_api_key: str | None = None
     dart_cache_dir: str = ".cache/dart"
     naver_prices_enabled: bool = True  # 네이버 금융 시세 (비공식, 키 없음)
+    upload_dir: str = "uploads"  # 커뮤니티 사진을 저장하는 폴더 (/uploads 로 보여준다)
 
     # Google 로그인
     google_client_id: str | None = None

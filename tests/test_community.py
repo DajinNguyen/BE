@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 import pytest
 
 from app.core.db import new_session
@@ -35,13 +33,18 @@ def login(client):
 
 
 @pytest.fixture(autouse=True)
-def no_spam_wait(monkeypatch):
-    """도배 방지 간격은 해당 테스트에서만 켠다."""
-    monkeypatch.setattr(community_service, "POST_INTERVAL", timedelta(0))
+def no_spam_limit(monkeypatch):
+    """도배 방지는 해당 테스트에서만 켠다."""
+    monkeypatch.setattr(community_service, "POSTS_PER_MINUTE", 1000)
+    monkeypatch.setattr(community_service, "COMMENTS_PER_MINUTE", 1000)
 
 
 def _write(client, **overrides):
     return client.post(f"/api/companies/{STOCK}/posts", json={**POST, **overrides})
+
+
+def _comment(client, post_id, body="댓글", **extra):
+    return client.post(f"/api/posts/{post_id}/comments", json={"body": body, **extra})
 
 
 # --------------------------------------------------------------------------
@@ -86,6 +89,19 @@ def test_write_post(client, login):
     assert post["updated_at"] is None
     assert post["is_mine"] is True
     assert (post["like_count"], post["comment_count"]) == (0, 0)
+    assert post["image_url"] is None
+
+
+def test_title_is_optional(client, login):
+    """프론트는 제목 없이 본문만 보낸다. 제목은 본문 첫 줄(30자)로 채운다."""
+    login(1)
+    body = "가" * 40 + "\n둘째 줄"
+    post = _write(client, title=None, body=body).json()
+    assert post["title"] == "가" * 30
+    post = client.post(
+        f"/api/companies/{STOCK}/posts", json={"category": "free", "body": "제목 없이"}
+    ).json()
+    assert (post["title"], post["body"]) == ("제목 없이", "제목 없이")
 
 
 def test_write_post_unknown_company(client, login):
@@ -147,7 +163,7 @@ def test_post_not_found(client):
 
 @pytest.mark.parametrize(
     "overrides",
-    [{"title": "   "}, {"title": "가" * 51}, {"body": ""}, {"body": "가" * 2001}],
+    [{"title": "가" * 51}, {"body": ""}, {"body": "  "}, {"body": "가" * 501}],
 )
 def test_post_length_rules(client, login, overrides):
     login(1)
@@ -158,7 +174,7 @@ def test_post_length_rules(client, login, overrides):
 
 def test_post_length_limits_are_inclusive(client, login):
     login(1)
-    assert _write(client, title="가" * 50, body="가" * 2000).status_code == 201
+    assert _write(client, title="가" * 50, body="가" * 500).status_code == 201
 
 
 @pytest.mark.parametrize(
@@ -173,16 +189,27 @@ def test_banned_words(client, login, text):
     assert "쓸 수 없어요" in res.json()["error"]["message"]
 
 
-def test_post_spam_interval(client, login, monkeypatch):
-    monkeypatch.setattr(community_service, "POST_INTERVAL", timedelta(seconds=30))
+def test_post_spam_limit(client, login, monkeypatch):
+    monkeypatch.setattr(community_service, "POSTS_PER_MINUTE", 1)
     login(1)
     assert _write(client).status_code == 201
     res = _write(client)
     assert res.status_code == 429
     assert res.json()["error"]["code"] == "TOO_FREQUENT"
+    assert "1분에 1개" in res.json()["error"]["message"]
 
     login(2)  # 다른 사람은 바로 쓸 수 있다
     assert _write(client).status_code == 201
+
+
+def test_comment_spam_limit(client, login, monkeypatch):
+    monkeypatch.setattr(community_service, "COMMENTS_PER_MINUTE", 5)
+    login(1)
+    post_id = _write(client).json()["id"]
+    for i in range(5):
+        assert _comment(client, post_id, f"답글 {i}").status_code == 201
+    res = _comment(client, post_id, "여섯 번째")
+    assert (res.status_code, res.json()["error"]["code"]) == (429, "TOO_FREQUENT")
 
 
 # --------------------------------------------------------------------------
@@ -232,6 +259,8 @@ def test_comments(client, login):
     assert first.status_code == 201
     assert first.json()["body"] == "첫 댓글"
     assert first.json()["is_mine"] is True
+    assert first.json()["parent_id"] is None
+    assert (first.json()["reply_count"], first.json()["is_deleted"]) == (0, False)
     client.post(f"/api/posts/{post_id}/comments", json={"body": "두 번째"})
 
     login(None)
@@ -335,3 +364,128 @@ def test_report_invalid_reason(client, login):
     login(1)
     post_id = _write(client).json()["id"]
     assert _report(client, "post", post_id, "spam").status_code == 422
+
+
+# --------------------------------------------------------------------------
+# 답글 · 삭제 자리
+# --------------------------------------------------------------------------
+
+
+def test_reply_is_one_level(client, login):
+    login(1)
+    post_id = _write(client).json()["id"]
+    root = _comment(client, post_id, "원댓글").json()
+    login(2)
+    reply = _comment(client, post_id, "답글", parent_id=root["id"]).json()
+    nested = _comment(
+        client, post_id, "답글의 답글", parent_id=reply["id"], reply_to_nickname=" 닉네임 "
+    ).json()
+
+    assert reply["parent_id"] == root["id"]
+    assert nested["parent_id"] == root["id"]  # 한 단계만: 원댓글에 붙는다
+    assert nested["reply_to_nickname"] == "닉네임"
+
+    comments = {c["id"]: c for c in client.get(f"/api/posts/{post_id}/comments").json()}
+    assert comments[root["id"]]["reply_count"] == 2
+    assert client.get(f"/api/posts/{post_id}").json()["comment_count"] == 3
+
+
+def test_reply_to_comment_of_other_post(client, login):
+    login(1)
+    first = _write(client).json()["id"]
+    second = _write(client).json()["id"]
+    other = _comment(client, first).json()["id"]
+    for parent_id in [other, "999"]:
+        res = _comment(client, second, parent_id=parent_id)
+        assert (res.status_code, res.json()["error"]["code"]) == (404, "COMMENT_NOT_FOUND")
+
+
+def test_delete_comment_with_replies_leaves_a_spot(client, login):
+    login(1)
+    post_id = _write(client).json()["id"]
+    root = _comment(client, post_id, "원댓글").json()["id"]
+    login(2)
+    reply = _comment(client, post_id, "답글", parent_id=root).json()["id"]
+
+    login(1)
+    assert client.delete(f"/api/comments/{root}").status_code == 204
+    comments = client.get(f"/api/posts/{post_id}/comments").json()
+    assert [(c["id"], c["is_deleted"], c["body"]) for c in comments] == [
+        (root, True, ""),
+        (reply, False, "답글"),
+    ]
+    assert client.get(f"/api/posts/{post_id}").json()["comment_count"] == 1
+    # 지운 댓글은 다시 지우거나 답글을 달 수 없다
+    assert client.delete(f"/api/comments/{root}").status_code == 404
+    assert _comment(client, post_id, parent_id=root).status_code == 404
+
+    login(2)  # 마지막 답글까지 지우면 자리도 사라진다
+    assert client.delete(f"/api/comments/{reply}").status_code == 204
+    assert client.get(f"/api/posts/{post_id}/comments").json() == []
+    assert client.get(f"/api/posts/{post_id}").json()["comment_count"] == 0
+
+
+# --------------------------------------------------------------------------
+# 사진
+# --------------------------------------------------------------------------
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 100
+
+
+def _upload(client, data=PNG, name="a.png", content_type="image/png"):
+    return client.post("/api/uploads", files={"file": (name, data, content_type)})
+
+
+def test_upload_needs_login(client, login):
+    login(None)
+    res = _upload(client)
+    assert (res.status_code, res.json()["error"]["code"]) == (401, "LOGIN_REQUIRED")
+
+
+def test_upload_and_attach_image(client, login):
+    login(1)
+    res = _upload(client)
+    assert res.status_code == 201
+    image_url = res.json()["image_url"]
+    assert image_url.startswith("http://testserver/uploads/") and image_url.endswith(".png")
+    assert client.get(image_url.removeprefix("http://testserver")).content == PNG
+
+    post = _write(client, body="", image_url=image_url).json()  # 사진만 있어도 된다
+    assert post["image_url"] == image_url
+    reply = _comment(client, post["id"], "", image_url=image_url).json()
+    assert reply["image_url"] == image_url
+
+
+@pytest.mark.parametrize(
+    "data, message",
+    [(b"GIF89a" + b"0" * 10, "jpg·png·webp"), (PNG + b"0" * (5 * 1024 * 1024), "5MB")],
+)
+def test_upload_rules(client, login, data, message):
+    login(1)
+    res = _upload(client, data=data)
+    assert (res.status_code, res.json()["error"]["code"]) == (400, "INVALID_IMAGE")
+    assert message in res.json()["error"]["message"]
+
+
+@pytest.mark.parametrize(
+    "image_url",
+    [
+        "https://evil.example.com/a.png",
+        "http://testserver/uploads/../dajin.db",
+        "http://testserver/uploads/" + "0" * 32 + ".png",  # 올린 적 없는 파일
+    ],
+)
+def test_only_our_uploads_can_be_attached(client, login, image_url):
+    login(1)
+    res = _write(client, image_url=image_url)
+    assert (res.status_code, res.json()["error"]["code"]) == (400, "INVALID_IMAGE")
+    post_id = _write(client).json()["id"]
+    res = _comment(client, post_id, image_url=image_url)
+    assert (res.status_code, res.json()["error"]["code"]) == (400, "INVALID_IMAGE")
+
+
+def test_report_reason_image(client, login):
+    login(1)
+    post_id = _write(client).json()["id"]
+    login(2)
+    assert _report(client, "post", post_id, "image").status_code == 204

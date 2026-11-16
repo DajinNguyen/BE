@@ -76,14 +76,16 @@ def banned_word(label: str) -> AppError:
     return AppError(400, "BANNED_WORD", f"{label}은(는) 쓸 수 없어요.")
 
 
-def too_frequent(seconds: int) -> AppError:
-    return AppError(
-        429, "TOO_FREQUENT", f"글은 {seconds}초에 한 번만 쓸 수 있어요. 잠시 후 다시 시도해 주세요."
-    )
+def too_frequent(detail: str) -> AppError:
+    return AppError(429, "TOO_FREQUENT", f"{detail} 잠시 후 다시 시도해 주세요.")
 
 
 def already_reported() -> AppError:
     return AppError(409, "ALREADY_REPORTED", "이미 신고했어요.")
+
+
+def invalid_image(detail: str) -> AppError:
+    return AppError(400, "INVALID_IMAGE", detail)
 
 
 def _error_body(code: str, message: str) -> dict:

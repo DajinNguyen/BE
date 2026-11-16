@@ -1,5 +1,7 @@
 """기업별 커뮤니티: 글 · 댓글 · 좋아요 · 신고.
 
+화면에서는 글이 "기업 댓글", 글의 댓글이 "답글"이에요 (FE `CommunityTab`).
+
 규칙 값은 프론트 `frontend/src/config/communityRules.ts` 와 같다. 프론트도 같은 검사를 하지만
 쉽게 우회할 수 있어서 서버에서 한 번 더 검사한다.
 보기는 누구나, 쓰기(글·댓글·좋아요·신고)는 로그인한 사람만 (라우터에서 `current_user`로 막는다).
@@ -36,14 +38,19 @@ from app.schemas.community import (
     PostSort,
     ReportInput,
 )
-from app.services import data_store
+from app.services import data_store, upload_service
 from app.services.auth_service import nickname_for
 from app.services.market_clock import KST
 
 TITLE_MAX = 50
-BODY_MAX = 2000
+AUTO_TITLE_MAX = 30  # 제목을 안 보내면 본문 첫 줄을 이만큼 잘라 쓴다
+BODY_MAX = 500  # 화면 입력창(FE COMMUNITY_LIMITS.commentMax)과 같다
 COMMENT_MAX = 500
-POST_INTERVAL = timedelta(seconds=30)  # 같은 사람이 글을 연달아 쓸 수 있는 간격 (도배 방지)
+NICKNAME_MAX = 30
+# 도배 방지: 같은 사람은 1분에 글 1개 · 댓글 5개까지
+RATE_WINDOW = timedelta(minutes=1)
+POSTS_PER_MINUTE = 1
+COMMENTS_PER_MINUTE = 5
 HIDE_AFTER_REPORTS = 3  # 서로 다른 사람의 신고가 이만큼 쌓이면 숨긴다
 
 # 띄어쓰기·대소문자를 무시하고 찾는다. 두 번째 값은 안내 문구에 보여줄 이름 (욕설은 그대로 보여주지 않는다)
@@ -131,6 +138,7 @@ def _posts_out(session: Session, posts: list[Post], viewer: User | None) -> list
             category=p.category,
             title="" if p.is_hidden else p.title,
             body="" if p.is_hidden else p.body,
+            image_url=None if p.is_hidden else p.image_url,
             author=authors[p.user_id],
             created_at=_iso(p.created_at),
             updated_at=_iso(p.updated_at),
@@ -149,11 +157,17 @@ def _comments_out(
     session: Session, comments: list[PostComment], viewer: User | None
 ) -> list[CommentOut]:
     authors = _authors(session, {c.user_id for c in comments})
+    replies = _reply_counts(session, [c.id for c in comments])
     return [
         CommentOut(
             id=str(c.id),
             post_id=str(c.post_id),
-            body="" if c.is_hidden else c.body,
+            body="" if c.is_hidden or c.is_deleted else c.body,
+            parent_id=str(c.parent_id) if c.parent_id else None,
+            reply_to_nickname=c.reply_to_nickname,
+            reply_count=replies.get(c.id, 0),
+            is_deleted=c.is_deleted,
+            image_url=None if c.is_hidden or c.is_deleted else c.image_url,
             author=authors[c.user_id],
             created_at=_iso(c.created_at),
             is_mine=viewer is not None and c.user_id == viewer.id,
@@ -161,6 +175,30 @@ def _comments_out(
         )
         for c in comments
     ]
+
+
+def _reply_counts(session: Session, comment_ids: list[int]) -> dict[int, int]:
+    """댓글별 (지우지 않은) 답글 수."""
+    if not comment_ids:
+        return {}
+    rows = session.exec(
+        select(PostComment.parent_id, func.count())
+        .where(col(PostComment.parent_id).in_(comment_ids), ~col(PostComment.is_deleted))
+        .group_by(PostComment.parent_id)
+    ).all()
+    return dict(rows)
+
+
+def _check_rate(session: Session, model, user: User, limit: int, message: str) -> None:
+    """최근 1분 동안 limit 개를 이미 썼으면 막는다."""
+    since = _now() - RATE_WINDOW
+    recent = session.exec(
+        select(func.count())
+        .select_from(model)
+        .where(model.user_id == user.id, model.created_at >= since)
+    ).one()
+    if recent >= limit:
+        raise too_frequent(message)
 
 
 # --------------------------------------------------------------------------
@@ -176,12 +214,15 @@ def _get_post(session: Session, post_id: str) -> Post:
     return post
 
 
-def _clean_post(data: PostInput) -> tuple[str, str]:
-    title, body = data.title.strip(), data.body.strip()
-    if not 1 <= len(title) <= TITLE_MAX or not 1 <= len(body) <= BODY_MAX:
-        raise invalid_length(f"제목은 1~{TITLE_MAX}자, 본문은 1~{BODY_MAX:,}자로 써 주세요.")
+def _clean_post(data: PostInput, base_url: str) -> tuple[str, str, str | None]:
+    """(제목, 본문, 사진 주소). 사진이 있으면 본문은 비워도 된다."""
+    body = data.body.strip()
+    image_url = upload_service.check_image_url(data.image_url, base_url)
+    title = (data.title or "").strip() or body.split("\n")[0].strip()[:AUTO_TITLE_MAX]
+    if len(title) > TITLE_MAX or len(body) > BODY_MAX or not (body or image_url):
+        raise invalid_length(f"댓글은 1~{BODY_MAX}자로 써 주세요.")
     _check_banned(f"{title} {body}")
-    return title, body
+    return title, body, image_url
 
 
 def list_posts(
@@ -211,19 +252,15 @@ def get_post(session: Session, post_id: str, viewer: User | None) -> PostOut:
     return _posts_out(session, [_get_post(session, post_id)], viewer)[0]
 
 
-def create_post(session: Session, stock_code: str, data: PostInput, user: User) -> PostOut:
+def create_post(
+    session: Session, stock_code: str, data: PostInput, user: User, base_url: str
+) -> PostOut:
     if not data_store.company_exists(stock_code):
         raise company_not_found()
-    title, body = _clean_post(data)
-    now = _now()
-    last = session.exec(
-        select(Post.created_at)
-        .where(Post.user_id == user.id)
-        .order_by(col(Post.created_at).desc())
-        .limit(1)
-    ).first()
-    if last and now - _as_utc(last) < POST_INTERVAL:
-        raise too_frequent(int(POST_INTERVAL.total_seconds()))
+    title, body, image_url = _clean_post(data, base_url)
+    _check_rate(
+        session, Post, user, POSTS_PER_MINUTE, f"댓글은 1분에 {POSTS_PER_MINUTE}개만 쓸 수 있어요."
+    )
 
     post = Post(
         stock_code=stock_code,
@@ -231,7 +268,8 @@ def create_post(session: Session, stock_code: str, data: PostInput, user: User) 
         category=data.category,
         title=title,
         body=body,
-        created_at=now,
+        image_url=image_url,
+        created_at=_now(),
     )
     session.add(post)
     session.commit()
@@ -239,11 +277,13 @@ def create_post(session: Session, stock_code: str, data: PostInput, user: User) 
     return _posts_out(session, [post], user)[0]
 
 
-def update_post(session: Session, post_id: str, data: PostInput, user: User) -> PostOut:
+def update_post(
+    session: Session, post_id: str, data: PostInput, user: User, base_url: str
+) -> PostOut:
     post = _get_post(session, post_id)
     if post.user_id != user.id:
         raise not_owner("내 글만 고칠 수 있어요.")
-    post.title, post.body = _clean_post(data)
+    post.title, post.body, post.image_url = _clean_post(data, base_url)
     post.category = data.category
     post.updated_at = _now()
     session.add(post)
@@ -298,14 +338,51 @@ def list_comments(session: Session, post_id: str, viewer: User | None) -> list[C
     return _comments_out(session, list(comments), viewer)
 
 
-def create_comment(session: Session, post_id: str, data: CommentInput, user: User) -> CommentOut:
+def _get_comment(session: Session, comment_id: str) -> PostComment:
+    cid = _parse_id(comment_id)
+    comment = session.get(PostComment, cid) if cid is not None else None
+    if comment is None or comment.is_deleted:
+        raise comment_not_found()
+    return comment
+
+
+def _parent_id(session: Session, post: Post, parent_id: str | None) -> int | None:
+    """답글은 한 단계만: 답글에 단 답글도 원댓글에 붙인다."""
+    if not parent_id:
+        return None
+    parent = _get_comment(session, parent_id)
+    if parent.post_id != post.id:
+        raise comment_not_found()
+    return parent.parent_id or parent.id
+
+
+def create_comment(
+    session: Session, post_id: str, data: CommentInput, user: User, base_url: str
+) -> CommentOut:
     post = _get_post(session, post_id)
     body = data.body.strip()
-    if not 1 <= len(body) <= COMMENT_MAX:
+    image_url = upload_service.check_image_url(data.image_url, base_url)
+    if len(body) > COMMENT_MAX or not (body or image_url):
         raise invalid_length(f"댓글은 1~{COMMENT_MAX}자로 써 주세요.")
     _check_banned(body)
+    parent_id = _parent_id(session, post, data.parent_id)
+    _check_rate(
+        session,
+        PostComment,
+        user,
+        COMMENTS_PER_MINUTE,
+        f"답글은 1분에 {COMMENTS_PER_MINUTE}개까지 쓸 수 있어요.",
+    )
 
-    comment = PostComment(post_id=post.id, user_id=user.id, body=body, created_at=_now())
+    comment = PostComment(
+        post_id=post.id,
+        user_id=user.id,
+        parent_id=parent_id,
+        reply_to_nickname=(data.reply_to_nickname or "").strip()[:NICKNAME_MAX] or None,
+        body=body,
+        image_url=image_url,
+        created_at=_now(),
+    )
     post.comment_count += 1
     session.add_all([comment, post])
     session.commit()
@@ -313,19 +390,40 @@ def create_comment(session: Session, post_id: str, data: CommentInput, user: Use
     return _comments_out(session, [comment], user)[0]
 
 
-def delete_comment(session: Session, comment_id: str, user: User) -> None:
-    cid = _parse_id(comment_id)
-    comment = session.get(PostComment, cid) if cid is not None else None
-    if comment is None:
-        raise comment_not_found()
-    if comment.user_id != user.id:
-        raise not_owner("내 댓글만 지울 수 있어요.")
+def _remove_comment(session: Session, comment: PostComment) -> None:
     for report in _reports_on(session, "comment", [comment.id]):
         session.delete(report)
+    session.delete(comment)
+
+
+def delete_comment(session: Session, comment_id: str, user: User) -> None:
+    """답글이 달린 댓글은 "삭제된 댓글이에요" 자리만 남기고, 나머지는 지운다."""
+    comment = _get_comment(session, comment_id)
+    if comment.user_id != user.id:
+        raise not_owner("내 댓글만 지울 수 있어요.")
     post = session.get(Post, comment.post_id)
     post.comment_count = max(post.comment_count - 1, 0)
     session.add(post)
-    session.delete(comment)
+
+    has_replies = session.exec(
+        select(PostComment.id).where(PostComment.parent_id == comment.id).limit(1)
+    ).first()
+    if has_replies:
+        comment.is_deleted = True
+        session.add(comment)
+        session.commit()
+        return
+
+    _remove_comment(session, comment)
+    session.flush()
+    # 자리만 남은 원댓글에 답글이 더 없으면 그 자리도 지운다
+    parent = session.get(PostComment, comment.parent_id) if comment.parent_id else None
+    if parent is not None and parent.is_deleted:
+        left = session.exec(
+            select(PostComment.id).where(PostComment.parent_id == parent.id).limit(1)
+        ).first()
+        if left is None:
+            _remove_comment(session, parent)
     session.commit()
 
 
@@ -360,7 +458,7 @@ def report(session: Session, data: ReportInput, user: User) -> None:
     tid = _parse_id(data.target_id)
     model = Post if data.target_type == "post" else PostComment
     target = session.get(model, tid) if tid is not None else None
-    if target is None:
+    if target is None or getattr(target, "is_deleted", False):
         raise report_target_not_found()
 
     same = (ContentReport.target_type == data.target_type, ContentReport.target_id == target.id)

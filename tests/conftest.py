@@ -1,6 +1,9 @@
 import os
+import tempfile
 
 os.environ["DATABASE_URL"] = "sqlite://"
+# 커뮤니티 사진은 임시 폴더에 저장한다
+os.environ["UPLOAD_DIR"] = tempfile.mkdtemp(prefix="dajin-uploads-")
 # 테스트는 실제 DART를 부르지 않는다 (.env에 키가 있어도)
 os.environ["DART_API_KEY"] = ""
 # 네이버 시세도 부르지 않는다 (시드 예시 값으로 동작)

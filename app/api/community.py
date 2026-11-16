@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlmodel import Session
 
 from app.api.deps import current_user, optional_user
@@ -38,10 +38,11 @@ def list_posts(
 def create_post(
     stock_code: str,
     data: PostInput,
+    request: Request,
     user: User = Depends(current_user),
     session: Session = Depends(get_session),
 ):
-    return community_service.create_post(session, stock_code, data, user)
+    return community_service.create_post(session, stock_code, data, user, str(request.base_url))
 
 
 @router.get("/posts/{post_id}", response_model=PostOut)
@@ -57,10 +58,11 @@ def get_post(
 def update_post(
     post_id: str,
     data: PostInput,
+    request: Request,
     user: User = Depends(current_user),
     session: Session = Depends(get_session),
 ):
-    return community_service.update_post(session, post_id, data, user)
+    return community_service.update_post(session, post_id, data, user, str(request.base_url))
 
 
 @router.delete("/posts/{post_id}", status_code=204)
@@ -85,10 +87,11 @@ def list_comments(
 def create_comment(
     post_id: str,
     data: CommentInput,
+    request: Request,
     user: User = Depends(current_user),
     session: Session = Depends(get_session),
 ):
-    return community_service.create_comment(session, post_id, data, user)
+    return community_service.create_comment(session, post_id, data, user, str(request.base_url))
 
 
 @router.delete("/comments/{comment_id}", status_code=204)
