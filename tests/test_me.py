@@ -111,7 +111,15 @@ def clock(monkeypatch):
     return lambda day: now.update(value=_at(day))
 
 
-def _complete(client, puzzle_id, minute=0, revealed=False):
+@pytest.fixture(autouse=True)
+def no_wait(monkeypatch):
+    """테스트에서는 퀴즈를 열자마자 완료해도 센다 (따로 확인하는 테스트만 시간을 둔다)."""
+    monkeypatch.setattr(credit_service, "MIN_SOLVE_SECONDS", 0)
+
+
+def _complete(client, puzzle_id, minute=0, revealed=False, opened=True):
+    if opened:  # 화면에서 퀴즈를 열면 이 요청이 먼저 나간다
+        client.get(f"/api/learn/crosswords/{puzzle_id}")
     body = {
         "puzzle_id": puzzle_id,
         "completed_at": f"2026-11-13T09:{minute:02d}:00+09:00",
@@ -187,3 +195,27 @@ def test_daily_max_rewards(client, login, clock, monkeypatch):
     body = _complete(client, PUZZLES[1], 2).json()  # 오늘 보상을 다 받았으면 세지 않는다
     assert (body["rewards_today"], body["progress"]) == (1, 0)
     assert body["counted_today"] == [PUZZLES[0]]
+
+
+def test_completion_without_opening_the_puzzle_is_not_counted(client, login, clock):
+    login(1)
+    body = _complete(client, PUZZLES[0], 1, opened=False).json()
+    assert (body["progress"], body["counted_today"]) == (0, [])
+    assert len(body["completions"]) == 1  # 기록은 남긴다
+    # 퀴즈를 연 뒤에 보낸 완료는 센다
+    assert _complete(client, PUZZLES[0], 2).json()["progress"] == 1
+
+
+def test_puzzle_opened_while_logged_out_does_not_count(client, login, clock):
+    client.get(f"/api/learn/crosswords/{PUZZLES[0]}")  # 로그인 전에 열었다
+    login(1)
+    assert _complete(client, PUZZLES[0], 1, opened=False).json()["progress"] == 0
+
+
+def test_completion_right_after_opening_is_not_counted(client, login, clock, monkeypatch):
+    monkeypatch.setattr(credit_service, "MIN_SOLVE_SECONDS", 15)
+    login(1)
+    assert _complete(client, PUZZLES[0], 1).json()["progress"] == 0
+    # 연 지 충분히 지난 뒤(여기서는 기준을 0초로 낮춰서)에는 센다. 다시 열어도 처음 연 시각이 기준이다
+    monkeypatch.setattr(credit_service, "MIN_SOLVE_SECONDS", 0)
+    assert _complete(client, PUZZLES[0], 2).json()["progress"] == 1

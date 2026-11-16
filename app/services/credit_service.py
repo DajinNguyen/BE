@@ -4,6 +4,7 @@
 프론트 계산은 화면에 바로 보여주기 위한 것이고, 보상은 여기서 판단한 값이 기준이다.
 - "오늘"은 서버 날짜(KST)다. 요청의 `completed_at` 은 기기 시각이라 기록만 하고 판단에 쓰지 않는다.
 - 같은 퀴즈는 하루에 한 번만 센다. 없는 퀴즈 id 는 404.
+- 퀴즈를 연 기록이 없거나(완료 요청만 보낸 경우) 연 지 너무 금방 완료한 퀴즈는 세지 않는다.
 - 같은 완료 기록(퀴즈 id·completed_at 이 같은 것)을 다시 보내면 한 번만 반영한다 (프론트가 실패하면 다시 보낸다).
 """
 
@@ -11,7 +12,7 @@ from datetime import UTC, datetime
 
 from sqlmodel import Session
 
-from app.models.learning import UsageCreditsRecord
+from app.models.learning import PuzzleOpenRecord, UsageCreditsRecord
 from app.schemas.learning import PuzzleCompletion, UsageCredits
 from app.services import data_store
 from app.services.market_clock import KST
@@ -19,6 +20,7 @@ from app.services.market_clock import KST
 PUZZLES_PER_REWARD = 3  # 보상 1회에 필요한 퀴즈 수
 DAILY_MAX_REWARDS = 2  # 하루 최대 보상 횟수
 KEEP_PROGRESS_ACROSS_DAYS = True  # 날짜가 바뀌어도 센 퀴즈 수(예: 2/3)를 남긴다
+MIN_SOLVE_SECONDS = 15  # 퀴즈를 열고 이보다 빨리 온 완료는 세지 않는다 (임시값)
 KEEP_COMPLETIONS = 50  # 완료 기록은 최근 이만큼만 남긴다
 
 
@@ -55,6 +57,29 @@ def _response(record: UsageCreditsRecord) -> UsageCredits:
     )
 
 
+def mark_opened(session: Session, user_id: int, puzzle_id: str) -> None:
+    """로그인 사용자가 퀴즈를 열었다고 적는다. 이미 연 퀴즈면 처음 연 시각을 그대로 둔다.
+
+    (다시 열 때마다 시각을 바꾸면, 오래 풀다가 새로고침한 사람이 "너무 빨리 완료"로 걸린다.)
+    """
+    if session.get(PuzzleOpenRecord, (user_id, puzzle_id)) is None:
+        session.add(
+            PuzzleOpenRecord(user_id=user_id, puzzle_id=puzzle_id, opened_at=datetime.now(UTC))
+        )
+        session.commit()
+
+
+def _really_solved(session: Session, user_id: int, puzzle_id: str) -> bool:
+    """퀴즈를 열었고, 풀 만한 시간이 지났는지."""
+    opened = session.get(PuzzleOpenRecord, (user_id, puzzle_id))
+    if opened is None:
+        return False
+    opened_at = (
+        opened.opened_at if opened.opened_at.tzinfo else opened.opened_at.replace(tzinfo=UTC)
+    )
+    return (datetime.now(UTC) - opened_at).total_seconds() >= MIN_SOLVE_SECONDS
+
+
 def get_credits(session: Session, user_id: int, now: datetime | None = None) -> UsageCredits:
     return _response(_load(session, user_id, _today(now)))
 
@@ -71,6 +96,7 @@ def complete_puzzle(
             not completion.revealed
             and completion.puzzle_id not in record.counted_today
             and record.rewards_today < DAILY_MAX_REWARDS
+            and _really_solved(session, user_id, completion.puzzle_id)
         )
         if counts:
             record.counted_today = [*record.counted_today, completion.puzzle_id]
