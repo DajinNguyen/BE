@@ -17,6 +17,7 @@ from app.api import (
     reports,
     terms,
     uploads,
+    watchlist,
 )
 from app.core.config import get_settings
 from app.core.db import init_db
@@ -71,6 +72,7 @@ app.include_router(community.router)
 app.include_router(market.router)
 app.include_router(industries.router)
 app.include_router(uploads.router)
+app.include_router(watchlist.router)
 app.include_router(me.router)
 # 커뮤니티 사진 (POST /api/uploads 로 올린 파일)
 app.mount(
