@@ -109,18 +109,33 @@ def test_cache_and_backoff(use_search):
 
 def test_company_news_from_naver(client, use_search):
     use_search(FakeNaverSearch(total=25))
-    page = client.get("/api/companies/000660/news", params={"size": 10, "page": 3}).json()
+    page = client.get("/api/companies/005930/news", params={"size": 10, "page": 3}).json()
     assert [a["title"] for a in page["items"]][0] == '삼성전자, 기사 21 "HBM"'
     assert len(page["items"]) == 5 and page["has_next"] is False
-    assert page["items"][0]["company_stock_code"] == "000660"  # 시드 뉴스가 없는 회사도 나온다
+    assert page["items"][0]["company_stock_code"] == "005930"
+
+
+def test_company_news_keeps_only_articles_with_name_in_title(client, use_search):
+    # 본문에만 회사 이름이 스친 기사(시황 모음 등)는 그 회사 뉴스로 보여주지 않는다
+    items = [
+        _item(1),
+        _item(2, title="코스피 상승 마감…대형주 강세"),
+        _item(3, title="삼성 전자 새 소식"),
+    ]
+    use_search(FakeNaverSearch(items=items))
+    page = client.get("/api/companies/005930/news").json()
+    assert [a["title"] for a in page["items"]] == ['삼성전자, 기사 1 "HBM"', "삼성 전자 새 소식"]
+    assert page["has_next"] is False
 
 
 def test_company_news_query_and_paging(client, use_search):
     api = FakeNaverSearch(total=25)
     use_search(api)
     page = client.get("/api/companies/005930/news", params={"size": 10, "page": 2}).json()
-    assert api.calls[-1] == {"query": "삼성전자", "start": 11, "display": 10, "sort": "date"}
+    # 제목을 거른 뒤에 페이지를 나누려고 한 번에 넉넉히 받는다
+    assert api.calls[-1] == {"query": "삼성전자", "start": 1, "display": 100, "sort": "date"}
     assert page["has_next"] is True and page["page"] == 2
+    assert page["items"][0]["title"] == '삼성전자, 기사 11 "HBM"'
 
 
 def test_company_news_falls_back_to_seed(client, use_search):
