@@ -30,3 +30,19 @@ class TermProgress(BaseModel):
     terms: dict[str, TermProgressItem] = Field(default_factory=dict, max_length=MAX_TERMS)
     set_progress: list[SetProgress] = Field(default_factory=list, max_length=MAX_SETS)
     study_dates: list[date] = Field(default_factory=list, max_length=MAX_STUDY_DATES)
+
+
+class PuzzleCompletion(BaseModel):
+    puzzle_id: str = Field(max_length=100)
+    completed_at: str = Field(max_length=40)  # 기기 시각 (ISO). 받은 그대로 돌려준다
+    revealed: bool  # [정답 보기]를 썼는지 (썼으면 보상 개수에 넣지 않는다)
+
+
+class UsageCredits(BaseModel):
+    """낱말퀴즈 보상 (리포트 만들기 추가 횟수)."""
+
+    date: str  # rewards_today·counted_today 의 기준 날짜 (서버 날짜)
+    rewards_today: int  # 오늘 받은 보상 횟수
+    progress: int  # 다음 보상까지 센 퀴즈 수
+    counted_today: list[str]  # 오늘 개수에 넣은 퀴즈 id
+    completions: list[PuzzleCompletion]  # 최근 완료 기록 (최근 50개)
