@@ -37,6 +37,11 @@ def _seed_companies() -> dict[str, CompanyDetail]:
     return {c["stock_code"]: CompanyDetail(**c) for c in load_json("companies.json")}
 
 
+def seed_companies() -> dict[str, CompanyDetail]:
+    """시세를 붙이지 않은 시드 회사 전체 (비슷한 회사 고르기처럼 많은 회사를 훑을 때)."""
+    return _seed_companies()
+
+
 def company_exists(stock_code: str) -> bool:
     """시세를 부르지 않고 시드 목록만 본다 (커뮤니티 글쓰기 등에서 회사 확인용)."""
     return stock_code in _seed_companies()

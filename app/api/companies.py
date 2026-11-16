@@ -4,17 +4,20 @@ from sqlmodel import Session
 from app.api.deps import get_overview_writer
 from app.core.db import get_session, new_session
 from app.schemas.company import CompanyDetail, CompanySummary
+from app.schemas.compare import CompanyCompare
 from app.schemas.financials import Financials
 from app.schemas.news import NewsPage
 from app.schemas.performance import PerformanceDetail
 from app.schemas.price import Period, PriceHistory
 from app.services import (
+    compare_service,
     data_store,
     overview_service,
     performance_service,
     price_service,
     segment_service,
 )
+from app.services.compare_service import CompareWriter
 from app.services.overview_service import OverviewWriter
 from app.services.performance_service import ReasonWriter
 from app.services.segment_service import SegmentWriter
@@ -33,6 +36,27 @@ def search_companies(
     return data_store.search_companies(query, limit)
 
 
+# "/compare" 가 "/{stock_code}" 보다 먼저 와야 한다
+@router.get("/compare", response_model=CompanyCompare)
+def compare_companies(
+    background_tasks: BackgroundTasks,
+    left: str = Query(..., description="비교할 기업의 종목코드"),
+    right: str = Query(..., description="지금 보는 기업의 종목코드"),
+    session: Session = Depends(get_session),
+    writer: CompareWriter | None = Depends(compare_service.get_compare_writer),
+):
+    """두 회사의 매출·영업이익·영업이익률·매출 증가율·부채비율을 같은 연도·같은 기준으로 맞춰서 준다.
+
+    한눈에 비교(`analysis`)는 처음 비교할 때 백그라운드에서 만들기 시작하고, 다음 요청부터 채워진다.
+    """
+    result, year = compare_service.compare(left.strip(), right.strip())
+    if writer is not None and compare_service.start_analysis(session, result, year):
+        background_tasks.add_task(
+            compare_service.run_analysis, left.strip(), right.strip(), writer, new_session
+        )
+    return compare_service.apply_analysis(session, result, year)
+
+
 @router.get("/{stock_code}", response_model=CompanyDetail)
 def get_company(
     stock_code: str,
@@ -49,6 +73,15 @@ def get_company(
     if writer is not None and overview_service.start_generation(session, company):
         background_tasks.add_task(overview_service.run_generation, stock_code, writer, new_session)
     return overview_service.apply_overview(session, company)
+
+
+@router.get("/{stock_code}/peers", response_model=list[CompanySummary])
+def get_peers(
+    stock_code: str,
+    limit: int = Query(compare_service.PEERS_DEFAULT, ge=1, le=compare_service.PEERS_MAX),
+):
+    """비교해 볼 만한 회사: 같은 산업이고 시가총액이 비슷한 회사 (가까운 순, 자기 자신 제외)."""
+    return compare_service.peers(stock_code, limit)
 
 
 @router.get("/{stock_code}/financials", response_model=Financials)
