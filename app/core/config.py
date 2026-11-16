@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     naver_client_secret: str | None = None
     naver_search_hub: bool = True  # NAVER API HUB 키면 true, 예전 개발자센터 키면 false
     google_news_enabled: bool = True  # Google 뉴스 RSS (키 없음, 비상업적 용도만)
+    upload_dir: str = "uploads"  # 커뮤니티 사진을 저장하는 폴더 (/uploads 로 보여준다)
 
     # Google 로그인
     google_client_id: str | None = None

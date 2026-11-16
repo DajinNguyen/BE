@@ -1,6 +1,9 @@
 import os
+import tempfile
 
 os.environ["DATABASE_URL"] = "sqlite://"
+# 커뮤니티 사진은 임시 폴더에 저장한다
+os.environ["UPLOAD_DIR"] = tempfile.mkdtemp(prefix="dajin-uploads-")
 # 테스트는 실제 DART를 부르지 않는다 (.env에 키가 있어도)
 os.environ["DART_API_KEY"] = ""
 # 네이버 시세도 부르지 않는다 (시드 예시 값으로 동작)
@@ -8,7 +11,8 @@ os.environ["NAVER_PRICES_ENABLED"] = "false"
 os.environ["NAVER_CLIENT_ID"] = ""
 os.environ["NAVER_CLIENT_SECRET"] = ""
 os.environ["GOOGLE_NEWS_ENABLED"] = "false"
-# AI 도 부르지 않는다 (.env 에 키가 있어도). 필요한 테스트는 가짜 작성자를 넣는다
+# AI 도 부르지 않는다 (.env 에 키가 있어도). 필요한 테스트는 가짜 작성자를 넣는다.
+# 뉴스 호재/악재 판단도 실제 AI를 부르지 않는다 — 항상 "보통"으로 대체된다.
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["ANTHROPIC_API_KEY"] = ""
 

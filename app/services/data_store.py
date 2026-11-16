@@ -23,6 +23,7 @@ from app.schemas.news import NewsArticle, NewsItem, NewsPage
 from app.schemas.term import Term
 from app.services import dart, dart_financials, naver, news_search
 from app.services.market_clock import last_close_date
+from app.services.news_sentiment import FALLBACK_REASON, FALLBACK_SENTIMENT, classify_news_sentiment
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -237,7 +238,11 @@ def get_news(stock_code: str) -> list[NewsItem]:
 
 
 def to_articles(stock_code: str, news: list[NewsItem]) -> list[NewsArticle]:
-    """원문 링크가 있는 실제 뉴스만 응답 형식으로 바꾼다 (예시 자리는 보내지 않는다)."""
+    """원문 링크가 있는 실제 뉴스만 응답 형식으로 바꾼다 (예시 자리는 보내지 않는다).
+
+    sentiment(호재/악재)는 아직 AI로 판단하기 전이라 임시값을 넣어 둔다.
+    실제 응답으로 나가기 전에 반드시 `classify_news_sentiment()` 로 채워야 한다.
+    """
     return [
         NewsArticle(
             id=n.id,
@@ -248,6 +253,8 @@ def to_articles(stock_code: str, news: list[NewsItem]) -> list[NewsArticle]:
             summary_short=n.summary,
             company_stock_code=stock_code,
             related_metric=n.financial_link,
+            sentiment=FALLBACK_SENTIMENT,
+            sentiment_reason=FALLBACK_REASON,
         )
         for n in news
         if not n.is_placeholder and n.url
@@ -272,26 +279,32 @@ def news_query(stock_code: str) -> str:
     return NEWS_QUERY_NAMES.get(stock_code) or get_company(stock_code).name
 
 
-def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
-    """실제 뉴스 검색(제목에 회사 이름이 있는 기사, 최신순)을 먼저 쓰고, 받지 못하면 시드 뉴스."""
+async def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
+    """실제 뉴스 검색(제목에 회사 이름이 있는 기사, 최신순)을 먼저 쓰고, 받지 못하면 시드 뉴스.
+
+    쪽(page)으로 자르기 전에 그 쪽의 목록을 한 번에 분류한다.
+    """
     start = (page - 1) * size + 1
     result = news_search.company_news(news_query(stock_code), start, size, stock_code)
     if result is None:
-        return _seed_page(to_articles(stock_code, get_news(stock_code)), page, size)
+        articles = await classify_news_sentiment(to_articles(stock_code, get_news(stock_code)))
+        return _seed_page(articles, page, size)
+    articles = await classify_news_sentiment(result.articles)
     return NewsPage(
-        items=result.articles,
+        items=articles,
         page=page,
         size=size,
         has_next=start - 1 + size < result.total,
     )
 
 
-def latest_company_news(stock_code: str, size: int) -> list[NewsArticle]:
+async def latest_company_news(stock_code: str, size: int) -> list[NewsArticle]:
     """리포트에 쓰는 최근 뉴스. 실제 뉴스를 받지 못하면 시드 뉴스."""
     live = news_search.company_news(news_query(stock_code), 1, size, stock_code)
-    return (
+    articles = (
         live.articles if live is not None else to_articles(stock_code, get_news(stock_code))[:size]
     )
+    return await classify_news_sentiment(articles)
 
 
 @lru_cache

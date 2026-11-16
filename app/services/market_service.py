@@ -37,6 +37,7 @@ from app.services.data_store import (
     load_json,
 )
 from app.services.market_clock import KST, last_close
+from app.services.news_sentiment import classify_news_sentiment
 from app.services.sample_news import latest_first, sample_article
 
 MARKET_NEWS_QUERY = "증시"
@@ -70,9 +71,9 @@ def _intraday(open_value: float, close: float, seed: int) -> list[IntradayPoint]
     return points
 
 
-def market_news(now: datetime | None = None) -> list[NewsArticle]:
+async def market_news(now: datetime | None = None) -> list[NewsArticle]:
     """시장 기사 (최신순). 예시 기사라 날짜와 상관없이 같은 목록이다."""
-    return latest_first(
+    articles = latest_first(
         [
             sample_article(
                 article_id=n["id"],
@@ -85,21 +86,26 @@ def market_news(now: datetime | None = None) -> list[NewsArticle]:
             for n in load_json("market.json")["news"]
         ]
     )
+    return await classify_news_sentiment(articles)
 
 
-def latest_market_news(now: datetime | None = None) -> list[NewsArticle]:
+async def latest_market_news(now: datetime | None = None) -> list[NewsArticle]:
     """시장 뉴스 목록. 실제 뉴스를 받지 못하면 예시 기사."""
     live = news_search.latest(MARKET_NEWS_QUERY, MARKET_NEWS_COUNT)
-    return live if live is not None else market_news(now)
+    if live is not None:
+        return await classify_news_sentiment(live)
+    return await market_news(now)
 
 
-def reason_news(now: datetime | None = None) -> dict[str, NewsArticle]:
+async def reason_news(now: datetime | None = None) -> dict[str, NewsArticle]:
     """예시 기사 id → 이유 카드에 붙일 기사. 검색은 동시에 한다."""
-    samples = market_news(now)
+    samples = await market_news(now)
     queries = {n["id"]: n.get("query") or n["title"] for n in load_json("market.json")["news"]}
     with ThreadPoolExecutor(max_workers=len(samples) or 1) as pool:
         found = list(pool.map(news_search.most_relevant, [queries[s.id] for s in samples]))
-    return {sample.id: live or sample for sample, live in zip(samples, found, strict=True)}
+    picked = [live or sample for sample, live in zip(samples, found, strict=True)]
+    classified = await classify_news_sentiment(picked)
+    return {sample.id: article for sample, article in zip(samples, classified, strict=True)}
 
 
 # ---------------------------------------------------------------- 실제 지수 + AI 한마디
@@ -349,13 +355,13 @@ def _live_summary(now: datetime | None = None) -> MarketSummary | None:
 # ---------------------------------------------------------------- 예시 값
 
 
-def get_summary(now: datetime | None = None) -> MarketSummary:
+async def get_summary(now: datetime | None = None) -> MarketSummary:
     live = _live_summary(now)
     if live is not None:
         return live
     data = load_json("market.json")
     as_of, is_previous = last_close(now)
-    news = reason_news(now)
+    news = await reason_news(now)
     return MarketSummary(
         as_of=as_of,
         is_previous_session=is_previous,

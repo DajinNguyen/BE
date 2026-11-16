@@ -27,6 +27,7 @@ import httpx
 from app.core.config import get_settings
 from app.schemas.news import NewsArticle
 from app.services.market_clock import KST
+from app.services.news_sentiment import FALLBACK_REASON, FALLBACK_SENTIMENT
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +132,8 @@ def _parse_item(item: dict[str, Any], stock_code: str | None) -> NewsArticle:
         url=url,
         summary_short=_clean(item["description"]),
         company_stock_code=stock_code,
+        sentiment=FALLBACK_SENTIMENT,
+        sentiment_reason=FALLBACK_REASON,
     )
 
 

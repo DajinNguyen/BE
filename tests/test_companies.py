@@ -165,10 +165,14 @@ def test_news(client):
         "summary_long",
         "company_stock_code",
         "related_metric",
+        "sentiment",
+        "sentiment_reason",
     }
     assert first["url"] and first["press"] == "삼성전자 뉴스룸"
     assert first["company_stock_code"] == "005930"
     assert first["related_metric"] == {"label": "2025년 매출", "value": "333.6조 원"}
+    assert first["sentiment"] in {"very_good", "good", "neutral", "bad", "very_bad"}
+    assert first["sentiment_reason"]
 
 
 def test_news_paging(client):

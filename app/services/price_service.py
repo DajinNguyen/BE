@@ -36,7 +36,10 @@ def get_price_history(stock_code: str, period: Period, today: date | None = None
         stock_code, live_end - timedelta(days=PERIOD_DAYS[period]), live_end, weekly
     )
     if live:
-        points = [PricePoint(date=d, close=c) for d, c in live]
+        points = [
+            PricePoint(date=p.date, open=p.open, high=p.high, low=p.low, close=p.close)
+            for p in live
+        ]
         return PriceHistory(stock_code=stock_code, period=period, is_sample=False, points=points)
 
     end = today or last_close_date()  # 마지막 값은 직전 장 마감일 종가 (실시간 아님)
@@ -53,5 +56,14 @@ def get_price_history(stock_code: str, period: Period, today: date | None = None
         closes.append(price)
     closes.reverse()
 
-    points = [PricePoint(date=d, close=round(c)) for d, c in zip(days, closes, strict=True)]
+    # 시가/고가/저가는 예시용으로 만든다: 전날 종가를 시가로 삼고, 당일 변동폭 안에서 고가·저가를 벌린다.
+    opens = [closes[0] * (1 + rng.gauss(0, volatility / 4))] + closes[:-1]
+    points = []
+    for d, o, c in zip(days, opens, closes, strict=True):
+        spread = abs(rng.gauss(0, volatility / 2)) * c
+        high = max(o, c) + spread
+        low = max(min(o, c) - spread, 1)
+        points.append(
+            PricePoint(date=d, open=round(o), high=round(high), low=round(low), close=round(c))
+        )
     return PriceHistory(stock_code=stock_code, period=period, is_sample=True, points=points)

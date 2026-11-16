@@ -11,8 +11,8 @@ router = APIRouter(prefix="/api/companies", tags=["reports"])
 
 
 @router.get("/{stock_code}/report", response_model=CompanyReport)
-def get_report(stock_code: str, session: Session = Depends(get_session)):
-    return report_service.get_report(session, stock_code)
+async def get_report(stock_code: str, session: Session = Depends(get_session)):
+    return await report_service.get_report(session, stock_code)
 
 
 @router.post("/{stock_code}/report", response_model=CompanyReport)

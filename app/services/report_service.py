@@ -495,7 +495,7 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
     if financials is None:
         raise report_generation_failed(NO_FINANCIALS_REASON)
     financials = in_readable_unit(financials)
-    news = latest_company_news(stock_code, REPORT_NEWS_COUNT)
+    news = await latest_company_news(stock_code, REPORT_NEWS_COUNT)
     context = build_context(company, financials, news)
     content = _sanitize(await writer.write(context), context["available_evidence"])
     generated_at = datetime.now(KST).replace(microsecond=0)
@@ -518,7 +518,7 @@ def _written_content(report: CompanyReport) -> ReportContent:
     )
 
 
-def refresh_values(report: CompanyReport) -> CompanyReport:
+async def refresh_values(report: CompanyReport) -> CompanyReport:
     """설명은 저장한 그대로, 숫자·뉴스·기준일은 지금 자료로 다시 붙인다.
     재무를 받지 못하면 저장한 그대로 돌려준다."""
     if not report.key_points:
@@ -528,7 +528,7 @@ def refresh_values(report: CompanyReport) -> CompanyReport:
         return report
     financials = in_readable_unit(financials)
     company = get_company(report.stock_code)
-    news = latest_company_news(report.stock_code, REPORT_NEWS_COUNT)
+    news = await latest_company_news(report.stock_code, REPORT_NEWS_COUNT)
     fresh = _assemble(
         report.stock_code,
         _written_content(report),
@@ -579,13 +579,13 @@ def _to_response(stock_code: str, record: ReportRecord | None) -> CompanyReport:
     )
 
 
-def get_report(session: Session, stock_code: str) -> CompanyReport:
+async def get_report(session: Session, stock_code: str) -> CompanyReport:
     """저장한 설명에 지금 숫자·뉴스를 붙여 돌려준다."""
     get_company(stock_code)
     record = session.get(ReportRecord, stock_code)
     if record is not None:
         _expire_if_stuck(session, record)
-    return refresh_values(_to_response(stock_code, record))
+    return await refresh_values(_to_response(stock_code, record))
 
 
 def start_generation(session: Session, stock_code: str) -> tuple[CompanyReport, bool]:

@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 
 from app.schemas.news import NewsArticle
 from app.services.market_clock import KST
+from app.services.news_sentiment import FALLBACK_REASON, FALLBACK_SENTIMENT
 
 SAMPLE_PRESS = "예시 뉴스"
 
@@ -16,6 +17,7 @@ SAMPLE_PRESS = "예시 뉴스"
 def sample_article(
     article_id: str, title: str, summary: str, hours_ago: float, url: str, now: datetime | None
 ) -> NewsArticle:
+    """sentiment(호재/악재)는 임시값이다. 응답으로 나가기 전에 `classify_news_sentiment()` 로 채워야 한다."""
     published = (now or datetime.now(KST)).astimezone(KST) - timedelta(hours=hours_ago)
     return NewsArticle(
         id=article_id,
@@ -25,6 +27,8 @@ def sample_article(
         url=url,
         summary_short=summary,
         company_stock_code=None,
+        sentiment=FALLBACK_SENTIMENT,
+        sentiment_reason=FALLBACK_REASON,
     )
 
 
