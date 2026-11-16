@@ -229,9 +229,9 @@ def news_query(stock_code: str) -> str:
 
 
 def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
-    """실제 뉴스 검색(회사 이름, 최신순)을 먼저 쓰고, 받지 못하면 시드 뉴스."""
+    """실제 뉴스 검색(제목에 회사 이름이 있는 기사, 최신순)을 먼저 쓰고, 받지 못하면 시드 뉴스."""
     start = (page - 1) * size + 1
-    result = news_search.search(news_query(stock_code), start, size, stock_code)
+    result = news_search.company_news(news_query(stock_code), start, size, stock_code)
     if result is None:
         return _seed_page(to_articles(stock_code, get_news(stock_code)), page, size)
     return NewsPage(
@@ -244,8 +244,10 @@ def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
 
 def latest_company_news(stock_code: str, size: int) -> list[NewsArticle]:
     """리포트에 쓰는 최근 뉴스. 실제 뉴스를 받지 못하면 시드 뉴스."""
-    live = news_search.latest(news_query(stock_code), size, stock_code)
-    return live if live is not None else to_articles(stock_code, get_news(stock_code))[:size]
+    live = news_search.company_news(news_query(stock_code), 1, size, stock_code)
+    return (
+        live.articles if live is not None else to_articles(stock_code, get_news(stock_code))[:size]
+    )
 
 
 @lru_cache

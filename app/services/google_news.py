@@ -35,7 +35,7 @@ RSS_URL = "https://news.google.com/rss/search"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 RECENT = "when:7d"  # 최근 7일 기사만
 TTL = 10 * 60  # 10분
-TIMEOUT = 3.0  # 화면이 기다리지 않도록 짧게
+TIMEOUT = 6.0  # 제목 검색(intitle)은 3~5초 걸릴 때가 있다. 더 짧으면 뉴스가 통째로 비어 보인다
 RETRY_AFTER = 60  # 받기에 실패하면 이 시간 동안은 다시 시도하지 않는다
 
 # 언론사 기사가 아닌 곳 (블로그·카페·유료 구독 글·커뮤니티·영상·회사 홍보). 하위 도메인도 같이 뺀다.
@@ -62,7 +62,19 @@ NOT_NEWS_DOMAINS = (
     "facebook.com",
     "x.com",
     "twitter.com",
+    # 채용 공고·기업정보 조회 사이트 (회사 이름으로 찾으면 기사처럼 섞여 온다)
+    "jobkorea.co.kr",
+    "saramin.co.kr",
+    "incruit.com",
+    "catch.co.kr",
+    "jobplanet.co.kr",
+    "wanted.co.kr",
+    "nicebizinfo.com",
+    "bizfact.app",
+    "statnorth.kr",
 )
+# 주소가 달라도 이름으로 알 수 있는 채용·기업정보 사이트
+NOT_NEWS_NAME = re.compile(r"잡코리아|사람인|인크루트|잡플래닛|BizINFO|올인포", re.IGNORECASE)
 # 검색할 때부터 빼면 그만큼 기사가 더 들어온다 (검색어가 길어지지 않게 많이 섞여 오는 곳만)
 EXCLUDE_QUERY = " ".join(f"-site:{d}" for d in ("naver.com", "tistory.com", "daum.net"))
 # 언론사 이름에 흔히 들어가는 말. 아는 언론사 주소(PRESS_BY_DOMAIN)가 아니면 이름이 이래야 기사로 본다
@@ -82,7 +94,7 @@ def _matches(host: str, domains) -> bool:
 def is_news(source_url: str, source_name: str) -> bool:
     """언론사 기사인지. 블로그·커뮤니티는 빼고, 아는 언론사 주소이거나 이름이 언론사 같아야 한다."""
     host = (urlparse(source_url).hostname or "").removeprefix("www.")
-    if not host or _matches(host, NOT_NEWS_DOMAINS):
+    if not host or _matches(host, NOT_NEWS_DOMAINS) or NOT_NEWS_NAME.search(source_name):
         return False
     return _matches(host, PRESS_BY_DOMAIN) or bool(PRESS_NAME.search(source_name))
 
@@ -138,26 +150,26 @@ class GoogleNewsClient:
             return hit[1]
         if time.time() < self._retry_at:
             return hit[1] if hit else None
-        with self._lock:
+        # 여러 회사 뉴스를 동시에 받을 수 있게 받는 동안은 잠그지 않는다 (같은 검색이 겹치면 두 번 받을 뿐)
+        try:
+            channel = ET.fromstring(self._fetch(query, between)).find("channel")
+            items = channel.findall("item") if channel is not None else []
+        except (httpx.HTTPError, ET.ParseError) as e:
+            logger.warning("Google 뉴스를 받지 못했어요 (%s): %s", query, e)
+            self._retry_at = time.time() + RETRY_AFTER
+            return hit[1] if hit else None
+        articles = []
+        for item in items:
+            source = item.find("source")
+            if source is None or not is_news(source.get("url", ""), source.text or ""):
+                continue
             try:
-                channel = ET.fromstring(self._fetch(query, between)).find("channel")
-                items = channel.findall("item") if channel is not None else []
-            except (httpx.HTTPError, ET.ParseError) as e:
-                logger.warning("Google 뉴스를 받지 못했어요 (%s): %s", query, e)
-                self._retry_at = time.time() + RETRY_AFTER
-                return hit[1] if hit else None
-            articles = []
-            for item in items:
-                source = item.find("source")
-                if source is None or not is_news(source.get("url", ""), source.text or ""):
-                    continue
-                try:
-                    articles.append(_parse_item(item, stock_code))
-                except (TypeError, ValueError) as e:  # 한 건이 이상해도 나머지는 보여준다
-                    logger.warning("Google 뉴스 한 건을 읽지 못했어요: %s", e)
-            articles = drop_duplicates(articles)
-            self._cache[key] = (time.time(), articles)
-            return articles
+                articles.append(_parse_item(item, stock_code))
+            except (TypeError, ValueError) as e:  # 한 건이 이상해도 나머지는 보여준다
+                logger.warning("Google 뉴스 한 건을 읽지 못했어요: %s", e)
+        articles = drop_duplicates(articles)
+        self._cache[key] = (time.time(), articles)
+        return articles
 
     def search(
         self,
