@@ -79,10 +79,6 @@ def conversation_not_found() -> AppError:
     return AppError(404, "CONVERSATION_NOT_FOUND", "대화를 찾지 못했어요.")
 
 
-def term_not_found() -> AppError:
-    return AppError(404, "TERM_NOT_FOUND", "용어를 찾지 못했어요.")
-
-
 # 커뮤니티
 
 

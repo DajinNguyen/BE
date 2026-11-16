@@ -1,29 +1,47 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-ChatPage = Literal["home", "company", "industry", "term", "compare", "other"]
-CompanyTab = Literal["overview", "report", "financials", "news", "community"]
+ChatPage = Literal["main", "company", "report", "compare", "industry", "learn", "other"]
 
 MESSAGE_MAX = 500
 
 
 class ChatContext(BaseModel):
-    """사용자가 지금 보고 있는 화면. 서버가 이 화면의 자료를 찾아 답변 근거로 쓴다."""
+    """사용자가 지금 보고 있는 화면. 프론트 `frontend/src/types/chat.ts` 의 `ChatContext` 와 같다.
+
+    서버는 코드·id 로 화면 자료를 직접 찾는다. 이름 칸(`company_name` 등)은 프론트 표시용이라 받기만 한다.
+    """
+
+    model_config = ConfigDict(extra="ignore")
 
     page: ChatPage = "other"
-    stock_code: str | None = Field(None, max_length=6)  # 기업 화면이면 종목코드
-    tab: CompanyTab | None = None  # 기업 화면의 탭
-    industry_id: str | None = Field(None, max_length=50)  # 산업 화면이면 산업 id
-    term_id: str | None = Field(None, max_length=100)  # 용어 카드면 용어 id
-    compare_stock_code: str | None = Field(None, max_length=6)  # 비교 화면이면 견주는 회사
+    # company · report
+    stock_code: str | None = Field(None, max_length=6)
+    tab: str | None = Field(None, max_length=30)  # 기업 화면의 탭 (예: financials, news)
+    report_id: str | None = Field(None, max_length=60)
+    # compare (left = 비교할 기업, right = 지금 보는 기업)
+    left_code: str | None = Field(None, max_length=6)
+    right_code: str | None = Field(None, max_length=6)
+    # industry
+    industry_id: str | None = Field(None, max_length=50)
+    # learn
+    term_id: str | None = Field(None, max_length=100)
 
 
 class ChatRequest(BaseModel):
     message: str = Field(max_length=MESSAGE_MAX)
     context: ChatContext = ChatContext()
-    conversation_id: str | None = None  # 이어서 묻는 대화. 없으면 새 대화를 만든다
+    conversation_id: str | None = None  # 첫 질문이면 null, 이어서 물으면 서버가 준 id
+
+
+class ChatResponse(BaseModel):
+    """POST /api/chat 응답."""
+
+    answer: str
+    conversation_id: str
+    balance: int  # 5 ADK를 뺀 뒤 잔액 (답변을 만든 뒤에만 뺀다)
 
 
 class ChatMessageOut(BaseModel):
@@ -31,14 +49,6 @@ class ChatMessageOut(BaseModel):
     role: Literal["user", "assistant"]
     content: str
     created_at: datetime
-
-
-class ChatReply(BaseModel):
-    conversation_id: str
-    question: ChatMessageOut
-    answer: ChatMessageOut
-    charged: int  # 이 질문으로 빠진 ADK (투자 추천을 거절한 답은 0)
-    balance: int  # 지금 내 ADK 잔액
 
 
 class ChatConversationOut(BaseModel):

@@ -5,7 +5,12 @@ from app.main import app
 from app.services import chat_service, wallet_service
 from tests.conftest import login_as
 
-COMPANY = {"page": "company", "stock_code": "005930", "tab": "financials"}
+COMPANY = {
+    "page": "company",
+    "tab": "financials",
+    "stock_code": "005930",
+    "company_name": "삼성전자",
+}
 
 
 class FakeChatWriter:
@@ -31,7 +36,7 @@ def _ask(client, message="매출이 왜 늘었어요?", context=COMPANY, convers
     body = {"message": message, "context": context}
     if conversation_id:
         body["conversation_id"] = conversation_id
-    return client.post("/api/chat/messages", json=body)
+    return client.post("/api/chat", json=body)
 
 
 def _balance(client):
@@ -54,11 +59,11 @@ def test_answer_uses_the_screen_data_and_takes_five_adk(client, writer):
     res = _ask(client)
     assert res.status_code == 200
     body = res.json()
-    assert body["question"]["role"] == "user"
-    assert body["question"]["content"] == "매출이 왜 늘었어요?"
-    assert body["answer"]["role"] == "assistant"
-    assert body["answer"]["content"] == "삼성전자는 2025년에 매출이 늘었어요."
-    assert (body["charged"], body["balance"]) == (5, 45)
+    assert body == {
+        "answer": "삼성전자는 2025년에 매출이 늘었어요.",
+        "conversation_id": body["conversation_id"],
+        "balance": 45,  # 5 ADK를 뺀 뒤 잔액
+    }
 
     # AI에게는 보고 있는 화면의 실제 자료를 넘긴다
     screen, history, question = writer.calls[0]
@@ -73,7 +78,8 @@ def test_answer_uses_the_screen_data_and_takes_five_adk(client, writer):
     assert (history, question) == ([], "매출이 왜 늘었어요?")
 
     wallet = client.get("/api/me/wallet").json()
-    assert (wallet["history"][0]["amount"], wallet["history"][0]["reason"]) == (-5, "chat")
+    top = wallet["history"][0]
+    assert (top["type"], top["amount"], top["reason"]) == ("spend", 5, "AI 챗봇 질문")
 
 
 def test_failed_answer_takes_nothing_and_is_not_saved(client, writer):
@@ -92,8 +98,8 @@ def test_refused_when_adk_is_short(client, writer):
     with new_session() as session:
         wallet_service.grant(session, user_id, -47, "chat", "테스트용", "test-spend")
     res = _ask(client)
-    assert res.status_code == 402
-    assert res.json()["error"]["code"] == "INSUFFICIENT_ADK"
+    assert res.status_code == 400
+    assert res.json()["error"]["code"] == "INSUFFICIENT_BALANCE"
     assert (res.json()["error"]["required"], res.json()["error"]["balance"]) == (5, 3)
     assert writer.calls == []
     assert _balance(client) == 3
@@ -154,8 +160,7 @@ def test_investment_advice_is_replaced_and_free(client, writer, advice):
     login_as(client, 1)
     writer.reply = f"실적이 좋아요. {advice}"
     body = _ask(client, "지금 사도 돼요?").json()
-    assert body["answer"]["content"] == chat_service.REFUSAL
-    assert (body["charged"], body["balance"]) == (0, 50)
+    assert (body["answer"], body["balance"]) == (chat_service.REFUSAL, 50)  # ADK는 빼지 않는다
 
 
 @pytest.mark.parametrize(
@@ -195,30 +200,72 @@ def test_too_many_questions_in_a_minute(client, writer, monkeypatch):
     assert _balance(client) == 40
 
 
-def test_industry_and_term_screens(client, writer):
+def test_screens_follow_the_frontend_context(client, writer, monkeypatch):
+    monkeypatch.setattr(chat_service, "PER_MINUTE", 100)
     login_as(client, 1)
-    _ask(client, "이 산업이 뭐예요?", {"page": "industry", "industry_id": "semiconductor"})
-    industry = writer.calls[0][0]["industry"]
+
+    def screen_for(context):
+        _ask(client, "알려줘요", context)
+        return writer.calls[-1][0]
+
+    industry = screen_for(
+        {"page": "industry", "industry_id": "semiconductor", "industry_name": "반도체"}
+    )["industry"]
     assert industry["name"] == "반도체"
     assert industry["biggest_companies"][0]["name"] == "삼성전자"
 
     term_id = client.get("/api/terms").json()[0]["id"]
-    _ask(client, "쉽게 알려줘요", {"page": "term", "term_id": term_id})
-    assert writer.calls[1][0]["term"]["easy_explanation"]
+    assert screen_for({"page": "learn", "term_id": term_id})["term"]["easy_explanation"]
 
-    _ask(client, "주식이 뭐예요?", {"page": "home"})
-    assert "note" in writer.calls[2][0]
+    # AI 분석 화면은 리포트 탭으로 본다
+    report = screen_for(
+        {"page": "report", "stock_code": "005930", "report_id": None, "company_name": "삼성전자"}
+    )
+    assert (report["tab"], report["company"]["name"]) == ("report", "삼성전자")
+
+    compare = screen_for(
+        {
+            "page": "compare",
+            "left_code": "000660",
+            "right_code": "005930",
+            "left_name": "SK하이닉스",
+        }
+    )
+    assert compare["viewing_company"]["name"] == "삼성전자"
+    assert compare["compared_company"]["name"] == "SK하이닉스"
+
+    for context in ({"page": "main"}, {"page": "learn"}, {"page": "other"}):
+        assert "note" in screen_for(context)
+
+
+def test_unknown_screen_data_is_skipped_not_an_error(client, writer):
+    """화면 정보가 이상해도 대답은 한다 (프론트는 오류를 모두 "답변을 받지 못했어요"로 보여준다)."""
+    login_as(client, 1)
+    for context in (
+        {"page": "company", "tab": "overview", "stock_code": "999999", "company_name": "없는회사"},
+        {"page": "industry", "industry_id": "없는산업"},
+        {"page": "learn", "term_id": "없는용어"},
+    ):
+        assert _ask(client, context=context).status_code == 200
+        assert "note" in writer.calls[-1][0]
 
 
 def test_bad_requests(client, writer):
     login_as(client, 1)
     assert _ask(client, "   ").json()["error"]["code"] == "INVALID_LENGTH"
     assert _ask(client, "가" * 501).status_code == 422
-    assert _ask(client, context={"page": "company", "stock_code": "999999"}).status_code == 404
-    assert _ask(client, context={"page": "industry", "industry_id": "없는산업"}).status_code == 404
-    assert _ask(client, context={"page": "term", "term_id": "없는용어"}).status_code == 404
+    assert _ask(client, context={"page": "없는화면"}).status_code == 422
     assert writer.calls == []
     assert _balance(client) == 50
+
+
+def test_first_question_sends_null_conversation_id(client, writer):
+    login_as(client, 1)
+    res = client.post(
+        "/api/chat",
+        json={"message": "안녕하세요", "context": {"page": "main"}, "conversation_id": None},
+    )
+    assert res.status_code == 200 and res.json()["conversation_id"]
 
 
 def test_chat_without_ai_key(client):

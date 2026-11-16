@@ -24,12 +24,11 @@ from sqlmodel import Session, col, select
 
 from app.core.config import Settings, get_settings
 from app.core.errors import (
+    AppError,
     chat_failed,
     chat_not_configured,
     conversation_not_found,
-    industry_not_found,
     invalid_length,
-    term_not_found,
     too_frequent,
 )
 from app.models.chat import ChatConversation, ChatMessage
@@ -40,8 +39,8 @@ from app.schemas.chat import (
     ChatConversationDetail,
     ChatConversationOut,
     ChatMessageOut,
-    ChatReply,
     ChatRequest,
+    ChatResponse,
 )
 from app.services import data_store, overview_service, wallet_service
 
@@ -217,17 +216,17 @@ def _company_screen(session: Session, stock_code: str, tab: str | None) -> dict[
             ],
             "vision_summary": content.get("vision_summary"),
         }
-    if tab == "news":
+    if tab and "news" in tab:
         screen["recent_news_titles"] = [n.title for n in data_store.get_news(stock_code)][:5]
     return screen
 
 
-def _industry_screen(industry_id: str) -> dict[str, Any]:
+def _industry_screen(industry_id: str) -> dict[str, Any] | None:
     record = next(
         (r for r in data_store.industry_records() if r["industry_id"] == industry_id), None
     )
     if record is None:
-        raise industry_not_found()
+        return None
     seeds = data_store._seed_companies()  # 시세를 붙이지 않은 시드 (회사 이름·한 줄 소개만 쓴다)
     members = sorted(
         (seeds[c] for c in record["companies"] if c in seeds),
@@ -245,10 +244,10 @@ def _industry_screen(industry_id: str) -> dict[str, Any]:
     }
 
 
-def _term_screen(term_id: str) -> dict[str, Any]:
+def _term_screen(term_id: str) -> dict[str, Any] | None:
     term = next((t for t in data_store.get_terms() if t.id == term_id), None)
     if term is None:
-        raise term_not_found()
+        return None
     return {
         "term": term.term,
         "also_called": term.aliases,
@@ -257,19 +256,35 @@ def _term_screen(term_id: str) -> dict[str, Any]:
     }
 
 
+def _company_or_none(session: Session, stock_code: str | None, tab: str | None) -> dict | None:
+    if not stock_code:
+        return None
+    try:
+        return _company_screen(session, stock_code, tab)
+    except AppError:  # 없는 회사
+        return None
+
+
 def build_screen(session: Session, context: ChatContext) -> dict[str, Any]:
-    """보고 있는 화면의 자료. 없는 회사·산업·용어면 404."""
-    screen: dict[str, Any] = {"page": context.page, "tab": context.tab}
-    if context.stock_code:
-        screen["company"] = _company_screen(session, context.stock_code, context.tab)
-    if context.compare_stock_code and context.stock_code:
-        # 비교 화면: 견주는 회사의 자료도 같이 넘긴다 (두 회사 숫자는 각자의 재무 자료가 기준)
-        screen["compared_company"] = _company_screen(session, context.compare_stock_code, None)
-    if context.industry_id:
+    """보고 있는 화면의 자료. 찾지 못한 회사·산업·용어는 빼고 넘긴다.
+
+    (프론트는 어떤 오류든 "답변을 받지 못했어요"로만 보여줘서, 화면 정보가 이상해도 대답은 한다)
+    """
+    screen: dict[str, Any] = {"page": context.page}
+    if context.page in ("company", "report"):
+        tab = "report" if context.page == "report" else context.tab
+        screen["tab"] = tab
+        screen["company"] = _company_or_none(session, context.stock_code, tab)
+    elif context.page == "compare":
+        # 비교 화면: 두 회사의 자료를 같이 넘긴다 (숫자는 각자의 재무 자료가 기준)
+        screen["viewing_company"] = _company_or_none(session, context.right_code, None)
+        screen["compared_company"] = _company_or_none(session, context.left_code, None)
+    elif context.page == "industry" and context.industry_id:
         screen["industry"] = _industry_screen(context.industry_id)
-    if context.term_id:
+    elif context.page == "learn" and context.term_id:
         screen["term"] = _term_screen(context.term_id)
-    if len(screen) == 2:
+    screen = {key: value for key, value in screen.items() if value is not None}
+    if set(screen) <= {"page", "tab"}:
         screen["note"] = (
             "이 화면에는 따로 넘겨받은 자료가 없어요. 일반적인 주식 공부 질문에만 대답해요."
         )
@@ -341,7 +356,7 @@ def gives_advice(answer: str) -> bool:
 
 def ask(
     session: Session, user_id: int, request: ChatRequest, writer: ChatWriter | None
-) -> ChatReply:
+) -> ChatResponse:
     question = request.message.strip()
     if not question or len(question) > MESSAGE_MAX:
         raise invalid_length(f"질문은 1~{MESSAGE_MAX}자로 써 주세요.")
@@ -361,7 +376,7 @@ def ask(
 
 def _ask(
     session: Session, user_id: int, request: ChatRequest, question: str, writer: ChatWriter
-) -> ChatReply:
+) -> ChatResponse:
     _check_rate(session, user_id)
     conversation = (
         _conversation(session, user_id, request.conversation_id)
@@ -424,13 +439,9 @@ def _ask(
     session.commit()
     session.add(answered)
     session.commit()
-    session.refresh(asked)
-    session.refresh(answered)
-    return ChatReply(
+    return ChatResponse(
+        answer=answer[:ANSWER_MAX],
         conversation_id=str(conversation.id),
-        question=_message_out(asked),
-        answer=_message_out(answered),
-        charged=0 if refused else wallet_service.CHAT_PRICE,
         balance=wallet_service.balance(session, user_id),
     )
 
