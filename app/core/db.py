@@ -22,6 +22,7 @@ engine = _make_engine(get_settings().database_url)
 def init_db() -> None:
     # 테이블 등록용
     from app.models import (  # noqa: F401
+        chat,
         community,
         learning,
         overview,
