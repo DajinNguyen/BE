@@ -28,6 +28,7 @@ def init_db() -> None:
         performance,
         report,
         user,
+        watchlist,
     )
 
     SQLModel.metadata.create_all(engine)
