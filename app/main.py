@@ -9,7 +9,6 @@ from app.api import (
     auth,
     community,
     companies,
-    compare,
     home,
     industries,
     learn,
@@ -47,7 +46,6 @@ app.add_middleware(
 app.include_router(home.router)
 app.include_router(companies.router)
 app.include_router(reports.router)
-app.include_router(compare.router)
 app.include_router(terms.router)
 app.include_router(learn.router)
 app.include_router(auth.router)

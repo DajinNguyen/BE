@@ -23,6 +23,7 @@ def init_db() -> None:
     # 테이블 등록용
     from app.models import (  # noqa: F401
         community,
+        compare,
         learning,
         overview,
         performance,
