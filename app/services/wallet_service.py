@@ -18,13 +18,13 @@ from sqlmodel import Session, col, select
 from app.core.errors import insufficient_adk
 from app.models.user import User
 from app.models.wallet import AdkEntry
-from app.schemas.wallet import AdkHistoryItem, AdkPrices, AdkRewards, Wallet
+from app.schemas.wallet import PuzzleProgress, Wallet, WalletHistoryItem
 
 SIGNUP_BONUS = 50
 PUZZLE_REWARD = 20
 REPORT_PRICE = 7
 CHAT_PRICE = 5
-HISTORY_COUNT = 50
+HISTORY_COUNT = 10
 # 잡아 둔 금액은 이 시간이 지나면 없던 일로 한다 (서버가 꺼져서 확정도 취소도 못 한 경우)
 HOLD_TTL = timedelta(minutes=10)
 
@@ -81,13 +81,27 @@ def grant(session: Session, user_id: int, amount: int, reason: str, title: str, 
 
 def ensure_signup_bonus(session: Session, user_id: int) -> None:
     """가입 축하 ADK를 한 번만 준다. (이 기능 전에 가입한 사용자도 지갑을 처음 볼 때 받는다)"""
-    grant(session, user_id, SIGNUP_BONUS, "signup", "가입 축하", SIGNUP_REF)
+    grant(session, user_id, SIGNUP_BONUS, "signup", "가입 선물", SIGNUP_REF)
 
 
 def balance(session: Session, user_id: int) -> int:
-    """확정된 잔액."""
+    """지금 쓸 수 있는 잔액. AI 결과를 기다리며 잡아 둔 금액은 이미 뺀 값이다.
+
+    (리포트 만들기를 누르면 화면의 잔액이 바로 줄고, 실패하면 돌아온다)
+    """
     ensure_signup_bonus(session, user_id)
-    return _sum(session, user_id, with_pending=False)
+    _drop_stale_holds(session, user_id)
+    return _sum(session, user_id, with_pending=True)
+
+
+def spend(session: Session, user_id: int, price: int, reason: str, title: str, ref: str) -> int:
+    """바로 뺀다 (결과를 기다리지 않는 차감). 같은 `ref` 로 이미 뺐으면 다시 빼지 않는다. 잔액을 돌려준다."""
+    exists = session.exec(
+        select(AdkEntry.id).where(AdkEntry.user_id == user_id, AdkEntry.ref == ref)
+    ).first()
+    if exists is None:
+        settle(session, hold(session, user_id, price, reason, title, ref))
+    return balance(session, user_id)
 
 
 def hold(session: Session, user_id: int, price: int, reason: str, title: str, ref: str) -> int:
@@ -136,9 +150,10 @@ def release(session: Session, hold_id: int) -> None:
 
 def get_wallet(session: Session, user_id: int) -> Wallet:
     # 순환 import 를 피하려고 여기서 가져온다 (credit_service 가 이 모듈을 쓴다)
-    from app.services.credit_service import DAILY_MAX_REWARDS, PUZZLES_PER_REWARD
+    from app.services import credit_service
 
     total = balance(session, user_id)
+    progress, rewards_today = credit_service.progress(session, user_id)
     entries = session.exec(
         select(AdkEntry)
         .where(AdkEntry.user_id == user_id, AdkEntry.status == "done")
@@ -147,19 +162,15 @@ def get_wallet(session: Session, user_id: int) -> Wallet:
     ).all()
     return Wallet(
         balance=total,
-        prices=AdkPrices(report=REPORT_PRICE, chat=CHAT_PRICE),
-        rewards=AdkRewards(
-            signup=SIGNUP_BONUS,
-            puzzle=PUZZLE_REWARD,
-            puzzles_per_reward=PUZZLES_PER_REWARD,
-            puzzle_daily_max=DAILY_MAX_REWARDS,
-        ),
+        puzzle_progress=PuzzleProgress(done=progress, required=credit_service.PUZZLES_PER_REWARD),
+        reward_count_today=rewards_today,
+        reward_daily_limit=credit_service.DAILY_MAX_REWARDS,
         history=[
-            AdkHistoryItem(
+            WalletHistoryItem(
                 id=str(e.id),
-                amount=e.amount,
-                reason=e.reason,
-                title=e.title,
+                type="earn" if e.amount >= 0 else "spend",
+                amount=abs(e.amount),
+                reason=e.title,
                 created_at=(
                     e.created_at if e.created_at.tzinfo else e.created_at.replace(tzinfo=UTC)
                 ),

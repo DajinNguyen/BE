@@ -117,15 +117,19 @@ def no_wait(monkeypatch):
     monkeypatch.setattr(credit_service, "MIN_SOLVE_SECONDS", 0)
 
 
-def _complete(client, puzzle_id, minute=0, revealed=False, opened=True):
+def _complete(client, puzzle_id, revealed=False, opened=True):
     if opened:  # 화면에서 퀴즈를 열면 이 요청이 먼저 나간다
         client.get(f"/api/learn/crosswords/{puzzle_id}")
-    body = {
-        "puzzle_id": puzzle_id,
-        "completed_at": f"2026-11-13T09:{minute:02d}:00+09:00",
-        "revealed": revealed,
-    }
+    body = {"puzzle_id": puzzle_id, "used_reveal": revealed}
     return client.post("/api/me/puzzle-completions", json=body)
+
+
+def _done(res) -> int:
+    return res.json()["puzzle_progress"]["done"]
+
+
+def _credits(client):
+    return client.get("/api/me/usage-credits").json()
 
 
 def test_credits_need_login(client):
@@ -135,40 +139,54 @@ def test_credits_need_login(client):
 
 def test_three_puzzles_give_one_reward(client, login, clock):
     login(1)
-    assert client.get("/api/me/usage-credits").json() == {
+    assert _credits(client) == {
         "date": "2026-11-13",
         "rewards_today": 0,
         "progress": 0,
         "counted_today": [],
         "completions": [],
-        "reward_adk": 20,
-        "balance": 50,  # 가입 축하 ADK
     }
-    assert _complete(client, PUZZLES[0], 1).json()["progress"] == 1
-    assert _complete(client, PUZZLES[1], 2).json()["progress"] == 2
-    body = _complete(client, PUZZLES[2], 3).json()
-    assert (body["rewards_today"], body["progress"]) == (1, 0)
-    assert body["balance"] == 70  # 보상 1회 = 20 ADK
-    assert body["counted_today"] == PUZZLES
-    # 요청에 온 completed_at 을 그대로 돌려준다
-    assert body["completions"][0] == {
-        "puzzle_id": "basics-easy",
+    first = _complete(client, PUZZLES[0]).json()
+    assert first == {
+        "puzzle_progress": {"done": 1, "required": 3},
+        "rewarded": False,
+        "balance": 50,  # 가입 선물
+        "reward_count_today": 0,
+        "reward_daily_limit": 2,
+    }
+    assert _done(_complete(client, PUZZLES[1])) == 2
+    assert _complete(client, PUZZLES[2]).json() == {
+        "puzzle_progress": {"done": 0, "required": 3},  # 3/3 이 되면 보상을 주고 0/3 부터
+        "rewarded": True,
+        "balance": 70,  # 보상 1회 = 20 ADK
+        "reward_count_today": 1,
+        "reward_daily_limit": 2,
+    }
+    credits = _credits(client)
+    assert credits["counted_today"] == PUZZLES
+    assert [c["puzzle_id"] for c in credits["completions"]] == PUZZLES
+
+
+def test_old_request_format_still_works(client, login, clock):
+    """예전 프론트가 보내던 `revealed`·`completed_at` 도 받는다."""
+    login(1)
+    client.get(f"/api/learn/crosswords/{PUZZLES[0]}")
+    body = {
+        "puzzle_id": PUZZLES[0],
         "completed_at": "2026-11-13T09:01:00+09:00",
         "revealed": False,
     }
-    assert client.get("/api/me/usage-credits").json() == body
+    assert _done(client.post("/api/me/puzzle-completions", json=body)) == 1
+    assert _credits(client)["completions"] == [body]
 
 
-def test_revealed_duplicate_and_resent_are_not_counted(client, login, clock):
+def test_revealed_and_duplicate_are_not_counted(client, login, clock):
     login(1)
-    assert _complete(client, PUZZLES[0], 1, revealed=True).json()["progress"] == 0
-    assert _complete(client, PUZZLES[0], 2).json()["progress"] == 1
+    assert _done(_complete(client, PUZZLES[0], revealed=True)) == 0
+    assert _done(_complete(client, PUZZLES[0])) == 1
     # 같은 퀴즈는 하루 한 번
-    body = _complete(client, PUZZLES[0], 3).json()
-    assert body["progress"] == 1 and len(body["completions"]) == 3
-    # 실패한 줄 알고 같은 기록을 다시 보내도 한 번만 남는다
-    again = _complete(client, PUZZLES[0], 3).json()
-    assert again == body
+    again = _complete(client, PUZZLES[0]).json()
+    assert (again["puzzle_progress"]["done"], again["rewarded"]) == (1, False)
 
 
 def test_unknown_puzzle_is_404(client, login, clock):
@@ -180,45 +198,47 @@ def test_unknown_puzzle_is_404(client, login, clock):
 
 def test_today_is_server_date_and_progress_carries_over(client, login, clock):
     login(1)
-    _complete(client, PUZZLES[0], 1)
-    _complete(client, PUZZLES[1], 2)
-    clock(14)  # 기기 시각(completed_at)은 13일 그대로여도 서버 날짜로 판단한다
-    body = client.get("/api/me/usage-credits").json()
-    assert (body["date"], body["rewards_today"], body["progress"]) == ("2026-11-14", 0, 2)
-    assert body["counted_today"] == []
-    body = _complete(client, PUZZLES[0], 5).json()  # 어제 센 퀴즈도 오늘은 다시 센다
-    assert (body["rewards_today"], body["progress"]) == (1, 0)
+    _complete(client, PUZZLES[0])
+    _complete(client, PUZZLES[1])
+    clock(14)  # 날짜는 서버 시각으로 판단한다
+    credits = _credits(client)
+    assert (credits["date"], credits["rewards_today"], credits["progress"]) == ("2026-11-14", 0, 2)
+    assert credits["counted_today"] == []
+    body = _complete(client, PUZZLES[0]).json()  # 어제 센 퀴즈도 오늘은 다시 센다
+    assert (body["reward_count_today"], body["puzzle_progress"]["done"]) == (1, 0)
+    assert body["rewarded"] is True
 
 
 def test_daily_max_rewards(client, login, clock, monkeypatch):
     monkeypatch.setattr(credit_service, "DAILY_MAX_REWARDS", 1)
     monkeypatch.setattr(credit_service, "PUZZLES_PER_REWARD", 1)
     login(1)
-    assert _complete(client, PUZZLES[0], 1).json()["rewards_today"] == 1
-    body = _complete(client, PUZZLES[1], 2).json()  # 오늘 보상을 다 받았으면 세지 않는다
-    assert (body["rewards_today"], body["progress"]) == (1, 0)
-    assert body["counted_today"] == [PUZZLES[0]]
+    assert _complete(client, PUZZLES[0]).json()["reward_count_today"] == 1
+    body = _complete(client, PUZZLES[1]).json()  # 오늘 보상을 다 받았으면 세지 않는다
+    assert (body["reward_count_today"], body["puzzle_progress"]["done"]) == (1, 0)
+    assert (body["rewarded"], body["balance"], body["reward_daily_limit"]) == (False, 70, 1)
+    assert _credits(client)["counted_today"] == [PUZZLES[0]]
 
 
 def test_completion_without_opening_the_puzzle_is_not_counted(client, login, clock):
     login(1)
-    body = _complete(client, PUZZLES[0], 1, opened=False).json()
-    assert (body["progress"], body["counted_today"]) == (0, [])
-    assert len(body["completions"]) == 1  # 기록은 남긴다
+    assert _done(_complete(client, PUZZLES[0], opened=False)) == 0
+    credits = _credits(client)
+    assert (credits["counted_today"], len(credits["completions"])) == ([], 1)  # 기록은 남긴다
     # 퀴즈를 연 뒤에 보낸 완료는 센다
-    assert _complete(client, PUZZLES[0], 2).json()["progress"] == 1
+    assert _done(_complete(client, PUZZLES[0])) == 1
 
 
 def test_puzzle_opened_while_logged_out_does_not_count(client, login, clock):
     client.get(f"/api/learn/crosswords/{PUZZLES[0]}")  # 로그인 전에 열었다
     login(1)
-    assert _complete(client, PUZZLES[0], 1, opened=False).json()["progress"] == 0
+    assert _done(_complete(client, PUZZLES[0], opened=False)) == 0
 
 
 def test_completion_right_after_opening_is_not_counted(client, login, clock, monkeypatch):
     monkeypatch.setattr(credit_service, "MIN_SOLVE_SECONDS", 15)
     login(1)
-    assert _complete(client, PUZZLES[0], 1).json()["progress"] == 0
+    assert _done(_complete(client, PUZZLES[0])) == 0
     # 연 지 충분히 지난 뒤(여기서는 기준을 0초로 낮춰서)에는 센다. 다시 열어도 처음 연 시각이 기준이다
     monkeypatch.setattr(credit_service, "MIN_SOLVE_SECONDS", 0)
-    assert _complete(client, PUZZLES[0], 2).json()["progress"] == 1
+    assert _done(_complete(client, PUZZLES[0])) == 1

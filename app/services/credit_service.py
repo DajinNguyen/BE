@@ -5,7 +5,7 @@
 - "오늘"은 서버 날짜(KST)다. 요청의 `completed_at` 은 기기 시각이라 기록만 하고 판단에 쓰지 않는다.
 - 같은 퀴즈는 하루에 한 번만 센다. 없는 퀴즈 id 는 404.
 - 퀴즈를 연 기록이 없거나(완료 요청만 보낸 경우) 연 지 너무 금방 완료한 퀴즈는 세지 않는다.
-- 같은 완료 기록(퀴즈 id·completed_at 이 같은 것)을 다시 보내면 한 번만 반영한다 (프론트가 실패하면 다시 보낸다).
+- 같은 퀴즈를 다시 보내도 하루에 한 번만 센다 (프론트가 실패하면 다시 보낸다).
 """
 
 from datetime import UTC, datetime
@@ -14,6 +14,7 @@ from sqlmodel import Session
 
 from app.models.learning import PuzzleOpenRecord, UsageCreditsRecord
 from app.schemas.learning import PuzzleCompletion, UsageCredits
+from app.schemas.wallet import PuzzleCompletionResult, PuzzleProgress
 from app.services import data_store, wallet_service
 from app.services.market_clock import KST
 
@@ -47,15 +48,13 @@ def _load(session: Session, user_id: int, today: str) -> UsageCreditsRecord:
     return record
 
 
-def _response(session: Session, record: UsageCreditsRecord) -> UsageCredits:
+def _response(record: UsageCreditsRecord) -> UsageCredits:
     return UsageCredits(
         date=record.day,
         rewards_today=record.rewards_today,
         progress=record.progress,
         counted_today=record.counted_today,
         completions=[PuzzleCompletion(**c) for c in record.completions],
-        reward_adk=wallet_service.PUZZLE_REWARD,
-        balance=wallet_service.balance(session, record.user_id),
     )
 
 
@@ -83,16 +82,24 @@ def _really_solved(session: Session, user_id: int, puzzle_id: str) -> bool:
 
 
 def get_credits(session: Session, user_id: int, now: datetime | None = None) -> UsageCredits:
-    return _response(session, _load(session, user_id, _today(now)))
+    return _response(_load(session, user_id, _today(now)))
+
+
+def progress(session: Session, user_id: int, now: datetime | None = None) -> tuple[int, int]:
+    """(다음 보상까지 센 퀴즈 수, 오늘 받은 보상 횟수). 지갑 화면용."""
+    record = _load(session, user_id, _today(now))
+    return record.progress, record.rewards_today
 
 
 def complete_puzzle(
     session: Session, user_id: int, completion: PuzzleCompletion, now: datetime | None = None
-) -> UsageCredits:
+) -> PuzzleCompletionResult:
     data_store.get_crossword(completion.puzzle_id)  # 없는 퀴즈면 404
     today = _today(now)
     record = _load(session, user_id, today)
     rewarded = False
+    if completion.completed_at is None:  # 지금 프론트는 시각을 보내지 않는다
+        completion = completion.model_copy(update={"completed_at": datetime.now(KST).isoformat()})
     entry = completion.model_dump()
     if entry not in record.completions:  # 다시 보낸 같은 기록은 한 번만 반영한다
         record.completions = [*record.completions, entry][-KEEP_COMPLETIONS:]
@@ -119,7 +126,13 @@ def complete_puzzle(
             user_id,
             wallet_service.PUZZLE_REWARD,
             "puzzle_reward",
-            f"낱말퀴즈 {PUZZLES_PER_REWARD}개 완료",
+            "낱말퀴즈 보상",
             f"puzzle:{today}:{record.rewards_today}",
         )
-    return _response(session, record)
+    return PuzzleCompletionResult(
+        puzzle_progress=PuzzleProgress(done=record.progress, required=PUZZLES_PER_REWARD),
+        rewarded=rewarded,
+        balance=wallet_service.balance(session, user_id),
+        reward_count_today=record.rewards_today,
+        reward_daily_limit=DAILY_MAX_REWARDS,
+    )
