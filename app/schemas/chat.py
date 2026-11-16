@@ -36,10 +36,20 @@ class ChatRequest(BaseModel):
     conversation_id: str | None = None  # 첫 질문이면 null, 이어서 물으면 서버가 준 id
 
 
+class ChatSource(BaseModel):
+    """답변이 근거로 든 기사."""
+
+    title: str
+    press: str
+    date: str  # YYYY-MM-DD
+    url: str
+
+
 class ChatResponse(BaseModel):
     """POST /api/chat 응답."""
 
     answer: str
+    sources: list[ChatSource] = []  # 답변에 나온 기사 (없으면 빈 목록)
     conversation_id: str
     balance: int  # 5 ADK를 뺀 뒤 잔액 (답변을 만든 뒤에만 뺀다)
 
