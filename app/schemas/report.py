@@ -34,6 +34,17 @@ def _migrate_news_item(n: Any, stock_code: str | None) -> Any:
     return n
 
 
+def _migrate_point(point: Any, stock_code: str | None) -> Any:
+    """핵심 포인트 상세 시트(`detail.related_news`)의 예전 형식 뉴스를 바꾼다."""
+    if not isinstance(point, dict) or not isinstance(point.get("detail"), dict):
+        return point
+    news = point["detail"].get("related_news")
+    if not isinstance(news, list):
+        return point
+    related = [_migrate_news_item(n, stock_code) for n in news]
+    return {**point, "detail": {**point["detail"], "related_news": related}}
+
+
 # 핵심 포인트는 항상 이 순서로 하나씩 보여준다.
 KEY_POINT_ORDER: tuple[KeyPointCategory, ...] = (
     "performance",
@@ -197,10 +208,17 @@ class CompanyReport(BaseModel):
         - `sentiment`/`sentiment_reason`(호재/악재)이 없으면(이 기능을 추가하기 전에 저장한
           리포트) "보통"으로 채운다. sentiment는 그때그때 새로 판단하는 값이라 다시 만들지 않는다.
         """
-        if not isinstance(data, dict) or not isinstance(data.get("evidence"), dict):
+        if not isinstance(data, dict):
             return data
-        news = data["evidence"].get("news")
-        if not isinstance(news, list):
-            return data
-        converted = [_migrate_news_item(n, data.get("stock_code")) for n in news]
-        return {**data, "evidence": {**data["evidence"], "news": converted}}
+        stock_code = data.get("stock_code")
+        evidence = data.get("evidence")
+        if isinstance(evidence, dict) and isinstance(evidence.get("news"), list):
+            news = [_migrate_news_item(n, stock_code) for n in evidence["news"]]
+            data = {**data, "evidence": {**evidence, "news": news}}
+        # 핵심 포인트 상세 시트의 관련 뉴스도 같은 형식이다
+        if isinstance(data.get("key_points"), list):
+            data = {
+                **data,
+                "key_points": [_migrate_point(p, stock_code) for p in data["key_points"]],
+            }
+        return data
