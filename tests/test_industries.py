@@ -56,3 +56,12 @@ def test_industry_news(client):
     news = client.get("/api/industries/ai/news", params={"size": 3}).json()
     assert [n["id"] for n in news] == ["ai-news-1", "ai-news-2", "ai-news-3"]
     assert all(n["press"] == "예시 뉴스" for n in news)
+
+
+def test_industry_without_heat_data_is_not_ranked_but_has_a_page(client):
+    hot = client.get("/api/industries/hot", params={"period": "1w"}).json()
+    assert "holding" not in {i["industry_id"] for i in hot}
+    detail = client.get("/api/industries/holding").json()
+    assert detail["name"] == "지주회사" and detail["icon_key"] == "holding"
+    assert detail["score_breakdown"]["price_change_rate"] == 0
+    assert len(detail["companies"]) > 50

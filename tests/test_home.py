@@ -34,8 +34,9 @@ def test_home_sector_companies(client):
     assert {"CJ제일제당", "오리온", "농심", "삼양식품"} <= {c["name"] for c in sectors["food"]}
     for group, companies in sectors.items():
         assert all(c["sector_group"] == group for c in companies)
-    # 모든 회사가 정확히 한 탭에 들어간다
-    assert sum(len(c) for c in sectors.values()) == 300
+    # 탭마다 시가총액 큰 순으로 30곳까지만 보낸다
+    assert all(len(c) <= 30 for c in sectors.values())
+    assert len(sectors["etc"]) == 30
 
 
 def test_home_lists_generated_reports(client):

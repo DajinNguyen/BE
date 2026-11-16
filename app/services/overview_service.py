@@ -187,6 +187,8 @@ def load_source(stock_code: str) -> tuple[dict[str, Any], str, str]:
     if report is None or not text:
         raise OverviewUnavailable(NO_SOURCE_REASON)
     financials = data_store.find_financials(stock_code)
+    if financials:
+        financials = data_store.in_readable_unit(financials)
     annual = (
         [
             {
