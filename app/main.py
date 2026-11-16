@@ -13,6 +13,7 @@ from app.api import (
     industries,
     learn,
     market,
+    me,
     reports,
     terms,
     uploads,
@@ -52,6 +53,7 @@ app.include_router(community.router)
 app.include_router(market.router)
 app.include_router(industries.router)
 app.include_router(uploads.router)
+app.include_router(me.router)
 # 커뮤니티 사진 (POST /api/uploads 로 올린 파일)
 app.mount(
     upload_service.URL_PATH.rstrip("/"),

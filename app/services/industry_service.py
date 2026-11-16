@@ -24,6 +24,7 @@ from app.schemas.industry import (
 from app.schemas.news import NewsArticle
 from app.services import data_store
 from app.services.market_clock import last_close, last_close_date
+from app.services.news_sentiment import classify_news_sentiment
 from app.services.sample_news import latest_first, sample_article
 
 # 점수 = 주가 상승률 40% + 거래대금 증가율 30% + 뉴스 언급 증가율 30% (임시값)
@@ -88,7 +89,9 @@ def hot_industries(period: HeatPeriod, now: datetime | None = None) -> list[Indu
     ]
 
 
-def industry_news(industry_id: str, size: int, now: datetime | None = None) -> list[NewsArticle]:
+async def industry_news(
+    industry_id: str, size: int, now: datetime | None = None
+) -> list[NewsArticle]:
     """산업 관련 기사 (최신순)."""
     record = _record(industry_id)
     articles = [
@@ -102,7 +105,7 @@ def industry_news(industry_id: str, size: int, now: datetime | None = None) -> l
         )
         for i, topic in enumerate(record["news_topics"])
     ]
-    return latest_first(articles)[:size]
+    return await classify_news_sentiment(latest_first(articles)[:size])
 
 
 def _weekly_trend(month_change: float, seed: int, close_day: date) -> list[TrendPoint]:
@@ -134,10 +137,10 @@ def _companies(stock_codes: list[str]) -> list[IndustryCompany]:
     return sorted(rows, key=lambda c: c.market_cap, reverse=True)
 
 
-def get_industry(industry_id: str, now: datetime | None = None) -> IndustryDetail:
+async def get_industry(industry_id: str, now: datetime | None = None) -> IndustryDetail:
     record = _record(industry_id)
     as_of, _ = last_close(now)
-    news = industry_news(industry_id, WHY_NEWS_COUNT, now)
+    news = await industry_news(industry_id, WHY_NEWS_COUNT, now)
     seed = data_store.industry_records().index(record)
     return IndustryDetail(
         industry_id=industry_id,

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -34,6 +36,10 @@ class NewsArticle(BaseModel):
     summary_long: str | None = None
     company_stock_code: str | None  # 시장 전체 기사면 null
     related_metric: FinancialLink | None = None
+    sentiment: Literal[
+        "very_good", "good", "neutral", "bad", "very_bad"
+    ]  # AI가 매 요청마다 판단 (호재/악재)
+    sentiment_reason: str  # 왜 그렇게 판단했는지 쉬운 말로 한 문장
 
 
 class NewsPage(BaseModel):

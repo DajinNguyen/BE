@@ -47,6 +47,7 @@ from app.schemas.report import (
 )
 from app.services.data_store import find_financials, get_company, get_news, to_articles
 from app.services.market_clock import KST, last_close_date
+from app.services.news_sentiment import classify_news_sentiment
 
 logger = logging.getLogger(__name__)
 
@@ -439,7 +440,7 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
     context = build_context(company, financials)
     content = _sanitize(await writer.write(context), context["available_evidence"])
 
-    news = to_articles(stock_code, get_news(stock_code))
+    news = await classify_news_sentiment(to_articles(stock_code, get_news(stock_code)))
     data_as_of = _data_as_of(company, financials, news)
     refs = _evidence_refs(data_as_of)
     generated_at = datetime.now(KST).replace(microsecond=0)

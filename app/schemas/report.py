@@ -11,6 +11,29 @@ EvidenceKind = Literal["financials", "news", "vision"]
 
 EVIDENCE_LABELS: dict[str, str] = {"financials": "재무제표", "news": "뉴스", "vision": "기업 비전"}
 
+# app.services.news_sentiment 과 같은 값. 스키마 계층이 서비스 계층을 import 하지 않도록 그대로 둔다.
+_SENTIMENT_FALLBACK = {"sentiment": "neutral", "sentiment_reason": "지금은 판단하기 어려워요"}
+
+
+def _migrate_news_item(n: Any, stock_code: str | None) -> Any:
+    """예전 형식의 근거 뉴스 한 건을 지금 `NewsArticle` 형식에 맞게 바꾼다."""
+    if not isinstance(n, dict):
+        return n
+    if "summary_short" not in n:
+        n = {
+            "id": n.get("title", ""),  # 원문 주소가 같은 기사가 있어서 제목으로
+            "title": n.get("title", ""),
+            "press": n.get("press", ""),
+            "published_at": n.get("published_at", ""),
+            "url": n.get("url", ""),
+            "summary_short": n.get("summary", ""),
+            "company_stock_code": stock_code,
+        }
+    if "sentiment" not in n or "sentiment_reason" not in n:
+        n = {**n, **_SENTIMENT_FALLBACK}
+    return n
+
+
 # 핵심 포인트는 항상 이 순서로 하나씩 보여준다.
 KEY_POINT_ORDER: tuple[KeyPointCategory, ...] = (
     "performance",
@@ -168,27 +191,16 @@ class CompanyReport(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _news_from_old_format(cls, data: Any) -> Any:
-        """예전에 저장한 리포트의 근거 뉴스({title, press, published_at, summary, url})를
-        뉴스 탭과 같은 형식으로 바꿔 읽는다."""
+        """예전에 저장한 리포트의 근거 뉴스를 지금 형식으로 바꿔 읽는다.
+
+        - `{title, press, published_at, summary, url}` 형식 → 뉴스 탭과 같은 형식.
+        - `sentiment`/`sentiment_reason`(호재/악재)이 없으면(이 기능을 추가하기 전에 저장한
+          리포트) "보통"으로 채운다. sentiment는 그때그때 새로 판단하는 값이라 다시 만들지 않는다.
+        """
         if not isinstance(data, dict) or not isinstance(data.get("evidence"), dict):
             return data
         news = data["evidence"].get("news")
         if not isinstance(news, list):
             return data
-        converted = [
-            (
-                {
-                    "id": n.get("title", ""),  # 원문 주소가 같은 기사가 있어서 제목으로
-                    "title": n.get("title", ""),
-                    "press": n.get("press", ""),
-                    "published_at": n.get("published_at", ""),
-                    "url": n.get("url", ""),
-                    "summary_short": n.get("summary", ""),
-                    "company_stock_code": data.get("stock_code"),
-                }
-                if isinstance(n, dict) and "summary_short" not in n
-                else n
-            )
-            for n in news
-        ]
+        converted = [_migrate_news_item(n, data.get("stock_code")) for n in news]
         return {**data, "evidence": {**data["evidence"], "news": converted}}
