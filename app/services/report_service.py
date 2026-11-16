@@ -48,7 +48,12 @@ from app.schemas.report import (
     VisionEvidence,
     YearlyFigure,
 )
-from app.services.data_store import find_financials, get_company, latest_company_news
+from app.services.data_store import (
+    find_financials,
+    get_company,
+    in_readable_unit,
+    latest_company_news,
+)
 from app.services.market_clock import KST, last_close_date
 
 logger = logging.getLogger(__name__)
@@ -489,6 +494,7 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
     financials = find_financials(stock_code)
     if financials is None:
         raise report_generation_failed(NO_FINANCIALS_REASON)
+    financials = in_readable_unit(financials)
     news = latest_company_news(stock_code, REPORT_NEWS_COUNT)
     context = build_context(company, financials, news)
     content = _sanitize(await writer.write(context), context["available_evidence"])
@@ -520,6 +526,7 @@ def refresh_values(report: CompanyReport) -> CompanyReport:
     financials = find_financials(report.stock_code)
     if financials is None:
         return report
+    financials = in_readable_unit(financials)
     company = get_company(report.stock_code)
     news = latest_company_news(report.stock_code, REPORT_NEWS_COUNT)
     fresh = _assemble(
