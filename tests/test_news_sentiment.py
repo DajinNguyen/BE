@@ -93,3 +93,21 @@ def test_missing_article_in_ai_result_falls_back_to_neutral(monkeypatch):
 
     assert result[0].sentiment == "neutral"
     assert result[0].sentiment_reason == FALLBACK_REASON
+
+
+def test_saved_report_news_without_sentiment_reads_as_neutral():
+    """호재/악재를 넣기 전에 저장한 리포트의 상세 시트 관련 뉴스도 "보통"으로 읽힌다."""
+    from app.schemas.report import KeyPointDetail, _migrate_point
+
+    old = {
+        "id": "old-1",
+        "title": "옛 기사",
+        "press": "한국경제",
+        "published_at": "2026-11-01T09:00:00+09:00",
+        "url": "https://www.hankyung.com/1",
+        "summary_short": "",
+        "company_stock_code": "005930",
+    }
+    point = _migrate_point({"title": "실적", "detail": {"related_news": [old]}}, "005930")
+    detail = KeyPointDetail(**point["detail"])
+    assert detail.related_news[0].sentiment == "neutral"
