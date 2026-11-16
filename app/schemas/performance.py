@@ -61,3 +61,4 @@ class PerformanceDetail(BaseModel):
     segments: list[SegmentPerformance]
     reasons: list[PerformanceReason]
     source: PerformanceSource | None
+    ai_summary: str | None = None  # 개요 "AI 한 줄 요약". 아직 못 만들었으면 null

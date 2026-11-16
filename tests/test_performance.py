@@ -2,6 +2,8 @@ from datetime import date
 
 import pytest
 
+from app.core.db import new_session
+from app.models.performance import CompanyPerformanceRecord
 from app.schemas.news import NewsArticle
 from app.services import dart, news_search, performance_service
 from app.services.naver_news import SearchResult
@@ -78,13 +80,14 @@ NEWS = [
 
 
 class FakeReasonWriter:
-    def __init__(self, reasons):
+    def __init__(self, reasons, summary=""):
         self.reasons = reasons
+        self.summary = summary
         self.contexts = []
 
     def write(self, context):
         self.contexts.append(context)
-        return ReasonsDraft(reasons=self.reasons)
+        return ReasonsDraft(reasons=self.reasons, summary=self.summary)
 
 
 def use_writer(client, writer):
@@ -156,12 +159,14 @@ def test_reasons_are_written_from_quarter_news(client, use_dart, monkeypatch):
             ReasonDraft(title="AI 메모리가 많이 팔렸어요", description="…", news_numbers=[1, 9]),
             ReasonDraft(title="근거 없는 이유", description="…", news_numbers=[]),
             ReasonDraft(title="지금 매수할 때예요", description="…", news_numbers=[1]),
-        ]
+        ],
+        summary="AI용 메모리가 많이 팔려서  매출과 이익이 함께 늘었어요",
     )
     use_writer(client, writer)
 
     first = client.get("/api/companies/005930/performance").json()
     assert first["reasons"] == []  # 백그라운드에서 만들고 다음 요청부터 채워진다
+    assert first["ai_summary"] is None
     assert searched == {
         "query": "삼성전자 2분기 실적",
         "sort": "sim",
@@ -185,14 +190,30 @@ def test_reasons_are_written_from_quarter_news(client, use_dart, monkeypatch):
             ],
         }
     ]
+    assert body["ai_summary"] == "AI용 메모리가 많이 팔려서 매출과 이익이 함께 늘었어요"
     assert len(writer.contexts) == 1  # 같은 분기 보고서로는 다시 만들지 않는다
 
 
-def test_no_news_skips_ai(client, use_dart, monkeypatch):
+def test_ai_summary_is_dropped_without_grounded_reason_or_with_numbers_or_advice():
+    draft = ReasonsDraft(reasons=[], summary="메모리가 많이 팔려서 이익이 늘었어요")
+    reason = performance_service.PerformanceReason(title="t", description="d", evidence=[])
+    assert performance_service.to_summary(draft, []) is None  # 근거가 된 이유가 없다
+    assert performance_service.to_summary(draft, [reason]) == draft.summary
+    for bad in ("매출이 23% 늘었어요", "지금이 매수 기회예요", "가" * 61, "  "):
+        draft = ReasonsDraft(reasons=[], summary=bad)
+        assert performance_service.to_summary(draft, [reason]) is None
+
+
+def test_old_saved_reasons_without_summary_still_read(client, use_dart):
     use_dart()
-    monkeypatch.setattr(news_search, "search", lambda *a, **k: None)
-    writer = FakeReasonWriter([])
-    use_writer(client, writer)
-    client.get("/api/companies/005930/performance")
-    assert client.get("/api/companies/005930/performance").json()["reasons"] == []
-    assert writer.contexts == []
+    reason = {"title": "예전 기록", "description": "…", "evidence": []}
+    with new_session() as session:
+        rcept_no = performance_service.get_detail(session, "005930")[1]
+        session.add(
+            CompanyPerformanceRecord(
+                stock_code="005930", status="done", content=[reason], rcept_no=rcept_no
+            )
+        )
+        session.commit()
+    body = client.get("/api/companies/005930/performance").json()
+    assert body["reasons"] == [reason] and body["ai_summary"] is None
