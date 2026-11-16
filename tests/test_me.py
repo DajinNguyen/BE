@@ -141,11 +141,14 @@ def test_three_puzzles_give_one_reward(client, login, clock):
         "progress": 0,
         "counted_today": [],
         "completions": [],
+        "reward_adk": 20,
+        "balance": 50,  # 가입 축하 ADK
     }
     assert _complete(client, PUZZLES[0], 1).json()["progress"] == 1
     assert _complete(client, PUZZLES[1], 2).json()["progress"] == 2
     body = _complete(client, PUZZLES[2], 3).json()
     assert (body["rewards_today"], body["progress"]) == (1, 0)
+    assert body["balance"] == 70  # 보상 1회 = 20 ADK
     assert body["counted_today"] == PUZZLES
     # 요청에 온 completed_at 을 그대로 돌려준다
     assert body["completions"][0] == {

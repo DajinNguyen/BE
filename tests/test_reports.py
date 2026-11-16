@@ -1,7 +1,12 @@
 from datetime import UTC, date, datetime, timedelta
 
+import pytest
+
 from app.core.db import new_session
 from app.models.report import ReportRecord
+
+# 리포트 만들기는 로그인과 ADK가 필요하다
+pytestmark = pytest.mark.usefixtures("member")
 
 KEY_POINT_ORDER = ["performance", "revenue_source", "recent_change", "risk", "strength"]
 

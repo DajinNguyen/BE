@@ -85,3 +85,33 @@ def client(fake_writer):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+def login_as(client, n: int | None) -> int | None:
+    """n번 사용자로 로그인한 상태로 바꾸고 사용자 id 를 돌려준다. None 이면 로그아웃."""
+    from app.core.db import new_session
+    from app.services import auth_service
+    from app.services.auth_service import GoogleProfile
+
+    client.cookies.clear()
+    if n is None:
+        return None
+    with new_session() as session:
+        user = auth_service.upsert_user(
+            session, GoogleProfile(sub=f"sub-{n}", email=f"u{n}@example.com", name=f"실명{n}")
+        )
+        user_id = user.id
+    client.cookies.set(auth_service.SESSION_COOKIE, auth_service.issue_session(user))
+    return user_id
+
+
+@pytest.fixture
+def member(client):
+    """ADK가 넉넉한 로그인 사용자 (리포트 만들기처럼 로그인·ADK가 필요한 API를 쓰는 테스트용)."""
+    from app.core.db import new_session
+    from app.services import wallet_service
+
+    user_id = login_as(client, 1)
+    with new_session() as session:
+        wallet_service.grant(session, user_id, 10_000, "signup", "테스트용", "test-grant")
+    return user_id

@@ -39,10 +39,12 @@ class PuzzleCompletion(BaseModel):
 
 
 class UsageCredits(BaseModel):
-    """낱말퀴즈 보상 (리포트 만들기 추가 횟수)."""
+    """낱말퀴즈 보상 (보상 1회마다 ADK를 준다)."""
 
     date: str  # rewards_today·counted_today 의 기준 날짜 (서버 날짜)
     rewards_today: int  # 오늘 받은 보상 횟수
     progress: int  # 다음 보상까지 센 퀴즈 수
     counted_today: list[str]  # 오늘 개수에 넣은 퀴즈 id
     completions: list[PuzzleCompletion]  # 최근 완료 기록 (최근 50개)
+    reward_adk: int  # 보상 1회에 주는 ADK
+    balance: int  # 지금 내 ADK 잔액

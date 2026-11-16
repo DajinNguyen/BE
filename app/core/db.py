@@ -28,6 +28,7 @@ def init_db() -> None:
         performance,
         report,
         user,
+        wallet,
     )
 
     SQLModel.metadata.create_all(engine)

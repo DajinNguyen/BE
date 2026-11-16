@@ -9,10 +9,11 @@ class AppError(Exception):
     `message` 는 화면에 그대로 보여줄 수 있는 쉬운 문장이다.
     """
 
-    def __init__(self, status_code: int, code: str, detail: str):
+    def __init__(self, status_code: int, code: str, detail: str, extra: dict | None = None):
         self.status_code = status_code
         self.code = code
         self.detail = detail
+        self.extra = extra or {}  # `error` 안에 같이 넣을 값 (예: 필요한 ADK, 지금 잔액)
 
 
 def company_not_found() -> AppError:
@@ -37,6 +38,16 @@ def invalid_param(detail: str) -> AppError:
 
 def login_required() -> AppError:
     return AppError(401, "LOGIN_REQUIRED", "로그인이 필요해요.")
+
+
+def insufficient_adk(required: int, balance: int) -> AppError:
+    """ADK가 모자라서 쓸 수 없다. 화면에서 숫자를 쓸 수 있게 `required`·`balance` 도 같이 준다."""
+    return AppError(
+        402,
+        "INSUFFICIENT_ADK",
+        f"ADK가 모자라요. {required} ADK가 필요한데 지금 {balance} ADK가 있어요.",
+        {"required": required, "balance": balance},
+    )
 
 
 def auth_not_configured() -> AppError:
@@ -88,14 +99,16 @@ def invalid_image(detail: str) -> AppError:
     return AppError(400, "INVALID_IMAGE", detail)
 
 
-def _error_body(code: str, message: str) -> dict:
-    return {"error": {"code": code, "message": message}}
+def _error_body(code: str, message: str, extra: dict | None = None) -> dict:
+    return {"error": {"code": code, "message": message, **(extra or {})}}
 
 
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(_: Request, exc: AppError) -> JSONResponse:
-        return JSONResponse(status_code=exc.status_code, content=_error_body(exc.code, exc.detail))
+        return JSONResponse(
+            status_code=exc.status_code, content=_error_body(exc.code, exc.detail, exc.extra)
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:

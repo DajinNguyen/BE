@@ -1,4 +1,4 @@
-"""낱말퀴즈 완료 보상: 퀴즈 3개를 [정답 보기] 없이 풀면 AI 리포트 만들기 1회 추가.
+"""낱말퀴즈 완료 보상: 퀴즈 3개를 [정답 보기] 없이 풀 때마다 20 ADK.
 
 규칙은 프론트 `src/config/usagePolicy.ts` 의 `PUZZLE_REWARD` 와 같다 (임시값, 확정 필요).
 프론트 계산은 화면에 바로 보여주기 위한 것이고, 보상은 여기서 판단한 값이 기준이다.
@@ -14,7 +14,7 @@ from sqlmodel import Session
 
 from app.models.learning import PuzzleOpenRecord, UsageCreditsRecord
 from app.schemas.learning import PuzzleCompletion, UsageCredits
-from app.services import data_store
+from app.services import data_store, wallet_service
 from app.services.market_clock import KST
 
 PUZZLES_PER_REWARD = 3  # 보상 1회에 필요한 퀴즈 수
@@ -47,13 +47,15 @@ def _load(session: Session, user_id: int, today: str) -> UsageCreditsRecord:
     return record
 
 
-def _response(record: UsageCreditsRecord) -> UsageCredits:
+def _response(session: Session, record: UsageCreditsRecord) -> UsageCredits:
     return UsageCredits(
         date=record.day,
         rewards_today=record.rewards_today,
         progress=record.progress,
         counted_today=record.counted_today,
         completions=[PuzzleCompletion(**c) for c in record.completions],
+        reward_adk=wallet_service.PUZZLE_REWARD,
+        balance=wallet_service.balance(session, record.user_id),
     )
 
 
@@ -81,14 +83,16 @@ def _really_solved(session: Session, user_id: int, puzzle_id: str) -> bool:
 
 
 def get_credits(session: Session, user_id: int, now: datetime | None = None) -> UsageCredits:
-    return _response(_load(session, user_id, _today(now)))
+    return _response(session, _load(session, user_id, _today(now)))
 
 
 def complete_puzzle(
     session: Session, user_id: int, completion: PuzzleCompletion, now: datetime | None = None
 ) -> UsageCredits:
     data_store.get_crossword(completion.puzzle_id)  # 없는 퀴즈면 404
-    record = _load(session, user_id, _today(now))
+    today = _today(now)
+    record = _load(session, user_id, today)
+    rewarded = False
     entry = completion.model_dump()
     if entry not in record.completions:  # 다시 보낸 같은 기록은 한 번만 반영한다
         record.completions = [*record.completions, entry][-KEEP_COMPLETIONS:]
@@ -104,7 +108,18 @@ def complete_puzzle(
             if record.progress >= PUZZLES_PER_REWARD:
                 record.progress = 0
                 record.rewards_today += 1
+                rewarded = True
     record.updated_at = datetime.now(UTC)
     session.add(record)
     session.commit()
-    return _response(record)
+    if rewarded:
+        # 같은 날 같은 번째 보상은 한 번만 준다
+        wallet_service.grant(
+            session,
+            user_id,
+            wallet_service.PUZZLE_REWARD,
+            "puzzle_reward",
+            f"낱말퀴즈 {PUZZLES_PER_REWARD}개 완료",
+            f"puzzle:{today}:{record.rewards_today}",
+        )
+    return _response(session, record)
