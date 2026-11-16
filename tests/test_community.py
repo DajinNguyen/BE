@@ -36,7 +36,6 @@ def login(client):
 def no_spam_limit(monkeypatch):
     """도배 방지는 해당 테스트에서만 켠다."""
     monkeypatch.setattr(community_service, "POSTS_PER_MINUTE", 1000)
-    monkeypatch.setattr(community_service, "COMMENTS_PER_MINUTE", 1000)
 
 
 def _write(client, **overrides):
@@ -202,14 +201,12 @@ def test_post_spam_limit(client, login, monkeypatch):
     assert _write(client).status_code == 201
 
 
-def test_comment_spam_limit(client, login, monkeypatch):
-    monkeypatch.setattr(community_service, "COMMENTS_PER_MINUTE", 5)
+def test_comments_have_no_per_minute_limit(client, login):
+    """댓글은 1분에 몇 개를 써도 막지 않는다 (글쓰기 제한만 남긴다)."""
     login(1)
     post_id = _write(client).json()["id"]
-    for i in range(5):
+    for i in range(12):
         assert _comment(client, post_id, f"답글 {i}").status_code == 201
-    res = _comment(client, post_id, "여섯 번째")
-    assert (res.status_code, res.json()["error"]["code"]) == (429, "TOO_FREQUENT")
 
 
 # --------------------------------------------------------------------------

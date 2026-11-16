@@ -47,10 +47,10 @@ AUTO_TITLE_MAX = 30  # 제목을 안 보내면 본문 첫 줄을 이만큼 잘�
 BODY_MAX = 500  # 화면 입력창(FE COMMUNITY_LIMITS.commentMax)과 같다
 COMMENT_MAX = 500
 NICKNAME_MAX = 30
-# 도배 방지: 같은 사람은 1분에 글 1개 · 댓글 5개까지
+# 도배 방지: 같은 사람은 1분에 글 1개까지.
+# 댓글(글에 다는 답글)은 개수를 막지 않는다 (2026-11-16 클라이언트 미팅에서 없애기로 했다)
 RATE_WINDOW = timedelta(minutes=1)
 POSTS_PER_MINUTE = 1
-COMMENTS_PER_MINUTE = 5
 HIDE_AFTER_REPORTS = 3  # 서로 다른 사람의 신고가 이만큼 쌓이면 숨긴다
 
 # 띄어쓰기·대소문자를 무시하고 찾는다. 두 번째 값은 안내 문구에 보여줄 이름 (욕설은 그대로 보여주지 않는다)
@@ -366,13 +366,6 @@ def create_comment(
         raise invalid_length(f"댓글은 1~{COMMENT_MAX}자로 써 주세요.")
     _check_banned(body)
     parent_id = _parent_id(session, post, data.parent_id)
-    _check_rate(
-        session,
-        PostComment,
-        user,
-        COMMENTS_PER_MINUTE,
-        f"답글은 1분에 {COMMENTS_PER_MINUTE}개까지 쓸 수 있어요.",
-    )
 
     comment = PostComment(
         post_id=post.id,
