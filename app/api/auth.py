@@ -94,7 +94,12 @@ def me(user: User = Depends(current_user)):
 
 
 @router.post("/logout", status_code=204)
-def logout():
+def logout(
+    token: str | None = Cookie(None, alias=SESSION_COOKIE),
+    session: Session = Depends(get_session),
+):
+    """로그아웃: 쿠키를 지우고, 그 쿠키 값도 서버에서 더는 받지 않는다."""
+    auth_service.revoke_session(session, token)
     response = Response(status_code=204)
     response.delete_cookie(SESSION_COOKIE, path="/")
     return response

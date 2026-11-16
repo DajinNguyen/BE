@@ -235,3 +235,91 @@ def test_logout(client, google):
     res = client.post("/api/auth/logout")
     assert res.status_code == 204
     assert client.get("/api/auth/me").status_code == 401
+
+
+def _login_as(client, n):
+    with new_session() as session:
+        user = auth_service.upsert_user(
+            session,
+            auth_service.GoogleProfile(sub=f"sub-{n}", email=f"u{n}@example.com", name=f"실명{n}"),
+        )
+    token = auth_service.issue_session(user)
+    client.cookies.clear()
+    client.cookies.set(auth_service.SESSION_COOKIE, token)
+    return token
+
+
+def test_logged_out_cookie_cannot_be_used_again(client):
+    """로그아웃한 쿠키 값을 따로 적어 뒀다가 다시 보내도 받지 않는다."""
+    token = _login_as(client, 1)
+    assert client.get("/api/auth/me").status_code == 200
+    assert client.post("/api/auth/logout").status_code == 204
+
+    client.cookies.set(auth_service.SESSION_COOKIE, token)
+    assert client.get("/api/auth/me").status_code == 401
+    assert client.get("/api/me/term-progress").status_code == 401
+
+
+def test_logout_keeps_other_logins(client):
+    """한 기기에서 로그아웃해도 같은 사람의 다른 로그인, 다시 한 로그인은 그대로다."""
+    other_device = _login_as(client, 1)
+    _login_as(client, 1)
+    client.post("/api/auth/logout")
+
+    client.cookies.set(auth_service.SESSION_COOKIE, other_device)
+    assert client.get("/api/auth/me").status_code == 200
+    _login_as(client, 1)
+    assert client.get("/api/auth/me").status_code == 200
+
+
+def test_logout_without_login_is_fine(client):
+    assert client.post("/api/auth/logout").status_code == 204
+    client.cookies.set(auth_service.SESSION_COOKIE, "not-a-token")
+    assert client.post("/api/auth/logout").status_code == 204
+
+
+def test_each_account_sees_only_its_own_data(client):
+    progress = {
+        "terms": {
+            "per": {
+                "status": "mastered",
+                "correct_count": 3,
+                "wrong_count": 1,
+                "last_studied_at": "2026-11-13T09:12:00+09:00",
+                "set_id": "basic",
+            }
+        },
+        "set_progress": [],
+        "study_dates": [],
+    }
+    _login_as(client, 1)
+    client.put("/api/me/term-progress", json=progress)
+    first = client.get("/api/auth/me").json()
+
+    # 같은 브라우저에서 로그아웃하고 다른 계정으로 로그인
+    client.post("/api/auth/logout")
+    _login_as(client, 2)
+    second = client.get("/api/auth/me").json()
+    assert second["id"] != first["id"]
+    assert client.get("/api/me/term-progress").json()["terms"] == {}
+
+    _login_as(client, 1)
+    assert list(client.get("/api/me/term-progress").json()["terms"]) == ["per"]
+
+
+def test_personal_responses_are_not_cached(client):
+    # 사용자별 API 는 로그인하지 않았을 때(401)도 저장하지 않는다
+    for res in (client.get("/api/auth/me"), client.get("/api/me/term-progress")):
+        assert res.headers["cache-control"] == "no-store"
+        assert "Cookie" in res.headers["vary"]
+
+    # 누구에게나 같은 응답은 그대로 둔다
+    assert "cache-control" not in client.get("/api/companies/005930").headers
+
+    # 로그인한 채로 부른 API 는 사람마다 다를 수 있어서 저장하지 않는다
+    _login_as(client, 1)
+    for path in ("/api/auth/me", "/api/me/term-progress", "/api/companies/005930/posts"):
+        res = client.get(path)
+        assert res.status_code == 200
+        assert res.headers["cache-control"] == "no-store"
+        assert "Cookie" in res.headers["vary"]

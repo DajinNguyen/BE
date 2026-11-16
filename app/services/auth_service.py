@@ -8,6 +8,7 @@
 비밀번호는 다루지 않는다. Google이 확인한 이메일만 받는다.
 """
 
+import hashlib
 import logging
 import secrets
 from dataclasses import dataclass
@@ -17,10 +18,10 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import httpx
 import jwt
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.core.config import get_settings
-from app.models.user import User
+from app.models.user import RevokedSession, User
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +239,10 @@ def nickname_for(user: User) -> str:
 def issue_session(user: User) -> str:
     expires = _now() + timedelta(days=get_settings().session_days)
     return jwt.encode(
-        {"typ": "session", "sub": str(user.id), "exp": expires}, _secret(), algorithm=ALGORITHM
+        # jti: 로그인할 때마다 다른 쿠키가 되게 한다 (로그아웃한 쿠키만 골라서 막으려고)
+        {"typ": "session", "sub": str(user.id), "exp": expires, "jti": secrets.token_urlsafe(8)},
+        _secret(),
+        algorithm=ALGORITHM,
     )
 
 
@@ -251,4 +255,34 @@ def user_from_session(session: Session, token: str | None) -> User | None:
         return None
     if data.get("typ") != "session" or not str(data.get("sub", "")).isdigit():
         return None
+    if session.get(RevokedSession, _token_hash(token)) is not None:
+        return None  # 로그아웃한 쿠키
     return session.get(User, int(data["sub"]))
+
+
+def _token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def revoke_session(session: Session, token: str | None) -> None:
+    """로그아웃: 이 로그인 쿠키를 다시 쓰지 못하게 한다. (다른 기기의 로그인은 그대로 둔다)"""
+    if not token:
+        return
+    try:
+        data = jwt.decode(token, _secret(), algorithms=[ALGORITHM])
+    except jwt.InvalidTokenError:
+        return  # 이미 끝났거나 우리 쿠키가 아니면 막을 것도 없다
+    if data.get("typ") != "session":
+        return
+    now = _now()
+    # 어차피 끝난 쿠키의 기록은 지운다
+    for old in session.exec(
+        select(RevokedSession).where(col(RevokedSession.expires_at) < now)
+    ).all():
+        session.delete(old)
+    key = _token_hash(token)
+    if session.get(RevokedSession, key) is None:
+        session.add(
+            RevokedSession(token_hash=key, expires_at=datetime.fromtimestamp(data["exp"], UTC))
+        )
+    session.commit()
