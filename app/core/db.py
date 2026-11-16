@@ -20,7 +20,15 @@ engine = _make_engine(get_settings().database_url)
 
 
 def init_db() -> None:
-    from app.models import community, learning, report, user  # noqa: F401  테이블 등록용
+    # 테이블 등록용
+    from app.models import (  # noqa: F401
+        community,
+        learning,
+        overview,
+        performance,
+        report,
+        user,
+    )
 
     SQLModel.metadata.create_all(engine)
     _add_missing_columns()

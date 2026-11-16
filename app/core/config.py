@@ -11,10 +11,15 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-opus-5-5"
     anthropic_effort: str = "medium"
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-3.5-flash"
+    gemini_model: str = "gemini-3.5-flash-lite"  # 무료 한도: 하루 약 500회 (flash는 20회)
     dart_api_key: str | None = None
     dart_cache_dir: str = ".cache/dart"
     naver_prices_enabled: bool = True  # 네이버 금융 시세 (비공식, 키 없음)
+    # 네이버 검색 API(뉴스). 비워 두면 Google 뉴스 RSS를 쓴다
+    naver_client_id: str | None = None
+    naver_client_secret: str | None = None
+    naver_search_hub: bool = True  # NAVER API HUB 키면 true, 예전 개발자센터 키면 false
+    google_news_enabled: bool = True  # Google 뉴스 RSS (키 없음, 비상업적 용도만)
     upload_dir: str = "uploads"  # 커뮤니티 사진을 저장하는 폴더 (/uploads 로 보여준다)
 
     # Google 로그인

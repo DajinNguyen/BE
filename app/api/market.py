@@ -23,4 +23,4 @@ async def get_market_news(date_text: str = Query(..., alias="date", description=
         date.fromisoformat(date_text)
     except ValueError:
         raise invalid_param("날짜는 YYYY-MM-DD 형식으로 보내 주세요.") from None
-    return await market_service.market_news()
+    return await market_service.latest_market_news()

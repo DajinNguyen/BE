@@ -1,10 +1,23 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from sqlmodel import Session
 
+from app.api.deps import get_overview_writer
+from app.core.db import get_session, new_session
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.financials import Financials
 from app.schemas.news import NewsPage
+from app.schemas.performance import PerformanceDetail
 from app.schemas.price import Period, PriceHistory
-from app.services import data_store, price_service
+from app.services import (
+    data_store,
+    overview_service,
+    performance_service,
+    price_service,
+    segment_service,
+)
+from app.services.overview_service import OverviewWriter
+from app.services.performance_service import ReasonWriter
+from app.services.segment_service import SegmentWriter
 
 router = APIRouter(prefix="/api/companies", tags=["companies"])
 
@@ -21,13 +34,58 @@ def search_companies(
 
 
 @router.get("/{stock_code}", response_model=CompanyDetail)
-def get_company(stock_code: str):
-    return data_store.get_company_detail(stock_code)
+def get_company(
+    stock_code: str,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+    writer: OverviewWriter | None = Depends(get_overview_writer),
+):
+    """시드에 개요가 없는 회사는 AI 개요(사업보고서 정리)를 채운다.
+
+    아직 없거나 새 사업보고서가 나왔으면 백그라운드에서 만들기 시작하고, 다음 요청부터 채워진다.
+    """
+    company = data_store.get_company_detail(stock_code)
+    # 개요를 채우기 전의 시드 값으로 만들지 정한다 (채운 뒤에는 시드에 개요가 있는 것처럼 보인다)
+    if writer is not None and overview_service.start_generation(session, company):
+        background_tasks.add_task(overview_service.run_generation, stock_code, writer, new_session)
+    return overview_service.apply_overview(session, company)
 
 
 @router.get("/{stock_code}/financials", response_model=Financials)
-def get_financials(stock_code: str):
-    return data_store.get_financials(stock_code)
+def get_financials(
+    stock_code: str,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+    writer: SegmentWriter | None = Depends(segment_service.get_segment_writer),
+):
+    """시드에 사업별 매출이 없는 회사는 사업보고서 표에서 뽑은 값으로 채운다.
+
+    아직 없거나 새 사업보고서가 나왔으면 백그라운드에서 만들기 시작하고, 다음 요청부터 채워진다.
+    """
+    financials = data_store.get_financials(stock_code)
+    corp_code = data_store.get_company(stock_code).corp_code
+    if writer is not None and segment_service.start_generation(session, financials, corp_code):
+        background_tasks.add_task(segment_service.run_generation, stock_code, writer, new_session)
+    return segment_service.apply_segments(session, financials)
+
+
+@router.get("/{stock_code}/performance", response_model=PerformanceDetail)
+def get_performance(
+    stock_code: str,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+    writer: ReasonWriter | None = Depends(performance_service.get_reason_writer),
+):
+    """재무 상세 "최근 사업 성과 분석". 실적 자료가 없으면 404 `DATA_NOT_FOUND`.
+
+    "왜 이렇게 됐나요?"는 백그라운드에서 만들고, 다음 요청부터 채워진다.
+    """
+    detail, rcept_no = performance_service.get_detail(session, stock_code)
+    if writer is not None and performance_service.start_generation(session, stock_code, rcept_no):
+        background_tasks.add_task(
+            performance_service.run_generation, stock_code, writer, new_session
+        )
+    return detail
 
 
 @router.get("/{stock_code}/prices", response_model=PriceHistory)

@@ -2,6 +2,7 @@
 
 기간별 변화율(주가·거래대금·뉴스 언급)은 아직 집계하지 않아서 `app/data/industries.json` 의
 예시 값을 쓴다 (`is_sample: true`). 관련 기업의 시가총액·등락률은 네이버 시세를 받으면 실제 값이다.
+산업 뉴스는 실제 뉴스 검색("산업 이름 산업")을 먼저 쓰고, 받지 못하면 예시 기사를 쓴다.
 점수 기준은 프론트 `src/config/industryHeat.ts` 와 같은 임시값이다 (PM 확정 필요).
 """
 
@@ -22,7 +23,7 @@ from app.schemas.industry import (
     TrendPoint,
 )
 from app.schemas.news import NewsArticle
-from app.services import data_store
+from app.services import data_store, news_search
 from app.services.market_clock import last_close, last_close_date
 from app.services.news_sentiment import classify_news_sentiment
 from app.services.sample_news import latest_first, sample_article
@@ -38,6 +39,8 @@ HIGH_RANKS = 3
 MID_RANKS = 3
 PERIOD_LABELS: dict[HeatPeriod, str] = {"1w": "최근 1주", "1m": "최근 1개월"}
 WHY_NEWS_COUNT = 2  # "왜 관심이 몰리나요?" 근거 뉴스 개수
+# 관심도(주가·거래대금·뉴스 언급 변화율)를 아직 집계하지 않는 산업은 0으로 보여준다
+NO_FACTORS = {"price_change_rate": 0, "trading_value_change_rate": 0, "news_mention_change_rate": 0}
 NEWS_HOURS_AGO = [2, 5, 20, 30, 60]  # 예시 기사 시각 (최신순)
 
 
@@ -67,7 +70,11 @@ def hot_industries(period: HeatPeriod, now: datetime | None = None) -> list[Indu
     """점수 높은 순."""
     as_of, _ = last_close(now)
     scored = sorted(
-        ((heat_score(r["factors"][period]), r) for r in data_store.industry_records()),
+        (
+            (heat_score(r["factors"][period]), r)
+            for r in data_store.industry_records()
+            if "factors" in r  # 관심도를 집계하지 않는 산업은 순위에 넣지 않는다
+        ),
         key=lambda pair: pair[0],
         reverse=True,
     )
@@ -89,11 +96,18 @@ def hot_industries(period: HeatPeriod, now: datetime | None = None) -> list[Indu
     ]
 
 
+def _news_query(record: dict[str, Any]) -> str:
+    return record.get("news_query") or f"{record['name'].replace('·', ' ')} 산업"
+
+
 async def industry_news(
     industry_id: str, size: int, now: datetime | None = None
 ) -> list[NewsArticle]:
     """산업 관련 기사 (최신순)."""
     record = _record(industry_id)
+    live = news_search.latest(_news_query(record), size)
+    if live is not None:
+        return await classify_news_sentiment(live)
     articles = [
         sample_article(
             article_id=f"{industry_id}-news-{i + 1}",
@@ -142,16 +156,15 @@ async def get_industry(industry_id: str, now: datetime | None = None) -> Industr
     as_of, _ = last_close(now)
     news = await industry_news(industry_id, WHY_NEWS_COUNT, now)
     seed = data_store.industry_records().index(record)
+    factors = record.get("factors") or {"1w": NO_FACTORS, "1m": NO_FACTORS}
     return IndustryDetail(
         industry_id=industry_id,
         name=record["name"],
         icon_key=record["icon_key"],
         description=record["description"],
         why=IndustryWhy(text=record["why"], news_ids=[n.id for n in news]),
-        trend=_weekly_trend(
-            record["factors"]["1m"]["price_change_rate"], seed, last_close_date(now)
-        ),
-        score_breakdown=ScoreBreakdown(**record["factors"]["1w"], period="1w"),
+        trend=_weekly_trend(factors["1m"]["price_change_rate"], seed, last_close_date(now)),
+        score_breakdown=ScoreBreakdown(**factors["1w"], period="1w"),
         news=news,
         companies=_companies(record["companies"]),
         as_of=as_of,

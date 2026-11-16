@@ -6,6 +6,8 @@ AI(Claude 또는 Gemini)는 문장(headline, title, reason, meaning 등)만 작�
 상태 흐름: none → generating → done / failed
 - POST는 생성을 시작하고 바로 generating을 돌려준다. 실제 생성은 백그라운드에서 한다.
 - GET은 마지막으로 성공한 내용 + 지금 상태를 돌려준다 (다시 만드는 중·실패여도 이전 내용 유지).
+- 저장한 리포트에서 AI가 쓴 설명은 그대로 쓰고, 근거 숫자(재무·상세 시트)·뉴스·기준일은
+  GET 할 때마다 지금 자료로 다시 붙인다. 핵심 포인트 문장 속 숫자는 AI가 쓴 글이라 그대로다.
 """
 
 import asyncio
@@ -39,15 +41,20 @@ from app.schemas.report import (
     FinancialsEvidence,
     KeyPoint,
     KeyPointDetail,
+    KeyPointDraft,
     ReportContent,
     ReportDataAsOf,
     RevenueMixItem,
     VisionEvidence,
     YearlyFigure,
 )
-from app.services.data_store import find_financials, get_company, get_news, to_articles
+from app.services.data_store import (
+    find_financials,
+    get_company,
+    in_readable_unit,
+    latest_company_news,
+)
 from app.services.market_clock import KST, last_close_date
-from app.services.news_sentiment import classify_news_sentiment
 
 logger = logging.getLogger(__name__)
 
@@ -307,6 +314,7 @@ def _financials_evidence(financials: Financials) -> FinancialsEvidence | None:
 
 YEARLY_COUNT = 5  # 상세 시트 연도별 막대 개수 (최근 몇 년)
 DETAIL_NEWS_COUNT = 3
+REPORT_NEWS_COUNT = 10  # AI에게 주고 근거로 붙이는 최근 뉴스 개수
 
 
 def _key_point_detail(
@@ -370,13 +378,21 @@ def _financials_basis(financials: Financials) -> str:
     return f"{latest.fiscal_year}년 연간" if latest else financials.basis
 
 
+def _news_date(published_at: str) -> str | None:
+    """실제 기사 시각(ISO)은 날짜만, 시드 값("2026년 1월")은 그대로."""
+    try:
+        return datetime.fromisoformat(published_at).date().isoformat()
+    except ValueError:
+        return published_at or None
+
+
 def _data_as_of(
     company: CompanyDetail, financials: Financials, news: list[NewsArticle]
 ) -> ReportDataAsOf:
     return ReportDataAsOf(
         financials=_financials_basis(financials),
         price=company.price_as_of or last_close_date().isoformat(),
-        news=(news[0].published_at or None) if news else None,  # 뉴스는 최신 순
+        news=_news_date(news[0].published_at) if news else None,  # 뉴스는 최신 순
     )
 
 
@@ -389,8 +405,9 @@ def _evidence_refs(data_as_of: ReportDataAsOf) -> dict[EvidenceKind, EvidenceRef
     }
 
 
-def build_context(company: CompanyDetail, financials: Financials) -> dict[str, Any]:
-    news = [n.model_dump() for n in get_news(company.stock_code) if not n.is_placeholder]
+def build_context(
+    company: CompanyDetail, financials: Financials, news: list[NewsArticle]
+) -> dict[str, Any]:
     available = ["financials"]
     if news:
         available.append("news")
@@ -410,7 +427,12 @@ def build_context(company: CompanyDetail, financials: Financials) -> dict[str, A
         ),
         "financials": financials.model_dump(exclude={"indicators"}),
         "derived": _derived_metrics(financials),
-        "news": news,
+        "news": [
+            n.model_dump(
+                include={"title", "press", "published_at", "summary_short", "related_metric"}
+            )
+            for n in news
+        ],
         "available_evidence": available,
     }
 
@@ -431,20 +453,18 @@ def _sanitize(content: ReportContent, available: list[str]) -> ReportContent:
     return content.model_copy(update={"key_points": key_points, "quiz": quiz})
 
 
-async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyReport, datetime]:
-    """AI로 리포트 내용을 만들고 근거 자료를 붙인다. 실패하면 AppError."""
-    company = get_company(stock_code)
-    financials = find_financials(stock_code)
-    if financials is None:
-        raise report_generation_failed(NO_FINANCIALS_REASON)
-    context = build_context(company, financials)
-    content = _sanitize(await writer.write(context), context["available_evidence"])
-
-    news = await classify_news_sentiment(to_articles(stock_code, get_news(stock_code)))
+def _assemble(
+    stock_code: str,
+    content: ReportContent,
+    generated_at: datetime | None,
+    company: CompanyDetail,
+    financials: Financials,
+    news: list[NewsArticle],
+) -> CompanyReport:
+    """AI가 쓴 설명(content)에 지금 자료(재무·뉴스·시세 기준일)로 근거를 붙인다."""
     data_as_of = _data_as_of(company, financials, news)
     refs = _evidence_refs(data_as_of)
-    generated_at = datetime.now(KST).replace(microsecond=0)
-    report = CompanyReport(
+    return CompanyReport(
         stock_code=stock_code,
         status="done",
         generated_at=generated_at,
@@ -466,7 +486,60 @@ async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyRe
         sources=SOURCES_BASE + ([financials.source] if financials.source else []),
         data_as_of=data_as_of,
     )
-    return report, generated_at
+
+
+async def write_report(stock_code: str, writer: ReportWriter) -> tuple[CompanyReport, datetime]:
+    """AI로 리포트 내용을 만들고 근거 자료를 붙인다. 실패하면 AppError."""
+    company = get_company(stock_code)
+    financials = find_financials(stock_code)
+    if financials is None:
+        raise report_generation_failed(NO_FINANCIALS_REASON)
+    financials = in_readable_unit(financials)
+    news = await latest_company_news(stock_code, REPORT_NEWS_COUNT)
+    context = build_context(company, financials, news)
+    content = _sanitize(await writer.write(context), context["available_evidence"])
+    generated_at = datetime.now(KST).replace(microsecond=0)
+    return _assemble(stock_code, content, generated_at, company, financials, news), generated_at
+
+
+def _written_content(report: CompanyReport) -> ReportContent:
+    """저장된 리포트에서 AI가 쓴 부분만 꺼낸다 (근거는 종류만 남긴다)."""
+    return ReportContent(
+        headline=report.headline,
+        key_points=[
+            KeyPointDraft(
+                **p.model_dump(exclude={"evidence", "detail"}),
+                evidence=list(dict.fromkeys(e.type for e in p.evidence)),
+            )
+            for p in report.key_points
+        ],
+        vision_summary=report.evidence.vision.summary if report.evidence.vision else "",
+        quiz=report.quiz,
+    )
+
+
+async def refresh_values(report: CompanyReport) -> CompanyReport:
+    """설명은 저장한 그대로, 숫자·뉴스·기준일은 지금 자료로 다시 붙인다.
+    재무를 받지 못하면 저장한 그대로 돌려준다."""
+    if not report.key_points:
+        return report
+    financials = find_financials(report.stock_code)
+    if financials is None:
+        return report
+    financials = in_readable_unit(financials)
+    company = get_company(report.stock_code)
+    news = await latest_company_news(report.stock_code, REPORT_NEWS_COUNT)
+    fresh = _assemble(
+        report.stock_code,
+        _written_content(report),
+        report.generated_at,
+        company,
+        financials,
+        news,
+    )
+    return fresh.model_copy(
+        update={"status": report.status, "failure_reason": report.failure_reason}
+    )
 
 
 # --------------------------------------------------------------------------
@@ -506,12 +579,13 @@ def _to_response(stock_code: str, record: ReportRecord | None) -> CompanyReport:
     )
 
 
-def get_report(session: Session, stock_code: str) -> CompanyReport:
+async def get_report(session: Session, stock_code: str) -> CompanyReport:
+    """저장한 설명에 지금 숫자·뉴스를 붙여 돌려준다."""
     get_company(stock_code)
     record = session.get(ReportRecord, stock_code)
     if record is not None:
         _expire_if_stuck(session, record)
-    return _to_response(stock_code, record)
+    return await refresh_values(_to_response(stock_code, record))
 
 
 def start_generation(session: Session, stock_code: str) -> tuple[CompanyReport, bool]:
