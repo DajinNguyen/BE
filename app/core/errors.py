@@ -60,6 +60,29 @@ def report_generation_failed(
     return AppError(502, "REPORT_GENERATION_FAILED", detail)
 
 
+# 챗봇
+
+
+def chat_failed() -> AppError:
+    return AppError(
+        502,
+        "CHAT_FAILED",
+        "답변을 만들지 못했어요. ADK는 빠지지 않았어요. 잠시 후 다시 물어봐 주세요.",
+    )
+
+
+def chat_not_configured() -> AppError:
+    return AppError(503, "CHAT_NOT_CONFIGURED", "AI 챗봇이 아직 준비되지 않았어요.")
+
+
+def conversation_not_found() -> AppError:
+    return AppError(404, "CONVERSATION_NOT_FOUND", "대화를 찾지 못했어요.")
+
+
+def term_not_found() -> AppError:
+    return AppError(404, "TERM_NOT_FOUND", "용어를 찾지 못했어요.")
+
+
 # 커뮤니티
 
 
