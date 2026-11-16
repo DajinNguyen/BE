@@ -5,6 +5,7 @@
 DART 키가 있으면 회사마다 DART 고유번호·공식 회사명을 붙이고, 상세 화면에서는 기업개황으로 빈 값을 채운다.
 재무는 DART 재무제표를 먼저 쓰고, 받지 못하면 시드 재무를 쓴다.
 네이버 시세를 받으면 현재가·등락률·시가총액을 실제 값(`is_sample: false`)으로 바꾼다.
+뉴스는 실제 기사(네이버 검색 API, 키가 없으면 Google 뉴스 RSS)를 쓰고, 받지 못하면 시드 뉴스를 쓴다.
 """
 
 import json
@@ -20,7 +21,7 @@ from app.schemas.financials import Financials, Segments
 from app.schemas.industry import IndustryRef
 from app.schemas.news import NewsArticle, NewsItem, NewsPage
 from app.schemas.term import Term
-from app.services import dart, dart_financials, naver
+from app.services import dart, dart_financials, naver, news_search
 from app.services.market_clock import last_close_date
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -50,21 +51,33 @@ def _with_live_data(
         update |= {
             "current_price": SampleValue(value=quote.price, is_sample=False),
             "change_rate": SampleValue(value=quote.change_rate, is_sample=False),
-            "market_cap": SampleValue(value=round(quote.market_cap / 1e12, 1), is_sample=False),
+            "market_cap": SampleValue(value=_trillion(quote.market_cap), is_sample=False),
             "price_as_of": quote.traded_at.date().isoformat(),
         }
     return company.model_copy(update=update) if update else company
 
 
-def _companies() -> dict[str, CompanyDetail]:
-    """시드 회사 + DART 고유번호 + 네이버 시세 (받지 못한 값은 시드 그대로)."""
+def _trillion(won: int) -> float:
+    """원 → 조 원. 1조 원이 안 되는 회사는 억 원 단위까지 남긴다 (0조로 뭉개지지 않게)."""
+    value = won / 1e12
+    return round(value, 1) if value >= 1 else round(value, 4)
+
+
+def _live(codes: list[str]) -> dict[str, CompanyDetail]:
+    """시드 회사 + DART 고유번호 + 네이버 시세 (받지 못한 값은 시드 그대로).
+
+    회사가 2,000곳이라 필요한 종목의 시세만 받는다. 없는 종목코드는 빠진다.
+    """
     seed = _seed_companies()
+    codes = [c for c in codes if c in seed]
     index = dart.corp_index()
-    quotes = naver.quotes(list(seed))
-    return {
-        code: _with_live_data(company, index.get(code), quotes.get(code))
-        for code, company in seed.items()
-    }
+    quotes = naver.quotes(codes)
+    return {c: _with_live_data(seed[c], index.get(c), quotes.get(c)) for c in codes}
+
+
+def _companies() -> dict[str, CompanyDetail]:
+    """전체 회사 (시세를 전부 받는다. 한 회사만 필요하면 `get_company`)."""
+    return _live(list(_seed_companies()))
 
 
 @lru_cache
@@ -104,12 +117,13 @@ def search_companies(query: str, limit: int) -> list[CompanySummary]:
         return []
     index = dart.corp_index()
     matches = []
-    for c in _companies().values():
+    for c in _seed_companies().values():
         fields = _search_fields(c, index.get(c.stock_code))
         if any(needle in f for f in fields):
-            matches.append((needle not in fields, c))  # 정확히 일치하는 회사를 먼저
-    matches.sort(key=lambda m: m[0])
-    return [to_summary(c) for _, c in matches[:limit]]
+            matches.append((needle not in fields, c.stock_code))  # 정확히 일치하는 회사를 먼저
+    matches.sort(key=lambda m: m[0])  # 같으면 시드 순서 (시가총액 순)
+    codes = [code for _, code in matches[:limit]]
+    return [to_summary(c) for c in _live(codes).values()]  # 시세는 보여줄 회사만 받는다
 
 
 def all_companies() -> list[CompanySummary]:
@@ -119,18 +133,16 @@ def all_companies() -> list[CompanySummary]:
 
 def companies_by_codes(stock_codes: list[str]) -> list[CompanySummary]:
     """요청한 순서대로 돌려주고, 없는 종목코드는 건너뛴다."""
-    companies = _companies()
-    return [to_summary(companies[code]) for code in stock_codes if code in companies]
+    return [to_summary(c) for c in _live(stock_codes).values()]
 
 
 def company_details_by_codes(stock_codes: list[str]) -> list[CompanyDetail]:
     """시세를 한 번만 받아서 여러 회사의 상세(시가총액 포함)를 돌려준다. 없는 종목코드는 건너뛴다."""
-    companies = _companies()
-    return [companies[code] for code in stock_codes if code in companies]
+    return list(_live(stock_codes).values())
 
 
 def get_company(stock_code: str) -> CompanyDetail:
-    company = _companies().get(stock_code)
+    company = _live([stock_code]).get(stock_code)
     if company is None:
         raise company_not_found()
     return company
@@ -174,6 +186,39 @@ def find_financials(stock_code: str) -> Financials | None:
     return live
 
 
+def in_readable_unit(financials: Financials) -> Financials:
+    """AI에게 줄 재무 숫자. 매출이 1조 원이 안 되는 회사는 억 원으로 바꾼다.
+
+    재무 탭은 프론트가 "조 원"으로 고정해 보여줘서 API 값은 조 원 그대로 두고, AI가 쓰는 글에서만
+    "0.0824조 원" 대신 "824억 원"으로 읽히게 한다.
+    """
+    if financials.unit != "조 원" or not financials.annual:
+        return financials
+    if max(abs(a.revenue) for a in financials.annual) >= 1:
+        return financials
+
+    def eok(value: float) -> float:
+        return round(value * 10_000)
+
+    update: dict[str, Any] = {
+        "unit": "억 원",
+        "annual": [
+            a.model_copy(
+                update={"revenue": eok(a.revenue), "operating_income": eok(a.operating_income)}
+            )
+            for a in financials.annual
+        ],
+    }
+    if q := financials.latest_quarter:
+        update["latest_quarter"] = q.model_copy(
+            update={"revenue": eok(q.revenue), "operating_income": eok(q.operating_income)}
+        )
+    if s := financials.segments:
+        items = [i.model_copy(update={"revenue": eok(i.revenue)}) for i in s.items]
+        update["segments"] = s.model_copy(update={"items": items})
+    return financials.model_copy(update=update)
+
+
 def get_financials(stock_code: str) -> Financials:
     """재무 API 응답용. 프론트는 segments가 항상 있다고 보므로 없으면 빈 목록으로 채운다."""
     financials = find_financials(stock_code)
@@ -209,8 +254,7 @@ def to_articles(stock_code: str, news: list[NewsItem]) -> list[NewsArticle]:
     ]
 
 
-def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
-    articles = to_articles(stock_code, get_news(stock_code))
+def _seed_page(articles: list[NewsArticle], page: int, size: int) -> NewsPage:
     start = (page - 1) * size
     return NewsPage(
         items=articles[start : start + size],
@@ -218,6 +262,28 @@ def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
         size=size,
         has_next=start + size < len(articles),
     )
+
+
+def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
+    """실제 뉴스 검색(회사 이름, 최신순)을 먼저 쓰고, 받지 못하면 시드 뉴스."""
+    company = get_company(stock_code)
+    start = (page - 1) * size + 1
+    result = news_search.search(company.name, start, size, stock_code)
+    if result is None:
+        return _seed_page(to_articles(stock_code, get_news(stock_code)), page, size)
+    return NewsPage(
+        items=result.articles,
+        page=page,
+        size=size,
+        has_next=start - 1 + size < result.total,
+    )
+
+
+def latest_company_news(stock_code: str, size: int) -> list[NewsArticle]:
+    """리포트에 쓰는 최근 뉴스. 실제 뉴스를 받지 못하면 시드 뉴스."""
+    company = get_company(stock_code)
+    live = news_search.latest(company.name, size, stock_code)
+    return live if live is not None else to_articles(stock_code, get_news(stock_code))[:size]
 
 
 @lru_cache

@@ -23,4 +23,4 @@ def get_market_news(date_text: str = Query(..., alias="date", description="YYYY-
         date.fromisoformat(date_text)
     except ValueError:
         raise invalid_param("날짜는 YYYY-MM-DD 형식으로 보내 주세요.") from None
-    return market_service.market_news()
+    return market_service.latest_market_news()

@@ -19,6 +19,7 @@ from app.services.market_clock import KST, MARKET_CLOSE, last_close_date
 
 AI_ANALYZED_LIMIT = 6
 TRADING_VALUE_LIMIT = 30
+SECTOR_LIMIT = 30  # 업종 탭마다 시가총액 큰 순으로 이만큼만 (회사가 2,000곳이라 전부 보내지 않는다)
 
 
 def _ranking(data: dict) -> CompanyRanking:
@@ -57,7 +58,8 @@ def _sector_companies(
 
     groups: dict[SectorGroup, list[CompanySummary]] = {g: [] for g in SECTOR_GROUPS}
     for company in sorted(companies, key=market_cap, reverse=True):  # 시세가 없으면 시드 순서 유지
-        groups[company.sector_group].append(company)
+        if len(groups[company.sector_group]) < SECTOR_LIMIT:
+            groups[company.sector_group].append(company)
     return groups
 
 
