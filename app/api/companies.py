@@ -4,11 +4,13 @@ from sqlmodel import Session
 from app.api.deps import get_overview_writer
 from app.core.db import get_session, new_session
 from app.schemas.company import CompanyDetail, CompanySummary
+from app.schemas.compare import SimilarCompany
 from app.schemas.financials import Financials
 from app.schemas.news import NewsPage
 from app.schemas.performance import PerformanceDetail
 from app.schemas.price import Period, PriceHistory
 from app.services import (
+    compare_service,
     data_store,
     overview_service,
     performance_service,
@@ -49,6 +51,15 @@ def get_company(
     if writer is not None and overview_service.start_generation(session, company):
         background_tasks.add_task(overview_service.run_generation, stock_code, writer, new_session)
     return overview_service.apply_overview(session, company)
+
+
+@router.get("/{stock_code}/similar", response_model=list[SimilarCompany])
+def get_similar_companies(
+    stock_code: str,
+    limit: int = Query(compare_service.SIMILAR_DEFAULT, ge=1, le=compare_service.SIMILAR_MAX),
+):
+    """비교해 볼 만한 회사: 같은 산업이고 시가총액이 비슷한 회사 (가까운 순)."""
+    return compare_service.similar_companies(stock_code, limit)
 
 
 @router.get("/{stock_code}/financials", response_model=Financials)
