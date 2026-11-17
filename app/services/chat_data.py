@@ -17,6 +17,7 @@ from app.models.performance import CompanyPerformanceRecord
 from app.models.report import ReportRecord
 from app.schemas.chat import ChatContext
 from app.services import (
+    credit_service,
     data_store,
     market_service,
     naver,
@@ -25,12 +26,14 @@ from app.services import (
     overview_service,
     performance_service,
     price_service,
+    wallet_service,
 )
 from app.services.chat_plan import Plan, Want
 
 logger = logging.getLogger(__name__)
 
 INDUSTRY_COMPANIES = 8
+_ASKS_NEWS = re.compile(r"뉴스|소식|기사")
 
 
 NEWS_COUNT = 5
@@ -431,6 +434,21 @@ def _industry_news_about_price(name: str) -> list[dict[str, Any]]:
     return [_article(a) for a in _usable(about)[:INDUSTRY_NEWS]]
 
 
+def _industry_recent_news(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """이 산업의 최근 소식 (산업 화면의 "최근 소식"과 같은 검색어)."""
+    query = record.get("news_query") or f"{record['name'].replace('·', ' ')} 산업"
+    try:
+        articles = news_search.latest(query, INDUSTRY_NEWS * 2)
+    except Exception as e:  # noqa: BLE001
+        logger.warning("챗봇용 산업 소식을 받지 못했어요 (%s): %s", record["name"], e)
+        return []
+    usable = _usable(articles or [])
+    # 검색어만 스친 기사(시장 전망 등)를 빼고, 제목에 산업 이름이 있는 기사를 먼저 쓴다
+    name = record["name"].split("·")[0]
+    named = [a for a in usable if name in a.title]
+    return [_article(a) for a in (named if len(named) >= 2 else usable)[:INDUSTRY_NEWS]]
+
+
 def _average(values: list[float]) -> float | None:
     return round(sum(values) / len(values), 2) if values else None
 
@@ -488,8 +506,9 @@ def _industry_screen(industry_id: str, wants: set[Want] = frozenset()) -> dict[s
         return screen
     # 산업 전체가 요즘 어떤지: 속한 회사 전체의 오늘 주가, 큰 회사들의 한 달 흐름, 이 산업 주가를 다룬 기사
     codes = [c.stock_code for c in members[:INDUSTRY_MOVERS]]
-    with ThreadPoolExecutor(max_workers=len(codes) + 2) as pool:
+    with ThreadPoolExecutor(max_workers=len(codes) + 3) as pool:
         news_job = pool.submit(_industry_news_about_price, record["name"].split("·")[0])
+        recent_job = pool.submit(_industry_recent_news, record) if "news" in wants else None
         today_job = pool.submit(_today_summary, [c.stock_code for c in members], seeds)
         month_changes = list(pool.map(_one_month_change, codes))
         screen["all_companies_today"] = today_job.result()
@@ -507,6 +526,8 @@ def _industry_screen(industry_id: str, wants: set[Want] = frozenset()) -> dict[s
             "notable_companies": list({m["name"]: m for m in notable}.values()),
         }
         screen["news_about_this_industry_price"] = news_job.result()
+        if recent_job is not None:
+            screen["recent_news_about_this_industry"] = recent_job.result()
     return screen
 
 
@@ -582,6 +603,65 @@ def _term_screen(term_id: str) -> dict[str, Any] | None:
         "easy_explanation": term.easy,
         "example": term.example,
     }
+
+
+# 다진 서비스 자체를 묻는 질문("다진은 어떻게 써요?", "커뮤니티 규칙 알려 줘")에 넘기는 안내
+SERVICE_GUIDE = {
+    "what_dajin_is": "주식을 처음 시작하는 사람이 기업을 쉬운 말로 이해하도록 돕는 서비스예요. "
+    "교육용 정보이고 투자 추천을 하지 않아요.",
+    "how_to_use": [
+        "첫 화면에서 기업 이름이나 종목코드로 검색하면 기업 화면으로 가요.",
+        "기업 화면은 개요, AI 분석, 재무 상세, 뉴스 상세, 커뮤니티, 비교하기 탭으로 나뉘어요. "
+        "처음이라면 개요와 AI 분석부터 보면 쉬워요.",
+        "비교하기 탭에서는 두 회사의 매출·영업이익·영업이익률·매출 증가율·부채비율을 같은 해 기준으로 나란히 봐요.",
+        "하트를 누르면 관심 기업에 담기고, 관심 기업 화면에서 모아 볼 수 있어요.",
+        "첫 화면에서 오늘의 시장 한마디, 관심이 몰리는 산업, 거래가 많은 기업을 볼 수 있어요.",
+        "점선 밑줄이 있는 낱말을 누르면 쉬운 설명이 나와요.",
+    ],
+    "how_to_learn_terms": "용어 카드 화면에 낱말퀴즈, 카드 학습, 문제 세 가지가 있어요. "
+    "카드로 뜻을 익히고, 문제와 낱말퀴즈로 확인하면 기억에 오래 남아요. 로그인하면 학습 기록이 저장돼요.",
+    "community_rules": [
+        "종목 추천, 매수·매도 권유, 유료 리딩방 홍보는 금지돼요.",
+        "오픈채팅방·텔레그램 같은 외부 채팅방으로 끌어가는 글과 욕설은 쓸 수 없어요.",
+        "글과 댓글은 500자까지 쓸 수 있고, 사진과 이모지를 하나씩 붙일 수 있어요.",
+        "규칙에 맞지 않는 글은 신고할 수 있고, 신고가 쌓이면 숨겨져요.",
+        "글을 쓰려면 Google 로그인이 필요해요.",
+    ],
+    "adk_points": {
+        "what": "앰똥깡(ADK)은 다진 안에서만 쓰는 포인트예요. 실제 돈이 아니고 사거나 바꿀 수 없어요.",
+        "earn": f"가입하면 {wallet_service.SIGNUP_BONUS} ADK를 받고, 낱말퀴즈 "
+        f"{credit_service.PUZZLES_PER_REWARD}개를 풀 때마다 {wallet_service.PUZZLE_REWARD} ADK를 받아요 "
+        f"(하루 {credit_service.DAILY_MAX_REWARDS}번까지).",
+        "spend": f"AI 리포트 만들기 {wallet_service.REPORT_PRICE} ADK, "
+        f"AI 챗봇 질문 {wallet_service.CHAT_PRICE} ADK예요.",
+    },
+}
+_ABOUT_SERVICE = re.compile(
+    r"다진|커뮤니티|규칙|앰똥깡|adk|낱말 ?퀴즈|용어 ?카드|관심 ?기업|사용법|어떻게 ?(쓰|써|사용|이용)"
+    r"|(용어|낱말|단어).*(익히|외우|공부|배우)",
+    re.IGNORECASE,
+)
+STARTER_TERMS = 8  # 낱말을 정하지 않고 물었을 때 예로 넘기는 기초 낱말 수
+
+
+def _starter_terms() -> list[dict[str, Any]]:
+    """용어 화면에서 낱말을 정하지 않고 물었을 때("이 용어를 예시로 설명해 줘") 예로 쓸 기초 낱말."""
+    wanted = (
+        "stock",
+        "market_cap",
+        "revenue",
+        "operating_income",
+        "operating_margin",
+        "per",
+        "pbr",
+    )
+    terms = {t.id: t for t in data_store.get_terms()}
+    picked = [terms[i] for i in wanted if i in terms]
+    picked += [t for t in terms.values() if t.category == "basic" and t not in picked]
+    return [
+        {"term": t.term, "easy_explanation": t.easy, "example": t.example}
+        for t in picked[:STARTER_TERMS]
+    ]
 
 
 MENTION_MAX = 3  # 질문에서 찾아 자료를 붙이는 회사 수
@@ -701,6 +781,8 @@ def build_screen(
     - 찾지 못한 회사·산업·용어는 빼고 넘긴다. 화면 정보가 이상해도 대답은 한다.
     """
     wants = set(plan.wants)
+    if _ASKS_NEWS.search(question):
+        wants.add("news")  # "뉴스 정리해 줘"는 의도 읽기가 놓쳐도 기사를 찾는다
     asked = list(
         dict.fromkeys(resolve_companies(plan.companies) + mentioned_companies(question, set()))
     )
@@ -747,8 +829,13 @@ def build_screen(
             asked_industries.insert(0, context.industry_id)  # "이 산업 어때?"
         elif context.industry_id not in asked_industries:
             screen["industry_on_screen"] = (_industry_screen(context.industry_id) or {}).get("name")
-    elif context.page == "learn" and context.term_id:
-        screen["term"] = _term_screen(context.term_id)
+    elif context.page == "learn":
+        # 프론트는 용어 화면에서 어느 낱말인지 보내지 않을 때가 많다. 그때는 기초 낱말을 예로 넘긴다
+        screen["term"] = _term_screen(context.term_id) if context.term_id else None
+        if screen["term"] is None:
+            screen["basic_terms_for_beginners"] = _starter_terms()
+    if _ABOUT_SERVICE.search(question):
+        screen["about_dajin_service"] = SERVICE_GUIDE
 
     # 화면에 없는 회사를 물어도 대답할 수 있게, 질문이 가리키는 회사의 자료를 찾아 붙인다
     others = [code for code in asked if code not in shown][:MENTION_MAX]
