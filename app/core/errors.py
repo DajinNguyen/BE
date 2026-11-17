@@ -40,6 +40,14 @@ def login_required() -> AppError:
     return AppError(401, "LOGIN_REQUIRED", "로그인이 필요해요.")
 
 
+def consent_required() -> AppError:
+    return AppError(
+        403,
+        "CONSENT_REQUIRED",
+        "이용약관과 개인정보 처리방침에 동의하고 만 14세 이상임을 확인해 주세요.",
+    )
+
+
 def nickname_taken() -> AppError:
     return AppError(409, "NICKNAME_TAKEN", "이미 다른 사람이 쓰고 있는 닉네임이에요.")
 

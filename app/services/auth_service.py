@@ -280,6 +280,20 @@ def update_nickname(session: Session, user: User, raw: str | None) -> User:
     return user
 
 
+def has_consented(user: User) -> bool:
+    """지금 약관 버전에 동의했는지 (약관이 바뀌면 다시 동의를 받는다)."""
+    return user.consented_at is not None and user.terms_version == get_settings().terms_version
+
+
+def record_consent(session: Session, user: User) -> User:
+    user.consented_at = _now()
+    user.terms_version = get_settings().terms_version
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
 def issue_session(user: User) -> str:
     expires = _now() + timedelta(days=get_settings().session_days)
     return jwt.encode(
