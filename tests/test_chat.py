@@ -239,9 +239,59 @@ def test_screens_follow_the_frontend_context(client, writer, monkeypatch):
     # 지금 보는 기업(right)이 먼저
     assert [c["name"] for c in compare["companies_being_compared"]] == ["삼성전자", "SK하이닉스"]
 
-    for page in ("main", "learn", "other"):
+    for page in ("main", "other"):
         screen = screen_for({"page": page})
         assert set(screen) == {"page", chat_service.ASKED_KEY}
+
+
+def test_suggested_questions_get_the_data_they_need(client, writer, monkeypatch):
+    """프론트의 추천 질문 가운데 자료가 없어서 엉뚱하게 대답하던 것들."""
+    monkeypatch.setattr(chat_service, "PER_MINUTE", 100)
+    monkeypatch.setattr(
+        chat_data,
+        "_industry_recent_news",
+        lambda record: [{"title": f"{record['name']} 수출 늘어", "press": "다진일보"}],
+    )
+    monkeypatch.setattr(chat_data, "_industry_news_about_price", lambda name: [])
+    monkeypatch.setattr(chat_data, "_today_summary", lambda codes, seeds: None)
+    monkeypatch.setattr(chat_data, "_one_month_change", lambda code: None)
+    login_as(client, 1)
+
+    def screen_for(context, question):
+        _ask(client, question, context)
+        return writer.calls[-1][0]
+
+    # 용어 화면은 어느 낱말인지 보내지 않는다 → 기초 낱말을 예로 넘긴다
+    learn = screen_for({"page": "learn"}, "이 용어를 예시로 설명해 줘")
+    terms = [t["term"] for t in learn["basic_terms_for_beginners"]]
+    assert {"매출액", "영업이익", "PER"} <= set(terms)
+    assert all(t["easy_explanation"] for t in learn["basic_terms_for_beginners"])
+
+    # 다진 서비스를 묻는 질문에는 서비스 안내를 넘긴다
+    for context, question in (
+        ({"page": "other"}, "다진은 어떻게 쓰면 돼요?"),
+        ({"page": "other"}, "용어를 쉽게 익히는 방법을 알려 줘"),
+        (
+            {
+                "page": "company",
+                "tab": "community",
+                "stock_code": "005930",
+                "company_name": "삼성전자",
+            },
+            "커뮤니티 규칙을 알려 줘",
+        ),
+    ):
+        guide = screen_for(context, question)["about_dajin_service"]
+        assert "리딩방" in guide["community_rules"][0]
+        assert "5 ADK" in guide["adk_points"]["spend"]
+    assert "about_dajin_service" not in screen_for({"page": "other"}, "재무제표가 뭐예요?")
+
+    # 산업 화면에서 뉴스를 정리해 달라고 하면 그 산업의 최근 소식을 넘긴다
+    context = {"page": "industry", "industry_id": "semiconductor", "industry_name": "반도체"}
+    industry = screen_for(context, "이 산업 뉴스를 쉽게 정리해 줘")["industries_asked_about"][0]
+    assert industry["recent_news_about_this_industry"][0]["title"] == "반도체 수출 늘어"
+    plain = screen_for(context, "이 산업은 어떤 일을 해요?")["industries_asked_about"][0]
+    assert "recent_news_about_this_industry" not in plain
 
 
 def test_unknown_screen_data_is_skipped_not_an_error(client, writer):
@@ -681,3 +731,30 @@ def test_answer_that_is_only_made_up_numbers_fails_and_is_free(client, writer):
     res = _ask(client)
     assert (res.status_code, res.json()["error"]["code"]) == (502, "CHAT_FAILED")
     assert _balance(client) == 50
+
+
+def test_industry_news_prefers_articles_that_name_the_industry(monkeypatch):
+    from types import SimpleNamespace
+
+    def article(title):
+        return SimpleNamespace(
+            title=title, summary="", press="다진일보", published_at=None, url="https://example.com"
+        )
+
+    monkeypatch.setattr(chat_data, "_article", lambda a: {"title": a.title})
+    found = [
+        article("코스피 1만 시대 온다"),
+        article("반도체 수출 늘어"),
+        article("반도체 공장 착공"),
+    ]
+    monkeypatch.setattr(chat_data.news_search, "latest", lambda query, size: found)
+    record = {"name": "반도체", "industry_id": "semiconductor"}
+    titles = [a["title"] for a in chat_data._industry_recent_news(record)]
+    assert titles == ["반도체 수출 늘어", "반도체 공장 착공"]
+
+    # 이름이 들어간 기사가 거의 없으면 받은 기사를 그대로 쓴다
+    monkeypatch.setattr(chat_data.news_search, "latest", lambda query, size: found[:2])
+    assert len(chat_data._industry_recent_news(record)) == 2
+    # 기사를 받지 못해도 대답은 한다
+    monkeypatch.setattr(chat_data.news_search, "latest", lambda query, size: None)
+    assert chat_data._industry_recent_news(record) == []
