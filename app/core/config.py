@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # production 이면 시작할 때 필수 설정을 점검하고, 빠졌으면 서버를 켜지 않는다 (check_production 참고)
+    environment: str = "development"
     database_url: str = "sqlite:///./dajin.db"
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-opus-5-5"
@@ -32,6 +34,41 @@ class Settings(BaseSettings):
     cookie_secure: bool = False  # https로 배포하면 true
     # 프론트 주소 (CORS 허용 + 로그인 후 돌아갈 곳). 첫 번째가 기본값
     frontend_origins: list[str] = ["http://localhost:5173", "http://localhost:5174"]
+
+
+def check_production(settings: Settings) -> tuple[list[str], list[str]]:
+    """운영(production)으로 켤 때 빠뜨리기 쉬운 설정을 점검한다. (오류, 경고) 목록을 돌려준다.
+
+    오류가 있으면 서버가 켜지지 않는다. 경고는 로그에만 남긴다.
+    """
+    errors: list[str] = []
+    warnings: list[str] = []
+    if not settings.jwt_secret or len(settings.jwt_secret) < 32:
+        errors.append(
+            "JWT_SECRET 을 32자 이상으로 정해 주세요 (없으면 재시작할 때마다 모두 로그아웃돼요)"
+        )
+    if not settings.cookie_secure:
+        errors.append("COOKIE_SECURE=true 로 해 주세요 (https 에서만 로그인 쿠키를 보내요)")
+    if not (settings.google_client_id and settings.google_client_secret):
+        errors.append("GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET 이 필요해요 (로그인이 안 돼요)")
+    if not settings.google_redirect_uri.startswith("https://"):
+        errors.append("GOOGLE_REDIRECT_URI 를 운영 도메인(https)으로 바꿔 주세요")
+    if settings.database_url.startswith("sqlite"):
+        errors.append("DATABASE_URL 을 PostgreSQL 로 바꿔 주세요 (SQLite 는 운영에 맞지 않아요)")
+    for origin in settings.frontend_origins:
+        if not origin.startswith("https://") or "localhost" in origin:
+            errors.append(f"FRONTEND_ORIGINS 에 운영 주소(https)만 넣어 주세요: {origin}")
+    if not (settings.anthropic_api_key or settings.gemini_api_key):
+        warnings.append("AI 키가 없어서 리포트가 데모용 목데이터로 나와요")
+    if settings.naver_prices_enabled:
+        warnings.append(
+            "네이버 금융 시세는 비공식 API라 상업 서비스에 쓰면 안 돼요. 정식 시세 소스로 바꿔 주세요"
+        )
+    if settings.google_news_enabled and not settings.naver_client_id:
+        warnings.append(
+            "Google 뉴스 RSS 는 비상업적 용도만 허용돼요. 뉴스 API 를 정식으로 계약해 주세요"
+        )
+    return errors, warnings
 
 
 @lru_cache
