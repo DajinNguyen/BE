@@ -10,6 +10,7 @@
 
 import hashlib
 import logging
+import re
 import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -18,9 +19,11 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import httpx
 import jwt
+from sqlalchemy import func
 from sqlmodel import Session, col, select
 
 from app.core.config import get_settings
+from app.core.errors import invalid_param, nickname_taken
 from app.models.user import RevokedSession, User
 
 logger = logging.getLogger(__name__)
@@ -230,10 +233,51 @@ def nickname_for(user: User) -> str:
 
     번호를 붙여서 겹치지 않고, 저장하지 않아도 늘 같은 이름이 나온다.
     """
+    if user.nickname:
+        return user.nickname
+    return default_nickname(user)
+
+
+def default_nickname(user: User) -> str:
     n = user.id or 0
     adjective = _NICK_ADJECTIVES[n % len(_NICK_ADJECTIVES)]
     noun = _NICK_NOUNS[(n // len(_NICK_ADJECTIVES)) % len(_NICK_NOUNS)]
     return f"{adjective}{noun}{n}"
+
+
+NICKNAME_MIN, NICKNAME_MAX = 2, 12
+_NICKNAME_RE = re.compile(r"^[0-9A-Za-z가-힣_]+$")
+_DEFAULT_NICKNAME_RE = re.compile(
+    "^(" + "|".join(_NICK_ADJECTIVES) + ")(" + "|".join(_NICK_NOUNS) + r")\d+$"
+)
+
+
+def update_nickname(session: Session, user: User, raw: str | None) -> User:
+    """닉네임을 바꾼다. 비우면 자동 닉네임으로 돌아간다.
+
+    2~12자의 한글·영문·숫자·밑줄만 쓸 수 있고, 다른 사람이 쓰는 닉네임(대소문자 무시)은 안 된다.
+    자동 닉네임 모양("다정한고래12")은 다른 사람 행세를 할 수 있어서 직접 정할 수 없다.
+    """
+    nickname = (raw or "").strip() or None
+    if nickname is not None:
+        if not NICKNAME_MIN <= len(nickname) <= NICKNAME_MAX:
+            raise invalid_param(f"닉네임은 {NICKNAME_MIN}~{NICKNAME_MAX}자로 정해 주세요.")
+        if not _NICKNAME_RE.match(nickname):
+            raise invalid_param("닉네임에는 한글, 영문, 숫자, 밑줄(_)만 쓸 수 있어요.")
+        if _DEFAULT_NICKNAME_RE.match(nickname) and nickname != default_nickname(user):
+            raise invalid_param("이 모양의 닉네임은 자동으로 만들어지는 이름이라 쓸 수 없어요.")
+        taken = session.exec(
+            select(User).where(
+                func.lower(col(User.nickname)) == nickname.lower(), col(User.id) != user.id
+            )
+        ).first()
+        if taken is not None:
+            raise nickname_taken()
+    user.nickname = nickname
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
 
 
 def issue_session(user: User) -> str:

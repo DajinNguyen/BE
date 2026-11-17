@@ -40,6 +40,10 @@ def login_required() -> AppError:
     return AppError(401, "LOGIN_REQUIRED", "로그인이 필요해요.")
 
 
+def nickname_taken() -> AppError:
+    return AppError(409, "NICKNAME_TAKEN", "이미 다른 사람이 쓰고 있는 닉네임이에요.")
+
+
 def insufficient_adk(required: int, balance: int) -> AppError:
     """ADK가 모자라서 쓸 수 없다. 화면에서 숫자를 쓸 수 있게 `required`·`balance` 도 같이 준다."""
     return AppError(

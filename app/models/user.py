@@ -12,6 +12,9 @@ class User(SQLModel, table=True):
     google_sub: str = Field(unique=True, index=True, max_length=255)  # Google 계정 고유 ID
     email: str = Field(max_length=320)
     name: str = Field(max_length=255)
+    nickname: str | None = Field(
+        default=None, max_length=20
+    )  # 직접 정한 닉네임 (없으면 자동 닉네임)
     created_at: datetime
     last_login_at: datetime
 
