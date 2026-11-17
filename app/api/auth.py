@@ -6,6 +6,7 @@ from app.api.deps import current_user
 from app.core.config import get_settings
 from app.core.db import get_session
 from app.core.errors import auth_not_configured
+from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.schemas.auth import AuthUser
 from app.services import auth_service
@@ -37,7 +38,7 @@ def _redirect_to_google(next_url: str) -> RedirectResponse:
     return response
 
 
-@router.get("/google/login")
+@router.get("/google/login", dependencies=[Depends(rate_limit("login", 20))])
 def login_with_google_path(
     redirect: str | None = Query(None, description="로그인 후 돌아갈 프론트 화면 경로 (/로 시작)"),
     referer: str | None = Header(None),
@@ -46,7 +47,7 @@ def login_with_google_path(
     return _redirect_to_google(auth_service.next_from_path(redirect, referer))
 
 
-@router.get("/google")
+@router.get("/google", dependencies=[Depends(rate_limit("login", 20))])
 def login_with_google(
     next: str | None = Query(None, description="로그인 후 돌아갈 프론트 전체 주소"),
 ):

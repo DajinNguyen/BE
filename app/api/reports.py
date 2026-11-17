@@ -5,6 +5,7 @@ from sqlmodel import Session
 
 from app.api.deps import current_user, get_report_writer
 from app.core.db import get_session, new_session
+from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.schemas.report import CompanyReport
 from app.services import report_service, wallet_service
@@ -26,7 +27,11 @@ async def get_report(stock_code: str, session: Session = Depends(get_session)):
     return await report_service.get_report(session, stock_code)
 
 
-@router.post("/{stock_code}/report", response_model=StartedReport)
+@router.post(
+    "/{stock_code}/report",
+    response_model=StartedReport,
+    dependencies=[Depends(rate_limit("report", 5))],
+)
 def create_report(
     stock_code: str,
     background_tasks: BackgroundTasks,

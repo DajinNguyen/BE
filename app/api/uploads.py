@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 
 from app.api.deps import current_user
+from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.schemas.community import UploadResult
 from app.services import upload_service
@@ -8,7 +9,12 @@ from app.services import upload_service
 router = APIRouter(prefix="/api", tags=["community"])
 
 
-@router.post("/uploads", response_model=UploadResult, status_code=201)
+@router.post(
+    "/uploads",
+    response_model=UploadResult,
+    status_code=201,
+    dependencies=[Depends(rate_limit("upload", 10))],
+)
 async def upload_image(
     request: Request,
     file: UploadFile = File(..., description="jpg·png·webp, 5MB 이하"),

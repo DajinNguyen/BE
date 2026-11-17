@@ -3,6 +3,7 @@ from sqlmodel import Session
 
 from app.api.deps import get_overview_writer
 from app.core.db import get_session, new_session
+from app.core.rate_limit import anonymous_ai_budget, rate_limit
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.compare import CompanyCompare
 from app.schemas.financials import Financials
@@ -37,7 +38,11 @@ def search_companies(
 
 
 # "/compare" 가 "/{stock_code}" 보다 먼저 와야 한다
-@router.get("/compare", response_model=CompanyCompare)
+@router.get(
+    "/compare",
+    response_model=CompanyCompare,
+    dependencies=[Depends(rate_limit("compare", 30))],
+)
 def compare_companies(
     background_tasks: BackgroundTasks,
     left: str = Query(..., description="비교할 기업의 종목코드"),
@@ -50,7 +55,12 @@ def compare_companies(
     한눈에 비교(`analysis`)는 처음 비교할 때 백그라운드에서 만들기 시작하고, 다음 요청부터 채워진다.
     """
     result, year = compare_service.compare(left.strip(), right.strip())
-    if writer is not None and compare_service.start_analysis(session, result, year):
+    if (
+        writer is not None
+        and anonymous_ai_budget.available()
+        and compare_service.start_analysis(session, result, year)
+    ):
+        anonymous_ai_budget.consume()
         background_tasks.add_task(
             compare_service.run_analysis, left.strip(), right.strip(), writer, new_session
         )
@@ -70,7 +80,12 @@ def get_company(
     """
     company = data_store.get_company_detail(stock_code)
     # 개요를 채우기 전의 시드 값으로 만들지 정한다 (채운 뒤에는 시드에 개요가 있는 것처럼 보인다)
-    if writer is not None and overview_service.start_generation(session, company):
+    if (
+        writer is not None
+        and anonymous_ai_budget.available()
+        and overview_service.start_generation(session, company)
+    ):
+        anonymous_ai_budget.consume()
         background_tasks.add_task(overview_service.run_generation, stock_code, writer, new_session)
     return overview_service.apply_overview(session, company)
 
@@ -97,7 +112,12 @@ def get_financials(
     """
     financials = data_store.get_financials(stock_code)
     corp_code = data_store.get_company(stock_code).corp_code
-    if writer is not None and segment_service.start_generation(session, financials, corp_code):
+    if (
+        writer is not None
+        and anonymous_ai_budget.available()
+        and segment_service.start_generation(session, financials, corp_code)
+    ):
+        anonymous_ai_budget.consume()
         background_tasks.add_task(segment_service.run_generation, stock_code, writer, new_session)
     return segment_service.apply_segments(session, financials)
 
@@ -114,7 +134,12 @@ def get_performance(
     "왜 이렇게 됐나요?"는 백그라운드에서 만들고, 다음 요청부터 채워진다.
     """
     detail, rcept_no = performance_service.get_detail(session, stock_code)
-    if writer is not None and performance_service.start_generation(session, stock_code, rcept_no):
+    if (
+        writer is not None
+        and anonymous_ai_budget.available()
+        and performance_service.start_generation(session, stock_code, rcept_no)
+    ):
+        anonymous_ai_budget.consume()
         background_tasks.add_task(
             performance_service.run_generation, stock_code, writer, new_session
         )
