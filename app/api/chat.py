@@ -3,6 +3,7 @@ from sqlmodel import Session
 
 from app.api.deps import current_user
 from app.core.db import get_session
+from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.schemas.chat import (
     ChatConversationDetail,
@@ -17,7 +18,7 @@ from app.services.chat_service import ChatWriter
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 
-@router.post("", response_model=ChatResponse)
+@router.post("", response_model=ChatResponse, dependencies=[Depends(rate_limit("chat", 20))])
 def ask(
     body: ChatRequest,
     user: User = Depends(current_user),

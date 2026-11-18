@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 from app.core.config import get_settings
 from app.core.db import get_session
-from app.core.errors import login_required
+from app.core.errors import consent_required, login_required
 from app.models.user import User
 from app.services import auth_service
 from app.services.auth_service import SESSION_COOKIE
@@ -52,8 +52,16 @@ def optional_user(
     return auth_service.user_from_session(session, token)
 
 
-def current_user(user: User | None = Depends(optional_user)) -> User:
-    """로그인이 필요한 API용. 로그인하지 않았으면 401 `LOGIN_REQUIRED`."""
+def session_user(user: User | None = Depends(optional_user)) -> User:
+    """로그인만 확인한다 (동의 여부는 보지 않는다). 내 정보·동의·탈퇴 API용."""
     if user is None:
         raise login_required()
+    return user
+
+
+def current_user(user: User = Depends(session_user)) -> User:
+    """로그인이 필요한 API용. 로그인하지 않았으면 401 `LOGIN_REQUIRED`,
+    약관 동의 전이면 403 `CONSENT_REQUIRED`."""
+    if get_settings().require_consent and not auth_service.has_consented(user):
+        raise consent_required()
     return user
