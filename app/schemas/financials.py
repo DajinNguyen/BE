@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 from app.schemas.common import SampleValue
@@ -73,6 +75,8 @@ class Financials(BaseModel):
     annual: list[AnnualResult]
     latest_quarter: LatestQuarter | None
     segments: Segments | None
+    # "무엇으로 돈을 버나요?"(segments)를 AI가 채우는 상태. "generating" 이면 몇 초 뒤 다시 요청
+    segments_status: Literal["ready", "generating", "failed", "none"] = "ready"
     indicators_as_of: str | None = None  # 주요 지표 기준 (예: "2025년 사업보고서")
     recent_performance: RecentPerformance | None = None  # 없으면 "아직 불러오지 못했어요"
     indicators: Indicators

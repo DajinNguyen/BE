@@ -48,4 +48,6 @@ class CompanyDetail(CompanySummary):
     business_segments: list[BusinessSegment] = []
     timeline: list[TimelineItem] = []
     timeline_source: str = ""
+    # "무슨 사업을 하나요?"·"회사의 방향"을 AI가 채우는 상태. "generating" 이면 몇 초 뒤 다시 요청
+    overview_status: Literal["ready", "generating", "failed", "none"] = "ready"
     price_as_of: str | None = None  # 현재가·등락률 기준일 (YYYY-MM-DD, 직전 장 마감일)

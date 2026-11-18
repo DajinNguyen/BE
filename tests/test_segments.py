@@ -139,10 +139,12 @@ def test_financials_fill_segments_from_report(client, hynix):
     # 백그라운드에서 만들고, 다음 요청부터 채워진다
     assert writer.calls == 1
     assert first["segments"]["items"] == []
+    assert first["segments_status"] == "generating"  # 프론트는 몇 초 뒤 다시 요청한다
 
     body = client.get("/api/companies/000660/financials").json()
     assert body["segments"]["base_label"] == "2025년 연간 기준"
     assert [s["name"] for s in body["segments"]["items"]] == ["조선·해양", "토건"]
+    assert body["segments_status"] == "ready"
     assert writer.calls == 1  # 같은 사업보고서로는 다시 만들지 않는다
 
 
@@ -152,6 +154,7 @@ def test_financials_without_table_does_not_retry(client, hynix):
     client.get("/api/companies/000660/financials")
     body = client.get("/api/companies/000660/financials").json()
     assert body["segments"]["items"] == []
+    assert body["segments_status"] == "failed"  # 다시 물어보지 않는다
     assert writer.calls == 1
     with new_session() as session:
         record = session.get(segment_service.CompanySegmentsRecord, "000660")
@@ -163,4 +166,5 @@ def test_seed_segments_are_kept(client):
     use_writer(client, writer)
     body = client.get("/api/companies/005930/financials").json()
     assert body["segments"]["items"][0]["code"] == "DS"
+    assert body["segments_status"] == "ready"
     assert writer.calls == 0
