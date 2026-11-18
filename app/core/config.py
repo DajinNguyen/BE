@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # 로그인 쿠키(JWT) 서명 키. 비워 두면 서버를 켤 때마다 새로 만들어서 재시작하면 로그아웃돼요.
     jwt_secret: str | None = None
     session_days: int = 7
+    # 약관 동의(만 14세 이상 확인 포함)를 마친 사용자만 서비스 기능을 쓰게 한다
+    require_consent: bool = True
+    terms_version: str = "2026-11-18"  # 약관이 바뀌어 다시 동의를 받을 때 올린다
     cookie_secure: bool = False  # https로 배포하면 true
     # 프론트 주소 (CORS 허용 + 로그인 후 돌아갈 곳). 첫 번째가 기본값
     frontend_origins: list[str] = ["http://localhost:5173", "http://localhost:5174"]

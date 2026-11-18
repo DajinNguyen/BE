@@ -2,13 +2,13 @@ from fastapi import APIRouter, Cookie, Depends, Header, Query, Response
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
-from app.api.deps import current_user
+from app.api.deps import session_user
 from app.core.config import get_settings
 from app.core.db import get_session
-from app.core.errors import auth_not_configured
+from app.core.errors import auth_not_configured, invalid_param
 from app.models.user import User
-from app.schemas.auth import AuthUser, ProfileUpdate
-from app.services import auth_service
+from app.schemas.auth import AuthUser, ConsentRequest, ProfileUpdate
+from app.services import account_service, auth_service
 from app.services.auth_service import SESSION_COOKIE, STATE_COOKIE, AuthFailed
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -89,11 +89,13 @@ def _auth_user(user: User) -> AuthUser:
         name=user.name,
         nickname=auth_service.nickname_for(user),
         joined_at=user.created_at.date(),
+        consent_required=get_settings().require_consent and not auth_service.has_consented(user),
+        terms_version=get_settings().terms_version,
     )
 
 
 @router.get("/me", response_model=AuthUser)
-def me(user: User = Depends(current_user)):
+def me(user: User = Depends(session_user)):
     """로그인한 사용자. 로그인하지 않았으면 401 `LOGIN_REQUIRED`."""
     return _auth_user(user)
 
@@ -101,7 +103,7 @@ def me(user: User = Depends(current_user)):
 @router.patch("/me", response_model=AuthUser)
 def update_me(
     body: ProfileUpdate,
-    user: User = Depends(current_user),
+    user: User = Depends(session_user),
     session: Session = Depends(get_session),
 ):
     """내 닉네임 바꾸기 (마이페이지). 비우면 자동 닉네임으로 돌아간다.
@@ -118,6 +120,30 @@ def logout(
 ):
     """로그아웃: 쿠키를 지우고, 그 쿠키 값도 서버에서 더는 받지 않는다."""
     auth_service.revoke_session(session, token)
+    response = Response(status_code=204)
+    response.delete_cookie(SESSION_COOKIE, path="/")
+    return response
+
+
+@router.post("/consent", response_model=AuthUser)
+def consent(
+    body: ConsentRequest,
+    user: User = Depends(session_user),
+    session: Session = Depends(get_session),
+):
+    """이용약관·개인정보 처리방침 동의와 만 14세 이상 확인. 셋 다 true 여야 한다 (아니면 400)."""
+    if not (body.terms and body.privacy and body.age_14):
+        raise invalid_param("이용약관, 개인정보 처리방침, 만 14세 이상 확인에 모두 동의해 주세요.")
+    return _auth_user(auth_service.record_consent(session, user))
+
+
+@router.delete("/me", status_code=204)
+def delete_me(
+    user: User = Depends(session_user),
+    session: Session = Depends(get_session),
+):
+    """회원 탈퇴: 계정과 내 기록(글·댓글·ADK·학습 기록 등)을 모두 지운다. 되돌릴 수 없다."""
+    account_service.delete_account(session, user)
     response = Response(status_code=204)
     response.delete_cookie(SESSION_COOKIE, path="/")
     return response
