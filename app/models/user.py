@@ -17,6 +17,9 @@ class User(SQLModel, table=True):
     )  # 직접 정한 닉네임 (없으면 자동 닉네임)
     created_at: datetime
     last_login_at: datetime
+    # 약관·개인정보 처리방침 동의와 만 14세 이상 확인 시각 (없으면 아직 동의 전)
+    consented_at: datetime | None = None
+    terms_version: str | None = Field(default=None, max_length=20)  # 동의한 약관 버전
 
 
 class RevokedSession(SQLModel, table=True):

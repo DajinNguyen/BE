@@ -115,3 +115,11 @@ def member(client):
     with new_session() as session:
         wallet_service.grant(session, user_id, 10_000, "signup", "테스트용", "test-grant")
     return user_id
+
+
+@pytest.fixture(autouse=True)
+def _no_consent_gate(monkeypatch):
+    """대부분의 테스트는 약관 동의를 마친 사용자를 가정한다 (동의 테스트는 다시 켠다)."""
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "require_consent", False)

@@ -403,3 +403,57 @@ def test_custom_nickname_appears_in_community(client):
     )
     assert res.status_code == 201, res.text
     assert res.json()["author"]["nickname"] == "주식왕"
+
+
+# ---- 약관 동의 · 만 14세 이상 확인 ----
+
+
+@pytest.fixture
+def consent_gate(monkeypatch):
+    monkeypatch.setattr(get_settings(), "require_consent", True)
+
+
+ALL_AGREED = {"terms": True, "privacy": True, "age_14": True}
+
+
+def test_new_user_must_consent_first(client, consent_gate):
+    _login(client)
+    assert client.get("/api/auth/me").json()["consent_required"] is True
+    res = client.get("/api/me/wallet")  # 서비스 기능은 막힌다
+    assert res.status_code == 403
+    assert res.json()["error"]["code"] == "CONSENT_REQUIRED"
+
+
+def test_consent_unlocks_service(client, consent_gate):
+    _login(client)
+    res = client.post("/api/auth/consent", json=ALL_AGREED)
+    assert res.status_code == 200
+    assert res.json()["consent_required"] is False
+    assert client.get("/api/me/wallet").status_code == 200
+
+
+@pytest.mark.parametrize("missing", ["terms", "privacy", "age_14"])
+def test_consent_needs_every_checkbox(client, consent_gate, missing):
+    _login(client)
+    res = client.post("/api/auth/consent", json={**ALL_AGREED, missing: False})
+    assert res.status_code == 400
+    assert client.get("/api/auth/me").json()["consent_required"] is True
+
+
+def test_consent_requires_login(client):
+    assert client.post("/api/auth/consent", json=ALL_AGREED).status_code == 401
+
+
+def test_account_pages_work_before_consent(client, consent_gate):
+    """동의 전에도 내 정보 확인·로그아웃·탈퇴는 할 수 있다 (동의하기 싫으면 나갈 수 있어야 한다)."""
+    _login(client)
+    assert client.get("/api/auth/me").status_code == 200
+    assert client.delete("/api/auth/me").status_code == 204
+
+
+def test_new_terms_version_asks_again(client, consent_gate, monkeypatch):
+    _login(client)
+    client.post("/api/auth/consent", json=ALL_AGREED)
+    monkeypatch.setattr(get_settings(), "terms_version", "2027-01-01")
+    assert client.get("/api/auth/me").json()["consent_required"] is True
+    assert client.get("/api/me/wallet").status_code == 403
