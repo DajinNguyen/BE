@@ -118,6 +118,14 @@ def member(client):
 
 
 @pytest.fixture(autouse=True)
+def _no_consent_gate(monkeypatch):
+    """대부분의 테스트는 약관 동의를 마친 사용자를 가정한다 (동의 테스트는 다시 켠다)."""
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "require_consent", False)
+
+
+@pytest.fixture(autouse=True)
 def _no_rate_limit(monkeypatch):
     """속도 제한은 전용 테스트에서만 켠다 (다른 테스트가 같은 주소로 많이 요청하므로)."""
     from app.core import rate_limit

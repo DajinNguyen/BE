@@ -323,3 +323,137 @@ def test_personal_responses_are_not_cached(client):
         assert res.status_code == 200
         assert res.headers["cache-control"] == "no-store"
         assert "Cookie" in res.headers["vary"]
+
+
+# ---- 마이페이지: 닉네임 바꾸기 ----
+
+
+def _login(client, n=1):
+    from tests.conftest import login_as
+
+    return login_as(client, n)
+
+
+def test_me_includes_joined_date(client):
+    _login(client)
+    body = client.get("/api/auth/me").json()
+    assert body["joined_at"]
+    assert body["nickname"] == body["nickname"].strip() and body["nickname"]
+
+
+def test_update_nickname_shows_everywhere(client):
+    _login(client)
+    res = client.patch("/api/auth/me", json={"nickname": "주식왕_1"})
+    assert res.status_code == 200
+    assert res.json()["nickname"] == "주식왕_1"
+    assert client.get("/api/auth/me").json()["nickname"] == "주식왕_1"
+
+
+def test_update_nickname_requires_login(client):
+    assert client.patch("/api/auth/me", json={"nickname": "주식왕"}).status_code == 401
+
+
+def test_clear_nickname_returns_to_default(client):
+    _login(client)
+    default = client.get("/api/auth/me").json()["nickname"]
+    client.patch("/api/auth/me", json={"nickname": "주식왕"})
+    res = client.patch("/api/auth/me", json={"nickname": "  "})
+    assert res.json()["nickname"] == default
+
+
+@pytest.mark.parametrize("nickname", ["가", "a" * 13, "공백 있음", "이모지😀", "<b>x</b>"])
+def test_invalid_nickname_is_rejected(client, nickname):
+    _login(client)
+    res = client.patch("/api/auth/me", json={"nickname": nickname})
+    assert res.status_code == 400
+    assert res.json()["error"]["code"] == "INVALID_PARAM"
+
+
+def test_nickname_must_be_unique_ignoring_case(client):
+    _login(client, 1)
+    client.patch("/api/auth/me", json={"nickname": "Dajin"})
+    _login(client, 2)
+    res = client.patch("/api/auth/me", json={"nickname": "dajin"})
+    assert res.status_code == 409
+    assert res.json()["error"]["code"] == "NICKNAME_TAKEN"
+    _login(client, 1)  # 내 닉네임을 다시 저장하는 건 괜찮다
+    assert client.patch("/api/auth/me", json={"nickname": "DAJIN"}).status_code == 200
+
+
+def test_cannot_impersonate_auto_nickname(client):
+    _login(client, 1)
+    other = _login(client, 2)
+    from app.core.db import new_session
+    from app.models.user import User
+
+    with new_session() as s:
+        auto = auth_service.default_nickname(s.get(User, other))
+    _login(client, 1)
+    assert client.patch("/api/auth/me", json={"nickname": auto}).status_code == 400
+    _login(client, 2)  # 본인의 자동 닉네임은 그대로 저장할 수 있다
+    assert client.patch("/api/auth/me", json={"nickname": auto}).status_code == 200
+
+
+def test_custom_nickname_appears_in_community(client):
+    _login(client)
+    client.patch("/api/auth/me", json={"nickname": "주식왕"})
+    res = client.post(
+        "/api/companies/005930/posts",
+        json={"title": "인사", "body": "안녕하세요", "category": "question"},
+    )
+    assert res.status_code == 201, res.text
+    assert res.json()["author"]["nickname"] == "주식왕"
+
+
+# ---- 약관 동의 · 만 14세 이상 확인 ----
+
+
+@pytest.fixture
+def consent_gate(monkeypatch):
+    monkeypatch.setattr(get_settings(), "require_consent", True)
+
+
+ALL_AGREED = {"terms": True, "privacy": True, "age_14": True}
+
+
+def test_new_user_must_consent_first(client, consent_gate):
+    _login(client)
+    assert client.get("/api/auth/me").json()["consent_required"] is True
+    res = client.get("/api/me/wallet")  # 서비스 기능은 막힌다
+    assert res.status_code == 403
+    assert res.json()["error"]["code"] == "CONSENT_REQUIRED"
+
+
+def test_consent_unlocks_service(client, consent_gate):
+    _login(client)
+    res = client.post("/api/auth/consent", json=ALL_AGREED)
+    assert res.status_code == 200
+    assert res.json()["consent_required"] is False
+    assert client.get("/api/me/wallet").status_code == 200
+
+
+@pytest.mark.parametrize("missing", ["terms", "privacy", "age_14"])
+def test_consent_needs_every_checkbox(client, consent_gate, missing):
+    _login(client)
+    res = client.post("/api/auth/consent", json={**ALL_AGREED, missing: False})
+    assert res.status_code == 400
+    assert client.get("/api/auth/me").json()["consent_required"] is True
+
+
+def test_consent_requires_login(client):
+    assert client.post("/api/auth/consent", json=ALL_AGREED).status_code == 401
+
+
+def test_account_pages_work_before_consent(client, consent_gate):
+    """동의 전에도 내 정보 확인·로그아웃·탈퇴는 할 수 있다 (동의하기 싫으면 나갈 수 있어야 한다)."""
+    _login(client)
+    assert client.get("/api/auth/me").status_code == 200
+    assert client.delete("/api/auth/me").status_code == 204
+
+
+def test_new_terms_version_asks_again(client, consent_gate, monkeypatch):
+    _login(client)
+    client.post("/api/auth/consent", json=ALL_AGREED)
+    monkeypatch.setattr(get_settings(), "terms_version", "2027-01-01")
+    assert client.get("/api/auth/me").json()["consent_required"] is True
+    assert client.get("/api/me/wallet").status_code == 403
