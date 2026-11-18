@@ -287,9 +287,7 @@ def test_cumulative_values_in_three_month_fields_are_read_again_as_cumulative():
         quarter_segment_service.to_items(current, q3, **totals)
 
 
-def test_suspected_cumulative_reads_the_previous_report(
-    client, use_dart, monkeypatch
-):  # noqa: F811
+def test_suspected_cumulative_reads_the_previous_report(client, monkeypatch):
     """3개월 칸 합계가 분기 매출의 3배면 앞 분기 보고서도 읽는다 (AI 호출 2번)."""
     cumulative = _extraction(
         items=[
