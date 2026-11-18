@@ -138,3 +138,24 @@ def test_works_without_dart(client):
     assert dart.get_dart() is None
     assert client.get("/api/companies", params={"query": "현대자동차"}).json() == []
     assert client.get("/api/companies/000270").json()["corp_code"] is None
+
+
+@pytest.mark.parametrize(
+    "heading",
+    [
+        "27. 부문별 보고 (연결)",  # 삼성전자
+        "4. 영업부문 (연결)",  # SK하이닉스
+        "34. 영업부문 - 연결 (연결)",  # 심텍
+        "2-2. 영업부문 (연결)",  # 셀트리온
+        " | 영업부문에 대한 공시",  # 번호 붙은 제목이 없는 보고서
+    ],
+)
+def test_segment_note_is_found_by_heading(heading):
+    text = f"\n1. 일반사항\n본문\n{heading}\n | 매출액 | 1,000 |{' 설명' * 100}\n35. 금융상품\n다른 주석\n"
+    note = dart.segment_note_text(text)
+    assert note.startswith(heading.strip()) and "1,000" in note
+    assert "다른 주석" not in note  # 다음 주석 전까지만
+
+
+def test_segment_note_missing():
+    assert dart.segment_note_text("\n1. 일반사항\n본문\n") == ""

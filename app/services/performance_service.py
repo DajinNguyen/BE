@@ -10,7 +10,7 @@
 - AI는 받은 숫자·기사에 있는 내용만 쓰고, 이유마다 근거 기사를 붙인다. 근거가 없는 이유는 버린다.
 - 기사가 없거나 AI 키가 없으면 비워 둔다 (그 블록만 "자료가 없어요").
 
-사업별 분기 실적(`segments`)은 DART API에 없어서 아직 비워 둔다.
+사업별 분기 실적(`segments`)은 DART API에 없어서 분기 보고서 원문에서 뽑는다 (`quarter_segment_service`).
 """
 
 import json
@@ -42,7 +42,7 @@ from app.schemas.performance import (
     QuarterPerformance,
     ReasonEvidence,
 )
-from app.services import dart, data_store, news_search
+from app.services import dart, data_store, news_search, quarter_segment_service
 from app.services.dart_financials import (
     BUSINESS_REPORT,
     OPERATING_INCOME_NAMES,
@@ -295,13 +295,26 @@ def _report_date(rcept_no: str) -> str:
     return f"{rcept_no[:4]}-{rcept_no[4:6]}-{rcept_no[6:8]}"
 
 
-def build_detail(company_name: str, chain: list[Quarter]) -> PerformanceDetail:
-    latest = chain[-1]
+def _scaler(latest: Quarter) -> tuple[str, Callable[[int], float]]:
+    """화면 단위와 원 → 화면 단위 변환. 최근 분기 매출이 10조 원 미만이면 억 원."""
     in_trillion = latest.revenue >= TRILLION_UNIT_FROM
     unit, divisor, digits = ("조 원", TRILLION, 2) if in_trillion else ("억 원", HUNDRED_MILLION, 0)
+    return unit, lambda won: round(won / divisor, digits)
 
-    def scale(won: int) -> float:
-        return round(won / divisor, digits)
+
+def same_quarter_last_year(chain: list[Quarter]) -> Quarter | None:
+    latest = chain[-1]
+    return next((c for c in chain if (c.year, c.q) == (latest.year - 1, latest.q)), None)
+
+
+def previous_quarter(chain: list[Quarter]) -> Quarter | None:
+    """바로 앞 분기 (같은 해 2·3분기일 때 누적 빼기에 쓴다)."""
+    return chain[-2] if len(chain) > 1 else None
+
+
+def build_detail(company_name: str, chain: list[Quarter]) -> PerformanceDetail:
+    latest = chain[-1]
+    unit, scale = _scaler(latest)
 
     by_key = {(c.year, c.q): c for c in chain}
     previous = (latest.year, latest.q - 1) if latest.q > 1 else (latest.year - 1, 4)
@@ -349,7 +362,16 @@ def get_detail(session: Session, stock_code: str) -> tuple[PerformanceDetail, st
     if record is not None and record.rcept_no == rcept_no:
         reasons, summary = saved(record)
         detail = detail.model_copy(update={"reasons": reasons, "ai_summary": summary})
+    items = quarter_segment_service.saved_items(session, stock_code, rcept_no)
+    if items:
+        segments = quarter_segment_service.to_segments(items, _scaler(chain[-1])[1])
+        detail = detail.model_copy(update={"segments": segments})
     return detail, rcept_no
+
+
+def latest_quarter(stock_code: str) -> tuple[str, list[Quarter]]:
+    """(회사 이름, 분기 목록). 사업별 성과를 만들 때 쓴다."""
+    return _chain(stock_code)
 
 
 def saved(record: CompanyPerformanceRecord) -> tuple[list[PerformanceReason], str | None]:

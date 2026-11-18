@@ -57,6 +57,22 @@ def _section_text(document: str, start: str, end: str) -> str:
         return ""
     tail = re.search(title.format(re.escape(end)), document[head.end() :])
     chunk = document[head.start() : head.end() + tail.start()] if tail else document[head.start() :]
+    return to_text(chunk)
+
+
+def to_text(chunk: str) -> str:
+    """공시 원문(XML)을 글자만 남긴다. 표는 한 줄에 한 행, 칸은 " | " 로 나눈다.
+
+    원문의 줄바꿈은 모양일 뿐이라 지운다 (남기면 표의 칸이 한 줄씩 흩어져서 어느 열의 숫자인지 알 수 없다).
+    칸 안의 문단·줄바꿈도 띄어쓰기로 바꾼다.
+    """
+    chunk = re.sub(r"[\r\n]+", " ", chunk)
+    chunk = re.sub(
+        r"(<T[DHE][^>]*>)(.*?)(?=<T[DHER]|</TR|</TABLE)",
+        lambda m: m.group(1) + re.sub(r"</?(P|BR)[^>]*>", " ", m.group(2), flags=re.I),
+        chunk,
+        flags=re.I | re.S,
+    )
     chunk = re.sub(r"<(TR|P|TITLE|BR)[^>]*>", "\n", chunk, flags=re.I)
     chunk = re.sub(r"<T[DHE][^>]*>", " | ", chunk, flags=re.I)  # 표 칸
     chunk = re.sub(r"<[^>]+>", "", chunk)
@@ -64,6 +80,26 @@ def _section_text(document: str, start: str, end: str) -> str:
     chunk = re.sub(r"[ \t\u00a0]+", " ", chunk)
     chunk = re.sub(r"\n\s*\n+", "\n", chunk)
     return chunk.strip()
+
+
+# 재무제표 주석의 "영업부문" 주석 제목 (예: "4. 영업부문 (연결)", "34. 영업부문 - 연결 (연결)")
+SEGMENT_NOTE_TITLE = re.compile(
+    r"\n\d{1,2}(?:-\d{1,2})?\.\s*(영업\s*부문|부문\s*별?\s*(?:정보|보고))[^\n]{0,30}\n"
+)  # 예: "27. 부문별 보고 (연결)", "2-2. 영업부문 (연결)"
+# 번호 붙은 주석 제목이 없는 보고서: 표 제목이나 문장에서 찾는다
+SEGMENT_NOTE_FALLBACK = re.compile(r"\n[^\n]{0,20}(영업부문에 대한 공시|영업부문별)[^\n]{0,40}\n")
+NOTE_TITLE = re.compile(r"\n\d{1,2}\.\s*\S[^\n|]{0,60}\n")
+MAX_SEGMENT_NOTE_CHARS = 14_000
+
+
+def segment_note_text(text: str) -> str:
+    """보고서 글자에서 첫 "영업부문" 주석(연결 기준이 먼저 나온다)만. 없으면 ""."""
+    head = SEGMENT_NOTE_TITLE.search(text) or SEGMENT_NOTE_FALLBACK.search(text)
+    if head is None:
+        return ""
+    tail = NOTE_TITLE.search(text, head.end() + 200)
+    end = tail.start() if tail else len(text)
+    return text[head.start() : min(end, head.start() + MAX_SEGMENT_NOTE_CHARS)].strip()
 
 
 def business_section_text(document: str) -> str:
@@ -257,13 +293,8 @@ class DartClient:
             self._write_cache(name, data)
         return AnnualReport(**data) if data else None
 
-    def business_section(self, rcept_no: str) -> str | None:
-        """사업보고서 원문의 "II. 사업의 내용" 글자. 받지 못하거나 찾지 못하면 None."""
-        path = self._cache_dir / f"business_{rcept_no}.txt"
-        try:
-            return path.read_text(encoding="utf-8")
-        except OSError:
-            pass
+    def _document(self, rcept_no: str) -> str | None:
+        """공시 원문(XML) 본문. 받지 못하면 None."""
         try:
             res = httpx.get(
                 f"{BASE_URL}/document.xml",
@@ -278,6 +309,18 @@ class DartClient:
         except (httpx.HTTPError, zipfile.BadZipFile, ValueError) as e:
             logger.warning("DART 사업보고서 원문을 받지 못했어요 (%s): %s", rcept_no, e)
             return None
+        return document
+
+    def business_section(self, rcept_no: str) -> str | None:
+        """사업보고서 원문의 "II. 사업의 내용" 글자. 받지 못하거나 찾지 못하면 None."""
+        path = self._cache_dir / f"business_{rcept_no}.txt"
+        try:
+            return path.read_text(encoding="utf-8")
+        except OSError:
+            pass
+        document = self._document(rcept_no)
+        if document is None:
+            return None
         text = business_section_text(document)
         if not text:
             logger.warning("사업보고서에서 사업의 내용을 찾지 못했어요 (%s)", rcept_no)
@@ -288,6 +331,23 @@ class DartClient:
         except OSError:
             logger.warning("DART 캐시 파일을 쓰지 못했어요: %s", path.name)
         return text
+
+    def quarter_report(self, rcept_no: str) -> tuple[str, str] | None:
+        """분기·반기 보고서의 (영업부문 주석, 사업의 내용). 받지 못하면 None, 찾지 못한 칸은 ""."""
+        path = self._cache_dir / f"quarter2_{rcept_no}.json"  # 2: 표를 한 줄에 한 행으로
+        try:
+            cached = json.loads(path.read_text(encoding="utf-8"))
+            return cached["segment_note"], cached["business"]
+        except (OSError, ValueError, KeyError):
+            pass
+        document = self._document(rcept_no)
+        if document is None:
+            return None
+        note = segment_note_text("\n" + to_text(document))
+        business = business_section_text(document)
+        if note:  # 못 찾았으면 저장하지 않는다 (찾는 방법을 고치면 다시 찾아본다)
+            self._write_cache(path.name, {"segment_note": note, "business": business})
+        return note, business
 
 
 @lru_cache
@@ -316,6 +376,11 @@ def single_accounts(corp_code: str, year: int, reprt_code: str) -> list[dict] | 
 def latest_annual_report(corp_code: str) -> AnnualReport | None:
     client = get_dart()
     return client.latest_annual_report(corp_code) if client else None
+
+
+def quarter_report(rcept_no: str) -> tuple[str, str] | None:
+    client = get_dart()
+    return client.quarter_report(rcept_no) if client else None
 
 
 def business_section(rcept_no: str) -> str | None:
