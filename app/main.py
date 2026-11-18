@@ -1,9 +1,12 @@
+import logging
 import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 from app.api import (
     auth,
@@ -20,15 +23,26 @@ from app.api import (
     uploads,
     watchlist,
 )
-from app.core.config import get_settings
-from app.core.db import init_db
+from app.core.config import check_production, get_settings
+from app.core.db import engine, init_db
 from app.core.errors import register_error_handlers
 from app.services import dart, upload_service
 from app.services.auth_service import SESSION_COOKIE
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    settings = get_settings()
+    if settings.environment == "production":
+        errors, warnings = check_production(settings)
+        for w in warnings:
+            logger.warning("운영 설정 점검: %s", w)
+        if errors:
+            raise RuntimeError(
+                "운영 설정이 부족해서 서버를 켤 수 없어요:\n- " + "\n- ".join(errors)
+            )
     init_db()
     upload_service.upload_dir()  # 사진 폴더가 없으면 만든다
     if dart.get_dart() is not None:
@@ -63,6 +77,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/api/health", tags=["health"])
+def health():
+    """배포 후 상태 확인용 (로드밸런서·모니터링이 부른다). DB에 연결되지 않으면 503."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("헬스 체크: DB 연결 실패")
+        return JSONResponse({"status": "error"}, status_code=503)
+    return {"status": "ok"}
+
+
 app.include_router(home.router)
 app.include_router(companies.router)
 app.include_router(reports.router)
