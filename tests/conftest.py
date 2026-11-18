@@ -134,3 +134,11 @@ def _no_rate_limit(monkeypatch):
     monkeypatch.setattr(get_settings(), "rate_limit_enabled", False)
     rate_limit.windows.clear()
     rate_limit.anonymous_ai_budget.reset()
+
+
+@pytest.fixture(autouse=True)
+def _no_ai_retry_wait(monkeypatch):
+    """AI 혼잡 오류를 다시 시도할 때 테스트는 기다리지 않는다."""
+    from app.services import ai_retry
+
+    monkeypatch.setattr(ai_retry, "RETRY_DELAYS_SECONDS", (0, 0, 0))

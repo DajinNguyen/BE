@@ -16,11 +16,13 @@ from app.services import (
     overview_service,
     performance_service,
     price_service,
+    quarter_segment_service,
     segment_service,
 )
 from app.services.compare_service import CompareWriter
 from app.services.overview_service import OverviewWriter
 from app.services.performance_service import ReasonWriter
+from app.services.quarter_segment_service import QuarterSegmentWriter
 from app.services.segment_service import SegmentWriter
 
 router = APIRouter(prefix="/api/companies", tags=["companies"])
@@ -128,12 +130,38 @@ def get_performance(
     background_tasks: BackgroundTasks,
     session: Session = Depends(get_session),
     writer: ReasonWriter | None = Depends(performance_service.get_reason_writer),
+    segment_writer: QuarterSegmentWriter | None = Depends(
+        quarter_segment_service.get_quarter_segment_writer
+    ),
 ):
     """재무 상세 "최근 사업 성과 분석". 실적 자료가 없으면 404 `DATA_NOT_FOUND`.
 
-    "왜 이렇게 됐나요?"는 백그라운드에서 만들고, 다음 요청부터 채워진다.
+    "왜 이렇게 됐나요?"와 "사업별 성과"는 백그라운드에서 만들고, 다음 요청부터 채워진다.
     """
     detail, rcept_no = performance_service.get_detail(session, stock_code)
+    name, chain = performance_service.latest_quarter(stock_code)
+    latest = chain[-1]
+    if (
+        segment_writer is not None
+        and anonymous_ai_budget.available()
+        and quarter_segment_service.start_generation(session, stock_code, rcept_no, latest.q)
+    ):
+        anonymous_ai_budget.consume()
+        last_year = performance_service.same_quarter_last_year(chain)
+        before = performance_service.previous_quarter(chain)
+        background_tasks.add_task(
+            quarter_segment_service.run_generation,
+            stock_code,
+            segment_writer,
+            new_session,
+            company_name=name,
+            rcept_no=rcept_no,
+            revenue=latest.revenue,
+            operating_income=latest.operating_income,
+            prior_revenue=last_year.revenue if last_year else None,
+            quarter=latest.q,
+            previous_rcept_no=before.rcept_no if before else None,
+        )
     if (
         writer is not None
         and anonymous_ai_budget.available()
