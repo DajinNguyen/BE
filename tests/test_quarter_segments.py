@@ -245,3 +245,78 @@ def test_cumulative_only_table_subtracts_the_previous_report():
             current, q3, revenue=120_000 * hundred_million, operating_income=0,
             prior_revenue=None, company_name="현대차", quarter=3,
         )  # fmt: skip
+
+
+def test_cumulative_values_in_three_month_fields_are_read_again_as_cumulative():
+    """SK텔레콤처럼 AI가 3개월 칸에 누적을 옮기면, 합계가 분기 매출의 몇 배라서 알아채고 다시 읽는다."""
+    q3 = " | 무선 | 유선 | 매출액 | 9,000 | 3,000 | 전년동기 | 매출액 | 8,700 | 2,700"
+    h1 = " | 무선 | 유선 | 매출액 | 6,000 | 2,000 | 전년동기 | 매출액 | 5,800 | 1,800"
+
+    def drafts(values):
+        return QuarterSegmentExtraction(
+            kind="segments",
+            unit="억원",
+            items=[
+                QuarterSegmentDraft(name=name, table_name=name, revenue=now, prior_revenue=before)
+                for name, now, before in values
+            ],
+        )
+
+    current = drafts([("무선", "9,000", "8,700"), ("유선", "3,000", "2,700")])
+    previous = drafts([("무선", "6,000", "5,800"), ("유선", "2,000", "1,800")])
+    hundred_million = 100_000_000
+    totals = {
+        "revenue": 4_000 * hundred_million,  # 3분기 3개월 매출
+        "operating_income": 0,
+        "prior_revenue": None,
+        "company_name": "SK텔레콤",
+        "quarter": 3,
+    }
+    assert quarter_segment_service.suspect_cumulative(current, q3, totals["revenue"], 3)
+    assert not quarter_segment_service.suspect_cumulative(current, q3, totals["revenue"], 1)
+
+    items = quarter_segment_service.to_items(
+        current, q3, previous=previous, previous_source=h1, **totals
+    )
+    assert [(i["name"], i["revenue"], i["prior_revenue"]) for i in items] == [
+        ("무선", 3_000 * hundred_million, 2_900 * hundred_million),
+        ("유선", 1_000 * hundred_million, 900 * hundred_million),
+    ]
+    # 앞 분기 보고서가 없으면 고칠 수 없으니 그대로 버린다
+    with pytest.raises(SegmentsUnavailable):
+        quarter_segment_service.to_items(current, q3, **totals)
+
+
+def test_suspected_cumulative_reads_the_previous_report(
+    client, use_dart, monkeypatch
+):  # noqa: F811
+    """3개월 칸 합계가 분기 매출의 3배면 앞 분기 보고서도 읽는다 (AI 호출 2번)."""
+    cumulative = _extraction(
+        items=[
+            QuarterSegmentDraft(name="DX", revenue="152,731,608"),
+            QuarterSegmentDraft(name="DS", revenue="316,335,814"),
+        ]
+    )
+    reads = []
+
+    def fake_source(rcept_no):
+        reads.append(rcept_no)
+        return SOURCE
+
+    monkeypatch.setattr(quarter_segment_service, "_read_source", fake_source)
+    writer = FakeWriter(cumulative)
+    status = quarter_segment_service.run_generation(
+        "005930",
+        writer,
+        new_session,
+        company_name="삼성전자",
+        rcept_no="q3",
+        revenue=150 * TRILLION,
+        operating_income=60 * TRILLION,
+        prior_revenue=None,
+        quarter=3,
+        previous_rcept_no="h1",
+    )
+    assert reads == ["q3", "h1"]
+    # 같은 표를 앞 분기라고 돌려줬으니 빼면 0 → 그래도 믿을 수 없어서 failed
+    assert status == "failed"

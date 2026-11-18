@@ -212,6 +212,49 @@ def needs_previous(extraction: QuarterSegmentExtraction, quarter: int) -> bool:
     )
 
 
+AMOUNT_FIELDS = ("revenue", "prior_revenue", "operating_income")
+
+
+def as_cumulative(extraction: QuarterSegmentExtraction) -> QuarterSegmentExtraction:
+    """3개월 칸에 누적 값을 잘못 옮긴 표로 보고, 모든 값을 누적으로 다시 읽는다.
+
+    누적 칸이 비어 있으면 3개월 칸 값을 누적으로 옮기고 3개월 칸은 비운다.
+    """
+    items = []
+    for d in extraction.items:
+        changes: dict[str, str] = {}
+        for field in AMOUNT_FIELDS:
+            changes[f"{field}_cumulative"] = getattr(d, f"{field}_cumulative").strip() or getattr(
+                d, field
+            )
+            changes[field] = ""
+        items.append(d.model_copy(update=changes))
+    return extraction.model_copy(update={"items": items})
+
+
+def _revenue_sum(extraction: QuarterSegmentExtraction, source: str) -> int:
+    factor = _unit_factor(extraction.unit)
+    if factor is None:
+        return 0
+    values = (_amount(d.revenue, source, factor) for d in extraction.items)
+    return sum(v for v in values if v and v > 0)
+
+
+def suspect_cumulative(
+    extraction: QuarterSegmentExtraction, source: str, revenue: int, quarter: int
+) -> bool:
+    """2·3분기인데 3개월 칸 합계가 분기 매출보다 훨씬 크면 누적 값을 옮긴 것으로 의심한다.
+
+    (예: SK텔레콤 3분기 "무선 9.86조" — 분기 매출 4.4조의 약 3배)
+    """
+    return (
+        quarter in (2, 3)
+        and extraction.kind in ("segments", "products")
+        and revenue > 0
+        and _revenue_sum(extraction, source) / revenue > SUM_RATIO_RANGE[1]
+    )
+
+
 def _key(draft: QuarterSegmentDraft) -> str:
     return "".join((draft.table_name or draft.name).split())
 
@@ -232,7 +275,37 @@ def to_items(
 
     revenue·operating_income·prior_revenue 는 그 분기(와 작년 같은 분기) DART 회사 전체 값이다.
     표에 3개월 열이 없으면 누적에서 앞 분기 보고서(previous)의 누적을 빼서 구한다 (1분기는 누적 = 3개월).
+    표 전체를 누적으로 옮긴 것 같으면(합계가 분기 매출의 몇 배) 누적으로 다시 읽어서 앞 분기 누적을 뺀다.
     """
+    totals = {
+        "revenue": revenue,
+        "operating_income": operating_income,
+        "prior_revenue": prior_revenue,
+        "company_name": company_name,
+        "quarter": quarter,
+        "previous_source": previous_source,
+    }
+    try:
+        return _to_items(extraction, source, previous=previous, **totals)
+    except SegmentsUnavailable:
+        if previous is None or not suspect_cumulative(extraction, source, revenue, quarter):
+            raise
+    logger.info("3개월 칸에 누적 값이 들어간 것 같아서 누적으로 다시 읽어요")
+    return _to_items(as_cumulative(extraction), source, previous=as_cumulative(previous), **totals)
+
+
+def _to_items(
+    extraction: QuarterSegmentExtraction,
+    source: str,
+    *,
+    revenue: int,
+    operating_income: int,
+    prior_revenue: int | None,
+    company_name: str,
+    quarter: int,
+    previous: QuarterSegmentExtraction | None,
+    previous_source: str,
+) -> list[dict[str, Any]]:
     if extraction.kind == "single":
         return [
             {
@@ -404,7 +477,8 @@ def run_generation(
 ) -> str:
     """백그라운드 작업: 사업별 분기 실적을 만들어 저장한다. "done" | "failed".
 
-    표에 3개월 열이 없으면 앞 분기 보고서(previous_rcept_no)도 읽어서 누적끼리 뺀다 (AI 호출 2번).
+    표에 3개월 열이 없거나 3개월 칸에 누적 값이 들어간 것 같으면 앞 분기 보고서(previous_rcept_no)도
+    읽어서 누적끼리 뺀다 (AI 호출 2번).
     """
     try:
         source = _read_source(rcept_no)
@@ -412,7 +486,10 @@ def run_generation(
         if extraction is None:
             raise RuntimeError(FAILED_REASON)
         previous, previous_source = None, ""
-        if needs_previous(extraction, quarter) and previous_rcept_no:
+        if previous_rcept_no and (
+            needs_previous(extraction, quarter)
+            or suspect_cumulative(extraction, source, revenue, quarter)
+        ):
             previous_source = _read_source(previous_rcept_no)
             previous = writer.write(previous_source)
         items = to_items(
