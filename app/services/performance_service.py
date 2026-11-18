@@ -71,12 +71,22 @@ DART_VIEWER = "https://dart.fss.or.kr/dsaf001/main.do?rcpNo="
 NEWS_COUNT = 8  # AI에게 보여줄 기사 수
 NEWS_WINDOW = timedelta(days=75)  # 분기가 끝난 뒤 이 기간 안에 나온 기사만 그 분기 실적 기사로 본다
 NEWS_WORDS = ("분기", "실적", "영업이익", "영업익", "매출")  # 제목에 이 중 하나는 있어야 한다
+FORECAST_WORDS = (
+    "전망",
+    "기대",
+    "임박",
+    "앞두고",
+    "앞둔",
+    "예상",
+)  # 발표 전 예상 기사는 이유가 아니다
+NEWS_SLICE = timedelta(days=15)  # 기사 기간을 이만큼씩 나눠서 찾는다
 MAX_REASONS = 3
 MAX_EVIDENCE = 2
 MAX_SUMMARY_CHARS = 60  # 한 줄 요약이 이보다 길면 버린다
 BANNED_WORDS = ("매수", "매도", "추천", "목표가", "사세요", "파세요")
 GENERATION_TIMEOUT = timedelta(minutes=5)
-RETRY_AFTER = timedelta(hours=6)  # 실패했거나 기사가 없었으면 이만큼 뒤에 다시 해 본다
+RETRY_AFTER = timedelta(hours=6)  # 기사가 없었으면 이만큼 뒤에 다시 찾아본다
+RETRY_FAILED_AFTER = timedelta(minutes=30)  # 검색·AI 가 실패했으면 이만큼 뒤에 다시 해 본다
 
 SYSTEM_PROMPT = """\
 당신은 주식을 처음 시작하는 10대 초보자에게 회사의 지난 분기 실적을 설명해 주는 선생님이에요.
@@ -368,28 +378,83 @@ def to_summary(draft: ReasonsDraft, reasons: list[PerformanceReason]) -> str | N
 # --------------------------------------------------------------------------
 
 
-def quarter_news(stock_code: str, latest: Quarter) -> list[NewsArticle]:
-    """그 분기 실적을 다룬 기사 (관련도순).
+def _compact(text: str) -> str:
+    return "".join(text.split())
+
+
+def _slices(first: date, last: date) -> list[tuple[date, date]]:
+    """[first, last] 를 NEWS_SLICE 씩 나눈다."""
+    slices, start = [], first
+    while start < last:
+        end = min(start + NEWS_SLICE, last)
+        slices.append((start, end))
+        start = end
+    return slices
+
+
+def _news_score(title: str, name: str, q: int) -> int:
+    """실적 발표 기사일수록 높다: 그 분기를 말하고, 영업이익을 말하고, 회사 이름으로 시작한다."""
+    score = 0
+    if f"{q}분기" in title or f"{q}Q" in title:
+        score += 2
+    if "영업이익" in title or "영업익" in title:
+        score += 1
+    if title.startswith(name):
+        score += 1
+    return score
+
+
+def quarter_news(stock_code: str, latest: Quarter) -> list[NewsArticle] | None:
+    """그 분기 실적을 다룬 기사 (실적 발표 기사 먼저). 검색이 모두 실패하면 None.
 
     분기가 끝난 뒤 실적 발표 철에 나왔고, 제목에 회사 이름과 실적 관련 말이 있는 기사만 쓴다.
+    발표 전 "전망" 기사는 뺀다. Google 뉴스는 한 번에 최대 50개만, 그것도 최근 기사 위주로 줘서
+    기간을 한 번에 찾으면 정작 실적 발표 무렵 기사가 빠진다. 그래서 기간을 나눠서 찾는다.
     """
     name = data_store.news_query(stock_code)
-    first, last = latest.end, latest.end + NEWS_WINDOW
-    result = news_search.search(
-        f"{name} {latest.q}분기 실적", 1, 50, stock_code, sort="sim", between=(first, last)
-    )
-    if result is None:
+    compact_name = _compact(name)
+    first = latest.end
+    last = min(latest.end + NEWS_WINDOW, _today())
+    slices = _slices(first, last)
+    if not slices:
         return []
 
     def fits(a: NewsArticle) -> bool:
-        title = "".join(a.title.split())
+        title = _compact(a.title)
         return (
             first < date.fromisoformat(a.published_at[:10]) <= last
-            and "".join(name.split()) in title
+            and compact_name in title
             and any(w in title for w in NEWS_WORDS)
+            and not any(w in title for w in FORECAST_WORDS)
         )
 
-    return [a for a in result.articles if fits(a)][:NEWS_COUNT]
+    found: dict[str, NewsArticle] = {}
+    failed = 0
+    # 실적 발표가 몰리는 기간(분기 끝 15~45일 뒤)부터 찾고, 발표 기사가 충분히 모이면 멈춘다
+    # (회사마다 검색을 여러 번 하면 Google 뉴스가 막힌다)
+    order = slices[1:3] + slices[3:] + slices[:1]
+    for between in order:
+        result = news_search.search(
+            f"{name} {latest.q}분기 실적", 1, 50, stock_code, sort="sim", between=between
+        )
+        if result is None:
+            failed += 1
+            continue
+        for a in result.articles:
+            if fits(a):
+                found.setdefault(_compact(a.title), a)  # 같은 제목은 한 번만
+        strong = [
+            a for a in found.values() if _news_score(_compact(a.title), compact_name, latest.q) >= 3
+        ]
+        if len(strong) >= NEWS_COUNT:
+            break
+    if failed == len(order):
+        return None
+    ranked = sorted(
+        found.values(),
+        key=lambda a: (-_news_score(_compact(a.title), compact_name, latest.q), a.published_at),
+    )
+    return ranked[:NEWS_COUNT]
 
 
 def to_reasons(draft: ReasonsDraft, news: list[NewsArticle]) -> list[PerformanceReason]:
@@ -428,7 +493,9 @@ def start_generation(
         if record.status == "done" and reasons and summary:
             return False  # 다 만들었다. 요약만 없으면(예전 기록 등) 아래 간격으로 다시 만들어 본다
         since = record.started_at if record.status == "generating" else record.updated_at
-        wait = GENERATION_TIMEOUT if record.status == "generating" else RETRY_AFTER
+        wait = {"generating": GENERATION_TIMEOUT, "failed": RETRY_FAILED_AFTER}.get(
+            record.status, RETRY_AFTER
+        )
         if since is not None and now - _as_utc(since) < wait:
             return False
     record = record or CompanyPerformanceRecord(stock_code=stock_code, status="generating")
@@ -450,7 +517,9 @@ def run_generation(
         latest = chain[-1]
         rcept_no = latest.rcept_no
         news = quarter_news(stock_code, latest)
-        if news:
+        if news is None:  # 검색이 막혔다 (기사가 없는 것과 달리 곧 다시 해 본다)
+            logger.warning("실적 기사 검색이 막혔어요: %s", stock_code)
+        elif news:
             detail = build_detail(name, chain)
             context = {
                 "company": name,
