@@ -26,11 +26,13 @@ def init_db() -> None:
         community,
         compare,
         learning,
+        mock_invest,
         overview,
         performance,
         report,
         user,
         wallet,
+        watchlist,
     )
 
     SQLModel.metadata.create_all(engine)
