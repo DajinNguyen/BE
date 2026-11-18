@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -147,10 +147,10 @@ def test_no_quarterly_data_is_404(client, monkeypatch):
 
 def test_reasons_are_written_from_quarter_news(client, use_dart, monkeypatch):
     use_dart()
-    searched = {}
+    searched = []
 
     def search(query, start, display, stock_code=None, sort="date", between=None):
-        searched.update(query=query, sort=sort, between=between)
+        searched.append((query, sort, between))
         return SearchResult(total=len(NEWS), articles=NEWS)
 
     monkeypatch.setattr(news_search, "search", search)
@@ -167,11 +167,15 @@ def test_reasons_are_written_from_quarter_news(client, use_dart, monkeypatch):
     first = client.get("/api/companies/005930/performance").json()
     assert first["reasons"] == []  # 백그라운드에서 만들고 다음 요청부터 채워진다
     assert first["ai_summary"] is None
-    assert searched == {
-        "query": "삼성전자 2분기 실적",
-        "sort": "sim",
-        "between": (date(2026, 6, 30), date(2026, 9, 13)),
-    }
+    # 분기가 끝난 날부터 75일을 15일씩 나눠서, 실적 발표가 몰리는 15~45일 뒤부터 찾는다
+    # (한 번에 찾으면 최근 기사만 온다)
+    assert searched == [
+        ("삼성전자 2분기 실적", "sim", (date(2026, 7, 15), date(2026, 7, 30))),
+        ("삼성전자 2분기 실적", "sim", (date(2026, 7, 30), date(2026, 8, 14))),
+        ("삼성전자 2분기 실적", "sim", (date(2026, 8, 14), date(2026, 8, 29))),
+        ("삼성전자 2분기 실적", "sim", (date(2026, 8, 29), date(2026, 9, 13))),
+        ("삼성전자 2분기 실적", "sim", (date(2026, 6, 30), date(2026, 7, 15))),
+    ]
     # 분기가 끝난 뒤 나온, 제목에 회사 이름이 있는 실적 기사만 AI에게 보여준다
     assert [n["title"] for n in writer.contexts[0]["news"]] == [NEWS[0].title]
 
@@ -217,3 +221,82 @@ def test_old_saved_reasons_without_summary_still_read(client, use_dart):
         session.commit()
     body = client.get("/api/companies/005930/performance").json()
     assert body["reasons"] == [reason] and body["ai_summary"] is None
+
+
+def _latest(year=2026, q=3):
+    return performance_service.Quarter(year, q, 1, 1, "x")
+
+
+def test_quarter_news_puts_earnings_articles_first_and_drops_forecasts(monkeypatch):
+    monkeypatch.setattr(performance_service, "_today", lambda: date(2026, 11, 19))
+    pages = {
+        date(2026, 9, 30): [
+            _article(1, "2026-10-01", "삼성전자 3분기 영업익 74조 전망"),  # 발표 전 예상
+        ],
+        date(2026, 10, 15): [
+            _article(2, "2026-10-29", "삼성전자 3분기 영업이익 83조…메모리 판매 늘어"),
+            _article(
+                3, "2026-10-29", "삼성전자  3분기 영업이익 83조…메모리 판매 늘어"
+            ),  # 같은 제목
+        ],
+        date(2026, 11, 14): [
+            _article(4, "2026-11-16", "코스피 상장사 실적 급증…삼성전자가 이끌어"),
+        ],
+    }
+
+    def search(query, start, display, stock_code=None, sort="date", between=None):
+        return SearchResult(total=0, articles=pages.get(between[0], []))
+
+    monkeypatch.setattr(news_search, "search", search)
+    news = performance_service.quarter_news("005930", _latest())
+    assert [a.id for a in news] == ["n2", "n4"]  # 실적 발표 기사가 먼저, 전망·같은 제목은 빠진다
+
+
+def test_quarter_news_only_searches_until_today(monkeypatch):
+    monkeypatch.setattr(performance_service, "_today", lambda: date(2026, 10, 20))
+    searched = []
+
+    def search(query, start, display, stock_code=None, sort="date", between=None):
+        searched.append(between)
+        return SearchResult(total=0, articles=[])
+
+    monkeypatch.setattr(news_search, "search", search)
+    assert performance_service.quarter_news("005930", _latest()) == []
+    assert searched == [
+        (date(2026, 10, 15), date(2026, 10, 20)),
+        (date(2026, 9, 30), date(2026, 10, 15)),
+    ]
+
+
+def test_quarter_news_stops_when_enough_earnings_articles(monkeypatch):
+    monkeypatch.setattr(performance_service, "_today", lambda: date(2026, 12, 31))
+    searched = []
+    announced = [
+        _article(n, "2026-10-29", f"삼성전자 3분기 영업이익 83조 기사{n}") for n in range(9)
+    ]
+
+    def search(query, start, display, stock_code=None, sort="date", between=None):
+        searched.append(between)
+        return SearchResult(total=9, articles=announced)
+
+    monkeypatch.setattr(news_search, "search", search)
+    news = performance_service.quarter_news("005930", _latest())
+    assert len(news) == performance_service.NEWS_COUNT
+    assert searched == [(date(2026, 10, 15), date(2026, 10, 30))]  # 한 번으로 충분하다
+
+
+def test_blocked_news_search_is_retried_soon(client, use_dart, monkeypatch):
+    use_dart()
+    monkeypatch.setattr(news_search, "search", lambda *a, **k: None)  # Google 뉴스가 막혔다
+    writer = FakeReasonWriter([])
+    use_writer(client, writer)
+    client.get("/api/companies/005930/performance")
+    with new_session() as session:
+        record = session.get(CompanyPerformanceRecord, "005930")
+        assert record.status == "failed"  # 기사가 없는 것(done)과 달리 실패로 남긴다
+        rcept_no = record.rcept_no
+        later = record.updated_at.replace(tzinfo=performance_service.UTC)
+        start = performance_service.start_generation
+        assert not start(session, "005930", rcept_no, later + timedelta(minutes=10))
+        assert start(session, "005930", rcept_no, later + timedelta(minutes=31))
+    assert writer.contexts == []
