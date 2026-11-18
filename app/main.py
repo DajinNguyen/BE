@@ -18,6 +18,7 @@ from app.api import (
     learn,
     market,
     me,
+    mock_invest,
     reports,
     terms,
     uploads,
@@ -102,6 +103,7 @@ app.include_router(market.router)
 app.include_router(industries.router)
 app.include_router(uploads.router)
 app.include_router(watchlist.router)
+app.include_router(mock_invest.router)
 app.include_router(me.router)
 app.include_router(chat.router)
 # 커뮤니티 사진 (POST /api/uploads 로 올린 파일)
