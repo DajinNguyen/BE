@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.wallet import Adk
+
 ChatPage = Literal["main", "company", "report", "compare", "industry", "learn", "other"]
 
 MESSAGE_MAX = 500
@@ -51,7 +53,7 @@ class ChatResponse(BaseModel):
     answer: str
     sources: list[ChatSource] = []  # 답변에 나온 기사 (없으면 빈 목록)
     conversation_id: str
-    balance: int  # 5 ADK를 뺀 뒤 잔액 (답변을 만든 뒤에만 뺀다)
+    balance: Adk  # 5 ADK를 뺀 뒤 잔액 (답변을 만든 뒤에만 뺀다)
 
 
 class ChatMessageOut(BaseModel):

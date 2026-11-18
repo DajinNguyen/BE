@@ -5,6 +5,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+# ADK 금액. 모의투자 때문에 소수가 생긴다 (25.7 같은 값). 딱 떨어지면 정수로 보낸다.
+Adk = int | float
+
 
 class PuzzleProgress(BaseModel):
     done: int  # 다음 보상까지 센 퀴즈 수
@@ -14,13 +17,13 @@ class PuzzleProgress(BaseModel):
 class WalletHistoryItem(BaseModel):
     id: str
     type: Literal["earn", "spend"]
-    amount: int  # 양수 (얻었는지 썼는지는 type 으로 구분한다)
+    amount: Adk  # 양수 (얻었는지 썼는지는 type 으로 구분한다)
     reason: str  # 화면에 그대로 보여주는 이유 (예: "낱말퀴즈 보상", "AI 리포트 · 삼성전자")
     created_at: datetime
 
 
 class Wallet(BaseModel):
-    balance: int  # 지금 쓸 수 있는 ADK (AI 결과를 기다리며 잡아 둔 금액은 뺀 값)
+    balance: Adk  # 지금 쓸 수 있는 ADK (AI 결과를 기다리며 잡아 둔 금액은 뺀 값)
     puzzle_progress: PuzzleProgress
     reward_count_today: int  # 오늘 받은 낱말퀴즈 보상 횟수
     reward_daily_limit: int  # 하루 최대 보상 횟수
@@ -32,7 +35,7 @@ class PuzzleCompletionResult(BaseModel):
 
     puzzle_progress: PuzzleProgress
     rewarded: bool  # 이번 완료로 보상(20 ADK)을 받았는지
-    balance: int
+    balance: Adk
     reward_count_today: int
     reward_daily_limit: int
 
@@ -43,4 +46,4 @@ class SpendRequest(BaseModel):
 
 
 class Balance(BaseModel):
-    balance: int
+    balance: Adk

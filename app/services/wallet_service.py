@@ -5,6 +5,7 @@
   실패하면 돌려놓는다(`release`). 그래서 결과가 나왔을 때만 빠지고, 잔액보다 많이 쓸 수 없다.
 - 같은 일로 두 번 주거나 빼지 않는다: 내역마다 `ref` 가 있고 사용자마다 한 번만 쓸 수 있다.
 - 잔액은 저장하지 않고 내역을 더해서 구한다 (동시에 요청이 와도 잔액이 어긋나지 않는다).
+- 모의투자(1 ADK = 가상 1만 원) 때문에 ADK에 소수가 생긴다. 소수 넷째 자리(= 가상 1원)까지 쓴다.
 """
 
 import threading
@@ -34,15 +35,24 @@ SIGNUP_REF = "signup"
 _locks: defaultdict[int, threading.Lock] = defaultdict(threading.Lock)
 
 
+ADK_DECIMALS = 4  # 소수 넷째 자리 = 가상 1원 (모의투자)
+
+
+def adk(value: float) -> int | float:
+    """ADK 금액을 소수 넷째 자리로 맞춘다. 딱 떨어지면 정수로 돌려준다 (응답에 50.0 대신 50)."""
+    value = round(float(value), ADK_DECIMALS) + 0.0  # -0.0 → 0.0
+    return int(value) if value.is_integer() else value
+
+
 def _now() -> datetime:
     return datetime.now(UTC)
 
 
-def _sum(session: Session, user_id: int, *, with_pending: bool) -> int:
+def _sum(session: Session, user_id: int, *, with_pending: bool) -> int | float:
     query = select(func.coalesce(func.sum(AdkEntry.amount), 0)).where(AdkEntry.user_id == user_id)
     if not with_pending:
         query = query.where(AdkEntry.status == "done")
-    return int(session.exec(query).one())
+    return adk(session.exec(query).one())
 
 
 def _drop_stale_holds(session: Session, user_id: int) -> None:
@@ -59,7 +69,7 @@ def _drop_stale_holds(session: Session, user_id: int) -> None:
         session.commit()
 
 
-def grant(session: Session, user_id: int, amount: int, reason: str, title: str, ref: str) -> bool:
+def grant(session: Session, user_id: int, amount: float, reason: str, title: str, ref: str) -> bool:
     """ADK를 준다. 같은 `ref` 로 이미 줬으면 주지 않고 False."""
     exists = session.exec(
         select(AdkEntry.id).where(AdkEntry.user_id == user_id, AdkEntry.ref == ref)
@@ -68,7 +78,12 @@ def grant(session: Session, user_id: int, amount: int, reason: str, title: str, 
         return False
     session.add(
         AdkEntry(
-            user_id=user_id, amount=amount, reason=reason, title=title, ref=ref, created_at=_now()
+            user_id=user_id,
+            amount=adk(amount),
+            reason=reason,
+            title=title,
+            ref=ref,
+            created_at=_now(),
         )
     )
     try:
@@ -84,7 +99,7 @@ def ensure_signup_bonus(session: Session, user_id: int) -> None:
     grant(session, user_id, SIGNUP_BONUS, "signup", "가입 선물", SIGNUP_REF)
 
 
-def balance(session: Session, user_id: int) -> int:
+def balance(session: Session, user_id: int) -> int | float:
     """지금 쓸 수 있는 잔액. AI 결과를 기다리며 잡아 둔 금액은 이미 뺀 값이다.
 
     (리포트 만들기를 누르면 화면의 잔액이 바로 줄고, 실패하면 돌아온다)
@@ -94,7 +109,9 @@ def balance(session: Session, user_id: int) -> int:
     return _sum(session, user_id, with_pending=True)
 
 
-def spend(session: Session, user_id: int, price: int, reason: str, title: str, ref: str) -> int:
+def spend(
+    session: Session, user_id: int, price: float, reason: str, title: str, ref: str
+) -> int | float:
     """바로 뺀다 (결과를 기다리지 않는 차감). 같은 `ref` 로 이미 뺐으면 다시 빼지 않는다. 잔액을 돌려준다."""
     exists = session.exec(
         select(AdkEntry.id).where(AdkEntry.user_id == user_id, AdkEntry.ref == ref)
@@ -104,13 +121,14 @@ def spend(session: Session, user_id: int, price: int, reason: str, title: str, r
     return balance(session, user_id)
 
 
-def hold(session: Session, user_id: int, price: int, reason: str, title: str, ref: str) -> int:
+def hold(session: Session, user_id: int, price: float, reason: str, title: str, ref: str) -> int:
     """쓸 금액을 잡아 둔다. 잔액이 모자라면 402 `INSUFFICIENT_ADK`. 잡아 둔 내역의 id 를 돌려준다."""
     with _locks[user_id]:
         ensure_signup_bonus(session, user_id)
         _drop_stale_holds(session, user_id)
         # 다른 서버 프로세스와도 겹치지 않게 사용자 행을 잠근다 (SQLite 에서는 효과가 없다)
         session.exec(select(User.id).where(User.id == user_id).with_for_update()).first()
+        price = adk(price)
         available = _sum(session, user_id, with_pending=True)
         if available < price:
             session.rollback()
@@ -169,7 +187,7 @@ def get_wallet(session: Session, user_id: int) -> Wallet:
             WalletHistoryItem(
                 id=str(e.id),
                 type="earn" if e.amount >= 0 else "spend",
-                amount=abs(e.amount),
+                amount=adk(abs(e.amount)),
                 reason=e.title,
                 created_at=(
                     e.created_at if e.created_at.tzinfo else e.created_at.replace(tzinfo=UTC)

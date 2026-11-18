@@ -8,6 +8,7 @@ from app.core.db import get_session, new_session
 from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.schemas.report import CompanyReport
+from app.schemas.wallet import Adk
 from app.services import report_service, wallet_service
 from app.services.data_store import get_company
 from app.services.report_service import ReportWriter
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/api/companies", tags=["reports"])
 class StartedReport(CompanyReport):
     """리포트 만들기 응답: 리포트 상태 + 7 ADK를 뺀 뒤 잔액."""
 
-    balance: int
+    balance: Adk
 
 
 @router.get("/{stock_code}/report", response_model=CompanyReport)
