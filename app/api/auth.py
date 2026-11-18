@@ -7,7 +7,7 @@ from app.core.config import get_settings
 from app.core.db import get_session
 from app.core.errors import auth_not_configured
 from app.models.user import User
-from app.schemas.auth import AuthUser
+from app.schemas.auth import AuthUser, ProfileUpdate
 from app.services import auth_service
 from app.services.auth_service import SESSION_COOKIE, STATE_COOKIE, AuthFailed
 
@@ -82,15 +82,33 @@ def google_callback(
     return response
 
 
-@router.get("/me", response_model=AuthUser)
-def me(user: User = Depends(current_user)):
-    """로그인한 사용자. 로그인하지 않았으면 401 `LOGIN_REQUIRED`."""
+def _auth_user(user: User) -> AuthUser:
     return AuthUser(
         id=str(user.id),
         email=user.email,
         name=user.name,
         nickname=auth_service.nickname_for(user),
+        joined_at=user.created_at.date(),
     )
+
+
+@router.get("/me", response_model=AuthUser)
+def me(user: User = Depends(current_user)):
+    """로그인한 사용자. 로그인하지 않았으면 401 `LOGIN_REQUIRED`."""
+    return _auth_user(user)
+
+
+@router.patch("/me", response_model=AuthUser)
+def update_me(
+    body: ProfileUpdate,
+    user: User = Depends(current_user),
+    session: Session = Depends(get_session),
+):
+    """내 닉네임 바꾸기 (마이페이지). 비우면 자동 닉네임으로 돌아간다.
+
+    400 `INVALID_PARAM`: 길이·글자 규칙 위반. 409 `NICKNAME_TAKEN`: 이미 쓰는 닉네임.
+    """
+    return _auth_user(auth_service.update_nickname(session, user, body.nickname))
 
 
 @router.post("/logout", status_code=204)
