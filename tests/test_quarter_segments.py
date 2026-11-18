@@ -149,10 +149,12 @@ def test_performance_shows_segments_after_generation(client, use_dart, monkeypat
 
     first = client.get("/api/companies/005930/performance").json()
     assert first["segments"] == []  # 백그라운드에서 만들고 다음 요청부터 채워진다
+    assert first["segments_status"] == "generating"
     assert "[영업부문 주석]" in writer.sources[0]
 
     body = client.get("/api/companies/005930/performance").json()
     assert body["unit"] == "조 원"
+    assert body["segments_status"] == "ready"
     assert body["segments"] == [
         {
             "name": "DS(반도체)",
@@ -184,6 +186,8 @@ def test_not_found_is_not_retried_for_the_same_report(client, use_dart, monkeypa
     # 주석이 없어도 사업의 내용으로 한 번 판단해 보고, 못 찾으면 같은 보고서로는 다시 하지 않는다
     assert len(writer.sources) == 1
     assert "(영업부문 주석이 없어요)" in writer.sources[0]
+    body = client.get("/api/companies/005930/performance").json()
+    assert body["segments_status"] == "failed"
     with new_session() as session:
         record = session.get(CompanyQuarterSegmentsRecord, "005930")
         assert (record.status, record.failure_reason) == ("failed", NOT_FOUND_REASON)

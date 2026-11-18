@@ -91,6 +91,7 @@ def test_business_section_text():
 def test_overview_generated_in_background_then_filled(client, overview):
     first = client.get("/api/companies/000660").json()
     assert first["business_segments"] == [] and first["timeline"] == []  # 아직 만드는 중
+    assert first["overview_status"] == "generating"  # 프론트는 몇 초 뒤 다시 요청한다
     assert overview.calls == 1  # 응답 뒤 백그라운드에서 만들었다
 
     body = client.get("/api/companies/000660").json()
@@ -105,6 +106,7 @@ def test_overview_generated_in_background_then_filled(client, overview):
         ("2026", True),
     ]
     assert body["timeline_source"] == SOURCE
+    assert body["overview_status"] == "ready"
 
 
 def test_new_annual_report_regenerates_but_keeps_old_meanwhile(client, overview, monkeypatch):
@@ -133,6 +135,7 @@ def test_same_annual_report_is_not_regenerated(client, overview, monkeypatch):
 def test_company_with_seed_overview_is_not_generated(client, overview):
     body = client.get("/api/companies/005930").json()
     assert body["timeline_source"].startswith("삼성전자")
+    assert body["overview_status"] == "ready"
     assert overview.calls == 0
 
 

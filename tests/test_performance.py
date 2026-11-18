@@ -167,6 +167,7 @@ def test_reasons_are_written_from_quarter_news(client, use_dart, monkeypatch):
     first = client.get("/api/companies/005930/performance").json()
     assert first["reasons"] == []  # 백그라운드에서 만들고 다음 요청부터 채워진다
     assert first["ai_summary"] is None
+    assert first["reasons_status"] == "generating"  # 프론트는 몇 초 뒤 다시 요청한다
     # 분기가 끝난 날부터 75일을 15일씩 나눠서, 실적 발표가 몰리는 15~45일 뒤부터 찾는다
     # (한 번에 찾으면 최근 기사만 온다)
     assert searched == [
@@ -195,6 +196,7 @@ def test_reasons_are_written_from_quarter_news(client, use_dart, monkeypatch):
         }
     ]
     assert body["ai_summary"] == "AI용 메모리가 많이 팔려서 매출과 이익이 함께 늘었어요"
+    assert body["reasons_status"] == "ready"
     assert len(writer.contexts) == 1  # 같은 분기 보고서로는 다시 만들지 않는다
 
 

@@ -62,3 +62,6 @@ class PerformanceDetail(BaseModel):
     reasons: list[PerformanceReason]
     source: PerformanceSource | None
     ai_summary: str | None = None  # 개요 "AI 한 줄 요약". 아직 못 만들었으면 null
+    # AI가 채우는 칸의 상태: "ready" | "generating" | "failed" | "none". "generating" 이면 몇 초 뒤 다시 요청
+    segments_status: Literal["ready", "generating", "failed", "none"] = "ready"
+    reasons_status: Literal["ready", "generating", "failed", "none"] = "ready"  # reasons·ai_summary

@@ -4,6 +4,8 @@ from sqlmodel import Session
 from app.api.deps import get_overview_writer
 from app.core.db import get_session, new_session
 from app.core.rate_limit import anonymous_ai_budget, rate_limit
+from app.models.overview import CompanyOverviewRecord, CompanySegmentsRecord
+from app.models.performance import CompanyPerformanceRecord, CompanyQuarterSegmentsRecord
 from app.schemas.company import CompanyDetail, CompanySummary
 from app.schemas.compare import CompanyCompare
 from app.schemas.financials import Financials
@@ -13,7 +15,9 @@ from app.schemas.price import Period, PriceHistory
 from app.services import (
     compare_service,
     data_store,
+    generation_status,
     overview_service,
+    performance_jobs,
     performance_service,
     price_service,
     quarter_segment_service,
@@ -89,7 +93,16 @@ def get_company(
     ):
         anonymous_ai_budget.consume()
         background_tasks.add_task(overview_service.run_generation, stock_code, writer, new_session)
-    return overview_service.apply_overview(session, company)
+    detail = overview_service.apply_overview(session, company)
+    status = generation_status.status_of(
+        session,
+        CompanyOverviewRecord,
+        stock_code,
+        has_content=bool(
+            detail.business_description or detail.business_segments or detail.timeline
+        ),
+    )
+    return detail.model_copy(update={"overview_status": status})
 
 
 @router.get("/{stock_code}/peers", response_model=list[CompanySummary])
@@ -121,7 +134,14 @@ def get_financials(
     ):
         anonymous_ai_budget.consume()
         background_tasks.add_task(segment_service.run_generation, stock_code, writer, new_session)
-    return segment_service.apply_segments(session, financials)
+    result = segment_service.apply_segments(session, financials)
+    status = generation_status.status_of(
+        session,
+        CompanySegmentsRecord,
+        stock_code,
+        has_content=bool(result.segments and result.segments.items),
+    )
+    return result.model_copy(update={"segments_status": status})
 
 
 @router.get("/{stock_code}/performance", response_model=PerformanceDetail)
@@ -139,38 +159,25 @@ def get_performance(
     "왜 이렇게 됐나요?"와 "사업별 성과"는 백그라운드에서 만들고, 다음 요청부터 채워진다.
     """
     detail, rcept_no = performance_service.get_detail(session, stock_code)
-    name, chain = performance_service.latest_quarter(stock_code)
-    latest = chain[-1]
-    if (
-        segment_writer is not None
-        and anonymous_ai_budget.available()
-        and quarter_segment_service.start_generation(session, stock_code, rcept_no, latest.q)
+    for job in performance_jobs.start_jobs(
+        session,
+        stock_code,
+        writer,
+        segment_writer,
+        rcept_no,
+        can_use_ai=anonymous_ai_budget.available,
+        on_use_ai=anonymous_ai_budget.consume,
     ):
-        anonymous_ai_budget.consume()
-        last_year = performance_service.same_quarter_last_year(chain)
-        before = performance_service.previous_quarter(chain)
-        background_tasks.add_task(
-            quarter_segment_service.run_generation,
-            stock_code,
-            segment_writer,
-            new_session,
-            company_name=name,
-            rcept_no=rcept_no,
-            revenue=latest.revenue,
-            operating_income=latest.operating_income,
-            prior_revenue=last_year.revenue if last_year else None,
-            quarter=latest.q,
-            previous_rcept_no=before.rcept_no if before else None,
-        )
-    if (
-        writer is not None
-        and anonymous_ai_budget.available()
-        and performance_service.start_generation(session, stock_code, rcept_no)
-    ):
-        anonymous_ai_budget.consume()
-        background_tasks.add_task(
-            performance_service.run_generation, stock_code, writer, new_session
-        )
+        background_tasks.add_task(job)
+    detail.segments_status = generation_status.status_of(
+        session, CompanyQuarterSegmentsRecord, stock_code, has_content=bool(detail.segments)
+    )
+    detail.reasons_status = generation_status.status_of(
+        session,
+        CompanyPerformanceRecord,
+        stock_code,
+        has_content=bool(detail.reasons or detail.ai_summary),
+    )
     return detail
 
 
