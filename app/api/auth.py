@@ -8,7 +8,7 @@ from app.core.db import get_session
 from app.core.errors import auth_not_configured
 from app.models.user import User
 from app.schemas.auth import AuthUser, ProfileUpdate
-from app.services import auth_service
+from app.services import account_service, auth_service
 from app.services.auth_service import SESSION_COOKIE, STATE_COOKIE, AuthFailed
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -118,6 +118,18 @@ def logout(
 ):
     """로그아웃: 쿠키를 지우고, 그 쿠키 값도 서버에서 더는 받지 않는다."""
     auth_service.revoke_session(session, token)
+    response = Response(status_code=204)
+    response.delete_cookie(SESSION_COOKIE, path="/")
+    return response
+
+
+@router.delete("/me", status_code=204)
+def delete_me(
+    user: User = Depends(current_user),
+    session: Session = Depends(get_session),
+):
+    """회원 탈퇴: 계정과 내 기록(글·댓글·ADK·학습 기록 등)을 모두 지운다. 되돌릴 수 없다."""
+    account_service.delete_account(session, user)
     response = Response(status_code=204)
     response.delete_cookie(SESSION_COOKIE, path="/")
     return response
