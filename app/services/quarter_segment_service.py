@@ -28,7 +28,7 @@ from sqlmodel import Session
 from app.core.config import Settings, get_settings
 from app.models.performance import CompanyQuarterSegmentsRecord
 from app.schemas.performance import SegmentPerformance
-from app.services import dart
+from app.services import ai_retry, dart
 
 logger = logging.getLogger(__name__)
 
@@ -482,7 +482,7 @@ def run_generation(
     """
     try:
         source = _read_source(rcept_no)
-        extraction = writer.write(source)
+        extraction = ai_retry.call(writer.write, source)
         if extraction is None:
             raise RuntimeError(FAILED_REASON)
         previous, previous_source = None, ""
@@ -491,7 +491,7 @@ def run_generation(
             or suspect_cumulative(extraction, source, revenue, quarter)
         ):
             previous_source = _read_source(previous_rcept_no)
-            previous = writer.write(previous_source)
+            previous = ai_retry.call(writer.write, previous_source)
         items = to_items(
             extraction,
             source,

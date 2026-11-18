@@ -42,7 +42,7 @@ from app.schemas.performance import (
     QuarterPerformance,
     ReasonEvidence,
 )
-from app.services import dart, data_store, news_search, quarter_segment_service
+from app.services import ai_retry, dart, data_store, news_search, quarter_segment_service
 from app.services.dart_financials import (
     BUSINESS_REPORT,
     OPERATING_INCOME_NAMES,
@@ -558,7 +558,7 @@ def run_generation(
                     for n, a in enumerate(news, start=1)
                 ],
             }
-            draft = writer.write(context)
+            draft = ai_retry.call(writer.write, context)
             if draft is not None:
                 reasons = to_reasons(draft, news)
                 summary = to_summary(draft, reasons)
