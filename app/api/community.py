@@ -3,6 +3,7 @@ from sqlmodel import Session
 
 from app.api.deps import current_user, optional_user
 from app.core.db import get_session
+from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.schemas.community import (
     CommentInput,
@@ -34,7 +35,12 @@ def list_posts(
     return community_service.list_posts(session, stock_code, sort, category, page, size, viewer)
 
 
-@router.post("/companies/{stock_code}/posts", response_model=PostOut, status_code=201)
+@router.post(
+    "/companies/{stock_code}/posts",
+    response_model=PostOut,
+    status_code=201,
+    dependencies=[Depends(rate_limit("post", 10))],
+)
 def create_post(
     stock_code: str,
     data: PostInput,
@@ -83,7 +89,12 @@ def list_comments(
     return community_service.list_comments(session, post_id, viewer)
 
 
-@router.post("/posts/{post_id}/comments", response_model=CommentOut, status_code=201)
+@router.post(
+    "/posts/{post_id}/comments",
+    response_model=CommentOut,
+    status_code=201,
+    dependencies=[Depends(rate_limit("comment", 20))],
+)
 def create_comment(
     post_id: str,
     data: CommentInput,

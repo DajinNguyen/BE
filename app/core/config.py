@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     # 약관 동의(만 14세 이상 확인 포함)를 마친 사용자만 서비스 기능을 쓰게 한다
     require_consent: bool = True
     terms_version: str = "2026-11-18"  # 약관이 바뀌어 다시 동의를 받을 때 올린다
+    # 요청 횟수 제한 (AI 비용·도배 방어)
+    rate_limit_enabled: bool = True
+    # Nginx 같은 프록시 뒤에서 X-Forwarded-For 로 실제 접속자 주소를 읽는다 (프록시 없이 켜면 주소를 속일 수 있다)
+    trust_proxy_headers: bool = False
+    # 로그인 없이 시작되는 AI 작성(회사 개요·기업 비교 분석)을 하루에 최대 몇 건까지 새로 만들지
+    anonymous_ai_daily_limit: int = 300
     cookie_secure: bool = False  # https로 배포하면 true
     # 프론트 주소 (CORS 허용 + 로그인 후 돌아갈 곳). 첫 번째가 기본값
     frontend_origins: list[str] = ["http://localhost:5173", "http://localhost:5174"]
