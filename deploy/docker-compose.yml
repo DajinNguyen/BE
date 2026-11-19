@@ -1,0 +1,83 @@
+# 다진 운영용 구성: DB + 백엔드 + 웹(Nginx+프론트) + (선택) Cloudflare 터널
+#
+# 폴더 배치(서버 컴퓨터):
+#   dajin/
+#   ├── backend/   ← 이 저장소 (이 파일은 backend/deploy/ 안에 있어요)
+#   └── frontend/  ← 프론트 저장소 (frontend/frontend 안에 Dockerfile 이 있어요)
+#
+# 사용법은 deploy/README.md 를 보세요.
+name: dajin
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dajin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?deploy/.env 에 POSTGRES_PASSWORD 를 적어 주세요}
+      POSTGRES_DB: dajin
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dajin -d dajin"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ..
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+psycopg://dajin:${POSTGRES_PASSWORD}@db:5432/dajin
+      UPLOAD_DIR: /data/uploads
+      COOKIE_SECURE: "true"
+      # Nginx 가 실제 접속자 주소를 넘겨 주므로 믿어도 된다 (backend 는 바깥에 열려 있지 않다)
+      TRUST_PROXY_HEADERS: "true"
+      FRONTEND_ORIGINS: '["https://${DOMAIN:?deploy/.env 에 DOMAIN 을 적어 주세요}"]'
+      GOOGLE_REDIRECT_URI: https://${DOMAIN}/api/auth/google/callback
+    volumes:
+      - uploads:/data/uploads
+      - cache:/srv/.cache
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  web:
+    build:
+      context: ../../frontend/frontend
+    restart: unless-stopped
+    # 이 컴퓨터 안에서만 열어 둔다 (http://localhost:8080). 바깥 공개는 터널이 한다.
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # 인터넷에 공개하는 통로. `docker compose --profile tunnel up -d` 로 함께 켠다.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?deploy/.env 에 CLOUDFLARE_TUNNEL_TOKEN 을 적어 주세요}
+    depends_on:
+      - web
+
+volumes:
+  db-data:
+  uploads:
+  cache:
