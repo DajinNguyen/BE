@@ -13,7 +13,7 @@ from sqlmodel import Session, col, select
 from app.models.chat import ChatConversation, ChatMessage
 from app.models.community import ContentReport, Post, PostComment, PostLike
 from app.models.learning import PuzzleOpenRecord, TermProgressRecord, UsageCreditsRecord
-from app.models.mock_invest import MockTrade
+from app.models.mock_invest import MockExchange, MockTrade
 from app.models.user import User
 from app.models.wallet import AdkEntry
 from app.models.watchlist import WatchlistRecord
@@ -100,6 +100,7 @@ def delete_account(session: Session, user: User) -> None:
     for model in (
         AdkEntry,
         MockTrade,
+        MockExchange,
         TermProgressRecord,
         UsageCreditsRecord,
         PuzzleOpenRecord,
