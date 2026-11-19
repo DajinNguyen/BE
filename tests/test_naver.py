@@ -96,6 +96,19 @@ def test_quotes_parse_and_cache(use_naver):
     assert len(api.calls) == 1
 
 
+def test_preopen_blank_fields_do_not_drop_the_batch(use_naver, monkeypatch):
+    """장 시작 전에는 거래대금이 ""로 온다. 예전에는 그 때문에 묶음 50종목이 모두 예전 시드 가격으로
+    보였다 (알테오젠 실제 17만 원 → 화면 41만 원)."""
+    preopen = dict(QUOTES["005930"], accumulatedTradingValueRaw="", fluctuationsRatioRaw="0.00")
+    broken = dict(QUOTES["271560"], closePriceRaw="")  # 현재가가 없는 종목은 그것만 빠진다
+    monkeypatch.setitem(QUOTES, "005930", preopen)
+    monkeypatch.setitem(QUOTES, "271560", broken)
+    client = use_naver(FakeNaverApi())
+    quotes = client.quotes(["005930", "000660", "271560"])
+    assert set(quotes) == {"005930", "000660"}
+    assert (quotes["005930"].price, quotes["005930"].trading_value) == (210750, 0)
+
+
 def test_quotes_failure_returns_empty_and_backs_off(use_naver):
     api = FakeNaverApi(fail=True)
     client = use_naver(api)

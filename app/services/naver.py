@@ -52,15 +52,33 @@ class Quote:
     traded_at: datetime  # 마지막 체결 시각 (KST)
 
 
+def _int_or_zero(raw: Any) -> int:
+    """장 시작 전(PREOPEN)·거래 정지 종목은 거래대금 등이 빈 문자열로 온다."""
+    return int(raw) if raw not in (None, "") else 0
+
+
 def _parse_quote(item: dict[str, Any]) -> Quote:
     return Quote(
         stock_code=item["itemCode"],
-        price=int(item["closePriceRaw"]),
-        change_rate=float(item["fluctuationsRatioRaw"]),
-        trading_value=int(item["accumulatedTradingValueRaw"]),
-        market_cap=int(item["marketValueFullRaw"]),
+        price=int(item["closePriceRaw"]),  # 현재가가 없으면 쓸 수 없어서 그 종목만 뺀다
+        change_rate=float(item["fluctuationsRatioRaw"] or 0),
+        trading_value=_int_or_zero(item.get("accumulatedTradingValueRaw")),
+        market_cap=_int_or_zero(item.get("marketValueFullRaw")),
         traded_at=datetime.fromisoformat(item["localTradedAt"]),
     )
+
+
+def _parse_quotes(items: list[dict[str, Any]]) -> list[Quote]:
+    """한 종목이 이상해도 같은 묶음(50종목)의 다른 종목은 살린다."""
+    quotes = []
+    for item in items:
+        try:
+            quotes.append(_parse_quote(item))
+        except (ValueError, KeyError, TypeError) as e:
+            logger.warning(
+                "네이버 현재가를 읽지 못한 종목을 건너뛰어요 %s: %s", item.get("itemCode"), e
+            )
+    return quotes
 
 
 class NaverClient:
@@ -93,7 +111,7 @@ class NaverClient:
     def _fetch_batch(self, batch: list[str]) -> list[Quote] | Exception:
         try:
             items = self._get(f"{QUOTE_URL}/{','.join(batch)}")["datas"]
-            return [_parse_quote(item) for item in items]
+            return _parse_quotes(items)
         except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
             return e
 
