@@ -11,12 +11,12 @@ import logging
 from typing import Literal
 
 import anthropic
-from google import genai
 from google.genai import types as genai_types
 from pydantic import BaseModel
 
 from app.core.config import Settings, get_settings
 from app.schemas.news import NewsArticle
+from app.services import gemini_keys
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ async def _call_claude(settings: Settings, articles: list[NewsArticle]) -> NewsS
 
 
 async def _call_gemini(settings: Settings, articles: list[NewsArticle]) -> NewsSentimentBatch:
-    client = genai.Client(api_key=settings.gemini_api_key)
+    client = gemini_keys.client(settings)
     response = await client.aio.models.generate_content(
         model=settings.gemini_model,
         contents=_request_payload(articles),

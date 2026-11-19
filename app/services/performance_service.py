@@ -24,7 +24,6 @@ from functools import lru_cache
 from typing import Any, Protocol
 
 import anthropic
-from google import genai
 from google.genai import types as genai_types
 from pydantic import BaseModel
 from sqlmodel import Session
@@ -42,7 +41,14 @@ from app.schemas.performance import (
     QuarterPerformance,
     ReasonEvidence,
 )
-from app.services import ai_retry, dart, data_store, news_search, quarter_segment_service
+from app.services import (
+    ai_retry,
+    dart,
+    data_store,
+    gemini_keys,
+    news_search,
+    quarter_segment_service,
+)
 from app.services.dart_financials import (
     BUSINESS_REPORT,
     OPERATING_INCOME_NAMES,
@@ -131,14 +137,11 @@ class GeminiReasonWriter:
 
     def __init__(self, settings: Settings):
         self._settings = settings
-        self._client: genai.Client | None = None
+        self._client: gemini_keys.FallbackClient | None = None
 
     def write(self, context: dict[str, Any]) -> ReasonsDraft | None:
         if self._client is None:
-            self._client = genai.Client(
-                api_key=self._settings.gemini_api_key,
-                http_options=genai_types.HttpOptions(timeout=self._REQUEST_TIMEOUT_MS),
-            )
+            self._client = gemini_keys.client(self._settings, self._REQUEST_TIMEOUT_MS)
         response = self._client.models.generate_content(
             model=self._settings.gemini_model,
             contents=_prompt(context),

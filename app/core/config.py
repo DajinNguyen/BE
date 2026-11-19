@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     anthropic_effort: str = "medium"
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-3.5-flash-lite"  # 무료 한도: 하루 약 500회 (flash는 20회)
+    # 예비 키: 앞 키가 사용 한도(429)에 걸리면 차례로 써요 (app/services/gemini_keys.py)
+    gemini_api_key_2: str | None = None
+    gemini_api_key_3: str | None = None
+    gemini_api_key_4: str | None = None
     dart_api_key: str | None = None
     dart_cache_dir: str = ".cache/dart"
     naver_prices_enabled: bool = True  # 네이버 금융 시세 (비공식, 키 없음)
@@ -43,6 +47,17 @@ class Settings(BaseSettings):
     cookie_secure: bool = False  # https로 배포하면 true
     # 프론트 주소 (CORS 허용 + 로그인 후 돌아갈 곳). 첫 번째가 기본값
     frontend_origins: list[str] = ["http://localhost:5173", "http://localhost:5174"]
+
+    @property
+    def gemini_api_keys(self) -> list[str]:
+        """쓸 Gemini 키 (기본 키 먼저, 빈 칸은 빼요)"""
+        keys = [
+            self.gemini_api_key,
+            self.gemini_api_key_2,
+            self.gemini_api_key_3,
+            self.gemini_api_key_4,
+        ]
+        return [k for k in keys if k]
 
 
 def check_production(settings: Settings) -> tuple[list[str], list[str]]:
