@@ -1,7 +1,7 @@
 """네이버 금융 시세 연동 (비공식 API).
 
 - 현재가(polling.finance.naver.com): 현재가·등락률·거래대금·시가총액·거래 시각. 여러 종목을 한 번에 받고 1분 캐시한다.
-- 일별·주별 종가(api.stock.naver.com): 주가 흐름 그래프용. 종목·기간별로 1시간 캐시한다.
+- 분·시간·일·주·월·년 캔들(api.stock.naver.com): 주가 흐름 그래프용. 종목·기간별로 1분 캐시한다.
 
 공식 API가 아니라서 예고 없이 바뀌거나 막힐 수 있다. 실패하면 None/빈 dict를 돌려주고,
 호출하는 쪽은 시드 예시 값(is_sample: true)으로 동작한다.
@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import date, datetime
 from functools import lru_cache
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -26,20 +26,25 @@ QUOTE_URL = "https://polling.finance.naver.com/api/realtime/domestic/stock"
 CHART_URL = "https://api.stock.naver.com/chart/domestic/item"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 QUOTE_TTL = 60  # 1분
-CHART_TTL = 60 * 60  # 1시간
+CHART_TTL = 60  # 1분 (오늘 캔들이 장중에 계속 바뀐다)
 TIMEOUT = 3.0  # 화면이 기다리지 않도록 짧게
 RETRY_AFTER = 60  # 받기에 실패하면 이 시간 동안은 다시 시도하지 않는다
 BATCH_SIZE = 50  # 한 번에 묻는 종목 수
 QUOTE_WORKERS = 8  # 묶음을 동시에 받는 수
 
 
+Timeframe = Literal["minute", "minute60", "day", "week", "month", "year"]
+
+
 @dataclass(frozen=True)
-class DailyPrice:
+class Candle:
     date: date
+    time: str | None  # 분 캔들만 "HH:MM"
     open: int
     high: int
     low: int
     close: int
+    volume: int
 
 
 @dataclass(frozen=True)
@@ -85,7 +90,7 @@ class NaverClient:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._quotes: dict[str, tuple[float, Quote]] = {}
-        self._charts: dict[tuple[str, str, date], tuple[float, list[DailyPrice]]] = {}
+        self._charts: dict[tuple[str, str, date], tuple[float, list[Candle]]] = {}
         self._retry_at = 0.0
 
     def _get(self, url: str, params: dict[str, str] | None = None) -> Any:
@@ -130,13 +135,12 @@ class NaverClient:
             for q in result:
                 self._quotes[q.stock_code] = (fetched_at, q)
 
-    # ------------------------------------------------------------------ 일별·주별 종가
+    # ------------------------------------------------------------------ 캔들 (분·일·주·월·년)
 
-    def closes(
-        self, stock_code: str, start: date, end: date, weekly: bool
-    ) -> list[DailyPrice] | None:
-        """(날짜, 시가·고가·저가·종가) 목록. 받지 못하면 마지막으로 받은 값, 그것도 없으면 None."""
-        timeframe = "week" if weekly else "day"
+    def candles(
+        self, stock_code: str, timeframe: Timeframe, start: date, end: date
+    ) -> list[Candle] | None:
+        """오래된 순 캔들 목록. 받지 못하면 마지막으로 받은 값, 그것도 없으면 None."""
         key = (stock_code, timeframe, start)
         hit = self._charts.get(key)
         if hit and time.time() - hit[0] < CHART_TTL:
@@ -148,23 +152,43 @@ class NaverClient:
                 f"{CHART_URL}/{stock_code}/{timeframe}",
                 {"startDateTime": f"{start:%Y%m%d}0000", "endDateTime": f"{end:%Y%m%d}2359"},
             )
-            points = [
-                DailyPrice(
-                    date=datetime.strptime(r["localDate"], "%Y%m%d").date(),
-                    open=round(r["openPrice"]),
-                    high=round(r["highPrice"]),
-                    low=round(r["lowPrice"]),
-                    close=round(r["closePrice"]),
-                )
-                for r in rows
-            ]
+            points = [_parse_candle(r) for r in rows]
         except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
             self._failed("주가 흐름", e)
             return hit[1] if hit else None
+        points = [p for p in points if _plausible(p)]
         if not points:
             return hit[1] if hit else None
         self._charts[key] = (time.time(), points)
         return points
+
+
+def _parse_candle(row: dict[str, Any]) -> Candle:
+    """분 캔들은 localDateTime·currentPrice, 나머지는 localDate·closePrice 로 온다."""
+    if "localDateTime" in row:
+        at = datetime.strptime(row["localDateTime"], "%Y%m%d%H%M%S")
+        day, clock, close = at.date(), f"{at:%H:%M}", row["currentPrice"]
+    else:
+        day = datetime.strptime(row["localDate"], "%Y%m%d").date()
+        clock, close = None, row["closePrice"]
+    return Candle(
+        date=day,
+        time=clock,
+        open=round(row["openPrice"]),
+        high=round(row["highPrice"]),
+        low=round(row["lowPrice"]),
+        close=round(close),
+        volume=int(row.get("accumulatedTradingVolume") or 0),
+    )
+
+
+# 한 캔들 안에서 고가가 저가의 이만큼 배를 넘으면 잘못된 값으로 본다
+# (예: 삼성전자 1990년 연봉이 시가 44,000원·종가 319원으로 온다)
+IMPLAUSIBLE_RANGE = 20
+
+
+def _plausible(c: Candle) -> bool:
+    return c.low > 0 and c.high <= c.low * IMPLAUSIBLE_RANGE
 
 
 @lru_cache
@@ -177,6 +201,6 @@ def quotes(stock_codes: list[str]) -> dict[str, Quote]:
     return client.quotes(stock_codes) if client else {}
 
 
-def closes(stock_code: str, start: date, end: date, weekly: bool) -> list[DailyPrice] | None:
+def candles(stock_code: str, timeframe: Timeframe, start: date, end: date) -> list[Candle] | None:
     client = get_naver()
-    return client.closes(stock_code, start, end, weekly) if client else None
+    return client.candles(stock_code, timeframe, start, end) if client else None

@@ -1,9 +1,10 @@
-from datetime import date
+from datetime import date, datetime
 
 import httpx
 import pytest
 
-from app.services import naver
+from app.services import naver, yahoo
+from app.services.market_clock import KST
 
 # 리포트 만들기는 로그인과 ADK가 필요하다
 pytestmark = pytest.mark.usefixtures("member")
@@ -51,18 +52,76 @@ CHART = [
 ]
 
 
-class FakeNaverApi:
-    """httpx.get 대신 쓰는 가짜 네이버 금융."""
+def _minute(at: str, price: float, volume: int = 10) -> dict:
+    return {
+        "localDateTime": at,
+        "currentPrice": price,
+        "openPrice": price,
+        "highPrice": price + 100,
+        "lowPrice": price - 100,
+        "accumulatedTradingVolume": volume,
+    }
 
-    def __init__(self, fail: bool = False):
+
+# 10월 19일 2분, 20일 09:00~09:11 1분 캔들 (09:00~09:09 · 09:10~09:11 두 묶음)
+MINUTES = [_minute("20261019152900", 217000.0), _minute("20261019153000", 217500.0)] + [
+    _minute(f"2026102009{m:02d}00", 218000.0 + m * 100) for m in range(12)
+]
+
+
+def _hour(day: str, hour: int, price: float) -> dict:
+    return _minute(f"{day}{hour:02d}0000", price, volume=1000)
+
+
+# 네이버 시간 캔들: 10월 20일 하루 정규장(09~15시) + 장 마감 뒤 16시
+HOURS = [_hour("20261020", h, 218000.0 + h * 100) for h in range(9, 17)]
+
+
+def _yahoo_chart(days: list[str]) -> dict:
+    """야후 1시간 캔들 (동시호가 15시 칸 없이 09~14시)."""
+    stamps, prices = [], []
+    for day in days:
+        for h in range(9, 15):
+            at = datetime.strptime(f"{day}{h:02d}", "%Y%m%d%H").replace(tzinfo=KST)
+            stamps.append(int(at.timestamp()))
+            prices.append(217000.0 + h * 10)
+    quote = {"open": prices, "high": prices, "low": prices, "close": prices}
+    return {
+        "chart": {
+            "result": [
+                {
+                    "timestamp": stamps,
+                    "indicators": {"quote": [{**quote, "volume": [500] * len(stamps)}]},
+                }
+            ]
+        }
+    }
+
+
+YAHOO = _yahoo_chart(["20261016", "20261019", "20261020"])
+
+
+class FakeNaverApi:
+    """httpx.get 대신 쓰는 가짜 네이버 금융 (야후 1시간 캔들도 여기서 받는다)."""
+
+    def __init__(self, fail: bool = False, yahoo_fail: bool = False):
         self.fail = fail
+        self.yahoo_fail = yahoo_fail
         self.calls = []
 
     def __call__(self, url, params=None, headers=None, timeout=None):
         self.calls.append(url)
         request = httpx.Request("GET", url)
+        if "finance.yahoo.com" in url:
+            if self.yahoo_fail:
+                raise httpx.ConnectError("down", request=request)
+            return httpx.Response(200, json=YAHOO, request=request)
         if self.fail:
             raise httpx.ConnectError("down", request=request)
+        if url.endswith("/minute60"):
+            return httpx.Response(200, json=HOURS, request=request)
+        if url.endswith("/minute"):
+            return httpx.Response(200, json=MINUTES, request=request)
         if "/chart/" in url:
             return httpx.Response(200, json=CHART, request=request)
         codes = url.rsplit("/", 1)[-1].split(",")
@@ -78,6 +137,8 @@ def use_naver(monkeypatch):
         monkeypatch.setattr(naver.httpx, "get", api)
         client = naver.NaverClient()
         monkeypatch.setattr(naver, "get_naver", lambda: client)
+        hourly = yahoo.YahooClient()
+        monkeypatch.setattr(yahoo, "get_yahoo", lambda: hourly)
         return client
 
     return install
@@ -169,12 +230,15 @@ def test_prices_use_live_chart(client, use_naver):
     use_naver(api)
     body = client.get("/api/companies/005930/prices", params={"period": "1m"}).json()
     assert body["is_sample"] is False
+    assert body["interval"] == "day"
     assert body["points"][-1] == {
         "date": "2026-10-20",
+        "time": None,
         "open": 218000,
         "high": 218500,
         "low": 209000,
         "close": 210750,
+        "volume": 0,
     }
     assert any(url.endswith("/005930/day") for url in api.calls)
 
@@ -184,7 +248,7 @@ def test_prices_use_live_chart(client, use_naver):
 
 def test_closes_failure_returns_none(use_naver):
     client = use_naver(FakeNaverApi(fail=True))
-    assert client.closes("005930", date(2026, 9, 20), date(2026, 10, 20), weekly=False) is None
+    assert client.candles("005930", "day", date(2026, 9, 20), date(2026, 10, 20)) is None
 
 
 def test_report_price_as_of_uses_live_date(client, use_naver):
@@ -192,3 +256,86 @@ def test_report_price_as_of_uses_live_date(client, use_naver):
     client.post("/api/companies/005930/report")
     report = client.get("/api/companies/005930/report").json()
     assert report["data_as_of"]["price"] == "2026-10-20"
+
+
+def test_prices_one_day_is_minute_candles_of_last_trading_day(client, use_naver):
+    use_naver(FakeNaverApi())
+    body = client.get("/api/companies/005930/prices", params={"period": "1d"}).json()
+    assert (body["interval"], body["is_sample"]) == ("1min", False)
+    points = body["points"]
+    assert {p["date"] for p in points} == {"2026-10-20"}  # 마지막 거래일만
+    assert (points[0]["time"], points[-1]["time"], len(points)) == ("09:00", "09:11", 12)
+
+
+def test_prices_five_days_bundle_minutes_into_ten(client, use_naver):
+    use_naver(FakeNaverApi())
+    points = client.get("/api/companies/005930/prices", params={"period": "5d"}).json()["points"]
+    assert [(p["date"], p["time"]) for p in points] == [
+        ("2026-10-19", "15:20"),
+        ("2026-10-19", "15:30"),
+        ("2026-10-20", "09:00"),
+        ("2026-10-20", "09:10"),
+    ]
+    first_ten = points[2]
+    assert (first_ten["open"], first_ten["close"]) == (218000, 218900)
+    assert (first_ten["high"], first_ten["low"], first_ten["volume"]) == (219000, 217900, 100)
+
+
+def test_prices_interval_picks_naver_timeframe(client, use_naver):
+    api = FakeNaverApi()
+    use_naver(api)
+    for period, interval, timeframe in [
+        ("1y", "day", "day"),
+        ("5y", "month", "month"),
+        ("all", "year", "year"),
+    ]:
+        res = client.get(
+            "/api/companies/005930/prices", params={"period": period, "interval": interval}
+        )
+        assert res.json()["interval"] == interval
+        assert api.calls[-1].endswith(f"/005930/{timeframe}")
+
+
+def test_implausible_candles_are_dropped():
+    broken = {**CHART[0], "openPrice": 44000.0, "highPrice": 45800.0, "lowPrice": 286.0}
+    assert not naver._plausible(naver._parse_candle(broken))
+    assert naver._plausible(naver._parse_candle(CHART[0]))
+
+
+def test_prices_hourly_joins_yahoo_and_recent_naver(client, use_naver):
+    use_naver(FakeNaverApi())
+    body = client.get(
+        "/api/companies/005930/prices", params={"period": "1m", "interval": "60min"}
+    ).json()
+    assert (body["interval"], body["is_sample"]) == ("60min", False)
+    keys = [(p["date"], p["time"]) for p in body["points"]]
+    # 야후 16·19일 (09~14시 + 일 캔들로 만든 15시 동시호가) → 네이버 20일 정규장 09~15시
+    assert keys == [
+        (day, f"{h:02d}:00") for day in ("2026-10-16", "2026-10-19") for h in range(9, 16)
+    ] + [("2026-10-20", f"{h:02d}:00") for h in range(9, 16)]
+    closing = body["points"][6]
+    assert (closing["open"], closing["close"]) == (217140, 218000)  # 16일 종가
+    assert body["points"][-1]["close"] == 219500  # 네이버 20일 15시 (16시 장외는 빠진다)
+
+
+def test_prices_half_days_split_morning_and_afternoon(client, use_naver):
+    use_naver(FakeNaverApi())
+    points = client.get(
+        "/api/companies/005930/prices", params={"period": "3m", "interval": "halfday"}
+    ).json()["points"]
+    assert [(p["date"], p["time"]) for p in points] == [
+        (day, half)
+        for day in ("2026-10-16", "2026-10-19", "2026-10-20")
+        for half in ("09:00", "12:00")
+    ]
+    morning = points[0]  # 16일 09·10·11시
+    assert (morning["open"], morning["close"], morning["volume"]) == (217090, 217110, 1500)
+
+
+def test_prices_hourly_falls_back_to_days_without_yahoo(client, use_naver):
+    use_naver(FakeNaverApi(yahoo_fail=True))
+    body = client.get(
+        "/api/companies/005930/prices", params={"period": "1m", "interval": "60min"}
+    ).json()
+    assert (body["interval"], body["is_sample"]) == ("day", False)
+    assert all(p["time"] is None for p in body["points"])

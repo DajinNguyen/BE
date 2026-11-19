@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     dart_api_key: str | None = None
     dart_cache_dir: str = ".cache/dart"
     naver_prices_enabled: bool = True  # 네이버 금융 시세 (비공식, 키 없음)
+    yahoo_prices_enabled: bool = True  # 야후 1시간 캔들: 차트 크게 보기 1달·3달 (비공식, 개인 용도)
     # 네이버 검색 API(뉴스). 비워 두면 Google 뉴스 RSS를 쓴다
     naver_client_id: str | None = None
     naver_client_secret: str | None = None
@@ -72,6 +73,11 @@ def check_production(settings: Settings) -> tuple[list[str], list[str]]:
     if settings.naver_prices_enabled:
         warnings.append(
             "네이버 금융 시세는 비공식 API라 상업 서비스에 쓰면 안 돼요. 정식 시세 소스로 바꿔 주세요"
+        )
+    if settings.yahoo_prices_enabled:
+        warnings.append(
+            "야후 파이낸스 1시간 캔들은 비공식 API·개인 용도라 상업 서비스에 쓰면 안 돼요. "
+            "YAHOO_PRICES_ENABLED=false 면 1달·3달 차트가 일 캔들로 나와요"
         )
     if settings.google_news_enabled and not settings.naver_client_id:
         warnings.append(

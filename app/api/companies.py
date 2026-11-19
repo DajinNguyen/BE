@@ -11,7 +11,7 @@ from app.schemas.compare import CompanyCompare
 from app.schemas.financials import Financials
 from app.schemas.news import NewsPage
 from app.schemas.performance import PerformanceDetail
-from app.schemas.price import Period, PriceHistory
+from app.schemas.price import Interval, Period, PriceHistory
 from app.services import (
     compare_service,
     data_store,
@@ -182,8 +182,17 @@ def get_performance(
 
 
 @router.get("/{stock_code}/prices", response_model=PriceHistory)
-def get_prices(stock_code: str, period: Period = Query("3m")):
-    return price_service.get_price_history(stock_code, period)
+def get_prices(
+    stock_code: str,
+    period: Period = Query("3m"),
+    interval: Interval | None = Query(
+        None,
+        description="캔들 하나의 길이. 없으면 기간에 맞춰 정한다 "
+        "(1d→1min, 5d→10min, 1m~6m→day, 1y·5y→week, all→month). 분 캔들은 1d·5d에만.",
+    ),
+):
+    """주가 캔들. 분 캔들은 시간(time)이 붙고, 장외(넥스트레이드) 시간도 들어 있다."""
+    return price_service.get_price_history(stock_code, period, interval)
 
 
 @router.get("/{stock_code}/news", response_model=NewsPage)
