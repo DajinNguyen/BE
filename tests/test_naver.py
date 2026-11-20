@@ -225,6 +225,54 @@ def test_home_base_time_after_close_is_market_close(client, use_naver, monkeypat
     assert client.get("/api/home").json()["base_time"] == "2026-10-20 15:30"
 
 
+def _quote_at(monkeypatch, price, compare, traded_at="2026-10-20T13:05:57.86+09:00"):
+    monkeypatch.setitem(
+        QUOTES,
+        "005930",
+        {
+            **QUOTES["005930"],
+            "closePriceRaw": str(price),
+            "compareToPreviousClosePriceRaw": str(compare),
+            "localTradedAt": traded_at,
+        },
+    )
+
+
+def test_quote_previous_close_is_price_minus_change(monkeypatch, use_naver):
+    _quote_at(monkeypatch, 211000, -7000)
+    client = use_naver(FakeNaverApi())
+    quote = client.quotes(["005930"])["005930"]
+    assert quote.previous_close == 218000
+    assert client.quotes(["000660"])["000660"].previous_close is None  # 변동 값이 없으면 모른다
+
+
+def test_prices_today_candle_follows_live_quote(client, use_naver, monkeypatch):
+    """차트 API는 오늘 종가를 늦게 갱신해서, 현재가(더 최근)로 마지막 캔들을 맞춘다."""
+    _quote_at(monkeypatch, 211000, -7000)
+    use_naver(FakeNaverApi())
+    body = client.get("/api/companies/005930/prices", params={"period": "1m"}).json()
+    last = body["points"][-1]
+    assert (last["date"], last["close"]) == ("2026-10-20", 211000)
+    assert (last["high"], last["low"]) == (218500, 209000)  # 범위 안이면 그대로
+    assert body["points"][-2]["close"] == 218000  # 지난 캔들은 건드리지 않는다
+    assert body["previous_close"] == 218000  # 현재가·등락률과 같은 기준
+
+
+def test_prices_today_candle_range_widens_to_live_quote(client, use_naver, monkeypatch):
+    _quote_at(monkeypatch, 219000, 1000)
+    use_naver(FakeNaverApi())
+    last = client.get("/api/companies/005930/prices", params={"period": "1m"}).json()["points"][-1]
+    assert (last["close"], last["high"], last["low"]) == (219000, 219000, 209000)
+
+
+def test_prices_after_hours_quote_does_not_change_candle(client, use_naver, monkeypatch):
+    _quote_at(monkeypatch, 205000, -13000, traded_at="2026-10-20T16:10:00+09:00")
+    use_naver(FakeNaverApi())
+    body = client.get("/api/companies/005930/prices", params={"period": "1m"}).json()
+    assert body["points"][-1]["close"] == 210750  # 시간외 가격은 정규장 캔들에 섞지 않는다
+    assert body["previous_close"] == 218000
+
+
 def test_prices_use_live_chart(client, use_naver):
     api = FakeNaverApi()
     use_naver(api)

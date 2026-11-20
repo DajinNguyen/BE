@@ -28,3 +28,5 @@ class PriceHistory(BaseModel):
     interval: Interval
     is_sample: bool
     points: list[PricePoint]
+    # 전일 종가 (원). 현재가·등락률과 같은 기준이라, 일 캔들의 마지막(오늘) 등락률을 이걸로 계산한다
+    previous_close: int | None = None
