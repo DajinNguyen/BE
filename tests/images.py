@@ -58,3 +58,21 @@ def make_webp(*, exif: bytes | None = None) -> bytes:
     if exif is not None:
         body += webp_chunk(b"EXIF", exif)
     return b"RIFF" + struct.pack("<I", len(body)) + body
+
+
+def exif_tiff(orientation: int | None = None, *, little: bool = False) -> bytes:
+    """EXIF 본문(TIFF): 기기(Make), (있으면) 회전(Orientation), GPS 위치를 가리키는 칸이 든 것."""
+    order = "<" if little else ">"
+    entries = [
+        (0x010F, 2, 6, b"Apple\x00"[:4])
+    ]  # Make: 값이 4바이트를 넘으면 오프셋이지만 구조만 맞으면 돼요
+    if orientation is not None:
+        entries.append((0x0112, 3, 1, struct.pack(order + "H", orientation) + b"\x00\x00"))
+    entries.append((0x8825, 4, 1, struct.pack(order + "I", 200)))  # GPS IFD 오프셋
+    entries.sort()
+    header = (b"II\x2a\x00" if little else b"MM\x00\x2a") + struct.pack(order + "I", 8)
+    body = struct.pack(order + "H", len(entries))
+    for tag, kind, count, value in entries:
+        body += struct.pack(order + "HHI", tag, kind, count) + value
+    body += b"\x00\x00\x00\x00"
+    return header + body + b"GPSLatitude=37.5665,GPSLongitude=126.9780" + b"\x00" * 8
