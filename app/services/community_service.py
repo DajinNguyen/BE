@@ -264,12 +264,15 @@ def update_post(
     post = _get_post(session, post_id)
     if post.user_id != user.id:
         raise not_owner("내 글만 고칠 수 있어요.")
+    old_image = post.image_url
     post.title, post.body, post.image_url = _clean_post(data, base_url)
     post.category = data.category
     post.updated_at = _now()
     session.add(post)
     session.commit()
     session.refresh(post)
+    if old_image != post.image_url:
+        upload_service.remove_unreferenced(session, [old_image])
     return _posts_out(session, [post], user)[0]
 
 
@@ -296,11 +299,13 @@ def delete_post(session: Session, post_id: str, user: User) -> None:
     reports = _reports_on(session, "post", [post.id]) + _reports_on(
         session, "comment", [c.id for c in comments]
     )
+    images = [post.image_url, *(c.image_url for c in comments)]
     for row in [*reports, *likes, *comments]:
         session.delete(row)
     session.flush()  # 댓글·좋아요를 먼저 지워야 글을 지울 수 있다 (외래 키)
     session.delete(post)
     session.commit()
+    upload_service.remove_unreferenced(session, images)
 
 
 # --------------------------------------------------------------------------
@@ -382,10 +387,14 @@ def delete_comment(session: Session, comment_id: str, user: User) -> None:
     has_replies = session.exec(
         select(PostComment.id).where(PostComment.parent_id == comment.id).limit(1)
     ).first()
+    images = [comment.image_url]
     if has_replies:
+        # 자리만 남기는 댓글도 사진은 더 보이지 않으므로 사진 파일은 지운다
         comment.is_deleted = True
+        comment.image_url = None
         session.add(comment)
         session.commit()
+        upload_service.remove_unreferenced(session, images)
         return
 
     _remove_comment(session, comment)
@@ -397,8 +406,10 @@ def delete_comment(session: Session, comment_id: str, user: User) -> None:
             select(PostComment.id).where(PostComment.parent_id == parent.id).limit(1)
         ).first()
         if left is None:
+            images.append(parent.image_url)
             _remove_comment(session, parent)
     session.commit()
+    upload_service.remove_unreferenced(session, images)
 
 
 # --------------------------------------------------------------------------

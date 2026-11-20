@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     naver_search_hub: bool = True  # NAVER API HUB 키면 true, 예전 개발자센터 키면 false
     google_news_enabled: bool = True  # Google 뉴스 RSS (키 없음, 비상업적 용도만)
     upload_dir: str = "uploads"  # 커뮤니티 사진을 저장하는 폴더 (/uploads 로 보여준다)
+    # 사진 주소의 앞부분 (예: https://dajin.example). 비워 두면 요청의 Host 로 만드는데, 그 값은
+    # 보내는 쪽이 마음대로 바꿀 수 있고 프록시 뒤에서는 http 로 나온다. 운영에서는 꼭 정해 둔다
+    public_base_url: str = ""
 
     # Google 로그인
     google_client_id: str | None = None
@@ -83,6 +86,11 @@ def check_production(settings: Settings) -> tuple[list[str], list[str]]:
     for origin in settings.frontend_origins:
         if not origin.startswith("https://") or "localhost" in origin:
             errors.append(f"FRONTEND_ORIGINS 에 운영 주소(https)만 넣어 주세요: {origin}")
+    if not settings.public_base_url:
+        warnings.append(
+            "PUBLIC_BASE_URL 이 비어 있어요. 사진 주소를 요청의 Host 로 만들어서 다른 주소가 저장될 수 있고, "
+            "https 페이지에서 http 사진 주소가 나와요 (예: PUBLIC_BASE_URL=https://내도메인)"
+        )
     if not settings.rate_limit_enabled:
         warnings.append(
             "RATE_LIMIT_ENABLED=false 라서 속도 제한이 꺼져 있어요 (AI 호출 비용과 도배를 막지 못해요)"

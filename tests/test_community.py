@@ -3,6 +3,7 @@ import pytest
 from app.core.db import new_session
 from app.services import auth_service
 from app.services.auth_service import GoogleProfile
+from tests.images import make_png
 
 STOCK = "005930"
 POST = {"category": "question", "title": "HBM이 뭐예요?", "body": "쉽게 알려주세요."}
@@ -414,7 +415,7 @@ def test_delete_comment_with_replies_leaves_a_spot(client, login):
 # 사진
 # --------------------------------------------------------------------------
 
-PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 100
+PNG = make_png()
 
 
 def _upload(client, data=PNG, name="a.png", content_type="image/png"):
@@ -480,3 +481,126 @@ def test_report_reason_image(client, login):
 def test_non_ascii_or_huge_ids_are_plain_404(client, bad_id):
     """ "²".isdigit() 는 True 인데 int("²") 는 오류라서 예전에는 500 이 났다."""
     assert client.get(f"/api/posts/{bad_id}").status_code == 404
+
+
+# --------------------------------------------------------------------------
+# 사진 파일의 수명
+# --------------------------------------------------------------------------
+
+
+@pytest.fixture
+def photos(tmp_path, monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "upload_dir", str(tmp_path))
+    return tmp_path
+
+
+def _upload_url(client) -> tuple[str, str]:
+    url = _upload(client).json()["image_url"]
+    return url, url.rsplit("/", 1)[-1]
+
+
+def test_deleting_post_removes_its_photos_and_its_comment_photos(client, login, photos):
+    login(1)
+    post_url, post_file = _upload_url(client)
+    comment_url, comment_file = _upload_url(client)
+    post_id = _write(client, image_url=post_url).json()["id"]
+    _comment(client, post_id, "", image_url=comment_url)
+    assert (photos / post_file).is_file() and (photos / comment_file).is_file()
+
+    assert client.delete(f"/api/posts/{post_id}").status_code == 204
+    assert not (photos / post_file).exists() and not (photos / comment_file).exists()
+
+
+def test_deleting_comment_removes_photo_even_when_replies_keep_its_place(client, login, photos):
+    login(1)
+    post_id = _write(client).json()["id"]
+    url, name = _upload_url(client)
+    parent = _comment(client, post_id, "원댓글", image_url=url).json()
+    _comment(client, post_id, "답글", parent_id=parent["id"])  # 답글이 있으면 자리만 남는다
+
+    assert client.delete(f"/api/comments/{parent['id']}").status_code == 204
+    assert not (photos / name).exists()
+
+
+def test_replacing_photo_in_post_removes_the_old_file(client, login, photos):
+    login(1)
+    old_url, old_name = _upload_url(client)
+    new_url, new_name = _upload_url(client)
+    post_id = _write(client, image_url=old_url).json()["id"]
+    res = client.put(f"/api/posts/{post_id}", json={**POST, "image_url": new_url})
+    assert res.status_code == 200
+    assert not (photos / old_name).exists() and (photos / new_name).is_file()
+
+
+def test_photo_still_used_elsewhere_is_kept(client, login, photos):
+    """같은 사진 주소를 다른 글이 쓰고 있으면, 한쪽을 지워도 파일은 남긴다."""
+    login(1)
+    url, name = _upload_url(client)
+    first = _write(client, image_url=url).json()["id"]
+    _write(client, image_url=url)
+    assert client.delete(f"/api/posts/{first}").status_code == 204
+    assert (photos / name).is_file()
+
+
+def test_orphan_sweep_only_removes_old_unused_photos(client, login, photos):
+    import os
+    import time
+
+    from app.services import upload_service
+
+    login(1)
+    used_url, used = _upload_url(client)
+    _write(client, image_url=used_url)
+    _, old_orphan = _upload_url(client)
+    _, fresh_orphan = _upload_url(client)
+    long_ago = time.time() - 3 * 24 * 60 * 60
+    for name in (used, old_orphan):
+        os.utime(photos / name, (long_ago, long_ago))
+
+    with new_session() as session:
+        assert upload_service.orphan_files(session) == [old_orphan]  # 쓰는 것·방금 올린 것은 제외
+        assert (photos / old_orphan).is_file()  # 목록만 보면 지우지 않는다
+        assert upload_service.delete_orphans(session) == [old_orphan]
+    assert not (photos / old_orphan).exists()
+    assert (photos / used).is_file() and (photos / fresh_orphan).is_file()
+
+
+def test_photo_url_uses_configured_public_address_not_the_request_host(
+    client, login, photos, monkeypatch
+):
+    """Host 헤더는 보내는 쪽이 바꿀 수 있다. 설정이 있으면 그 주소로 사진 주소를 만들고 저장한다."""
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "public_base_url", "https://dajin.example")
+    login(1)
+    res = client.post(
+        "/api/uploads",
+        files={"file": ("a.png", PNG, "image/png")},
+        headers={"Host": "evil.example"},
+    )
+    url = res.json()["image_url"]
+    assert url.startswith("https://dajin.example/uploads/")
+    post = client.post(
+        "/api/companies/005930/posts",
+        json={**POST, "image_url": url},
+        headers={"Host": "evil.example"},
+    ).json()
+    assert post["image_url"] == url  # 저장된 주소도 우리 주소
+
+
+def test_photo_url_with_a_foreign_host_is_refused_when_public_address_is_set(
+    client, login, photos, monkeypatch
+):
+    from app.core.config import get_settings
+
+    login(1)
+    _, name = _upload_url(client)  # 설정 없이 올린 사진 (testserver 주소)
+    monkeypatch.setattr(get_settings(), "public_base_url", "https://dajin.example")
+    res = client.post(
+        "/api/companies/005930/posts",
+        json={**POST, "image_url": f"http://evil.example/uploads/{name}"},
+        headers={"Host": "evil.example"},
+    )
+    assert (res.status_code, res.json()["error"]["code"]) == (400, "INVALID_IMAGE")

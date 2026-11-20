@@ -16,7 +16,7 @@ from app.schemas.community import (
     PostSort,
     ReportInput,
 )
-from app.services import community_service
+from app.services import community_service, upload_service
 
 # 보기는 누구나 (optional_user), 쓰기는 로그인한 사람만 (current_user → 401 LOGIN_REQUIRED)
 router = APIRouter(prefix="/api", tags=["community"])
@@ -48,7 +48,9 @@ def create_post(
     user: User = Depends(current_user),
     session: Session = Depends(get_session),
 ):
-    return community_service.create_post(session, stock_code, data, user, str(request.base_url))
+    return community_service.create_post(
+        session, stock_code, data, user, upload_service.public_base(str(request.base_url))
+    )
 
 
 @router.get("/posts/{post_id}", response_model=PostOut)
@@ -68,7 +70,9 @@ def update_post(
     user: User = Depends(current_user),
     session: Session = Depends(get_session),
 ):
-    return community_service.update_post(session, post_id, data, user, str(request.base_url))
+    return community_service.update_post(
+        session, post_id, data, user, upload_service.public_base(str(request.base_url))
+    )
 
 
 @router.delete("/posts/{post_id}", status_code=204)
@@ -102,7 +106,9 @@ def create_comment(
     user: User = Depends(current_user),
     session: Session = Depends(get_session),
 ):
-    return community_service.create_comment(session, post_id, data, user, str(request.base_url))
+    return community_service.create_comment(
+        session, post_id, data, user, upload_service.public_base(str(request.base_url))
+    )
 
 
 @router.delete("/comments/{comment_id}", status_code=204)
