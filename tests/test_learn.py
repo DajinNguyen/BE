@@ -21,6 +21,7 @@ def test_crossword_detail(client):
         "row": 0,
         "col": 2,
         "answer": "주가",
+        "answer_length": 2,
         "term_id": "stock_price",
         "clue": "주식 1주의 가격",
     }

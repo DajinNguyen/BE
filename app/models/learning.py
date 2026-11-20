@@ -39,3 +39,8 @@ class PuzzleOpenRecord(SQLModel, table=True):
     user_id: int = Field(primary_key=True, foreign_key="users.id")
     puzzle_id: str = Field(primary_key=True, max_length=100)
     opened_at: datetime
+    # 오늘의 풀이 상태 (서버 검증용). 새 칸이라 비워 둘 수 있다 — 기존 행은 None 이고, 다음에 열 때 채워진다.
+    attempt_day: str | None = Field(default=None, max_length=10)  # 이 풀이를 시작한 날 (KST)
+    attempt_started_at: datetime | None = None  # 오늘 처음 연 시각
+    attempt_calls: int | None = None  # 오늘 부른 확인·힌트 수 (정답 추측을 막는 데 쓴다)
+    attempt_revealed: bool | None = None  # 오늘 [정답 보기]를 썼는지
