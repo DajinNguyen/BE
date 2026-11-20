@@ -12,7 +12,7 @@ import threading
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import func
+from sqlalchemy import delete, func, update
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, col, select
 
@@ -56,16 +56,15 @@ def _sum(session: Session, user_id: int, *, with_pending: bool) -> int | float:
 
 
 def _drop_stale_holds(session: Session, user_id: int) -> None:
-    stale = session.exec(
-        select(AdkEntry).where(
-            AdkEntry.user_id == user_id,
-            AdkEntry.status == "pending",
+    """결과 없이 10분이 지난 잡아 둔 금액을 돌려놓는다. 한 번의 DELETE 라서 동시에 불러도 안전하다."""
+    result = session.exec(
+        delete(AdkEntry).where(
+            col(AdkEntry.user_id) == user_id,
+            col(AdkEntry.status) == "pending",
             col(AdkEntry.created_at) < _now() - HOLD_TTL,
         )
-    ).all()
-    for entry in stale:
-        session.delete(entry)
-    if stale:
+    )
+    if result.rowcount:
         session.commit()
 
 
@@ -153,21 +152,25 @@ def hold(session: Session, user_id: int, price: float, reason: str, title: str, 
 
 
 def settle(session: Session, hold_id: int) -> None:
-    """결과가 제대로 나왔다: 잡아 둔 금액을 확정한다."""
-    entry = session.get(AdkEntry, hold_id)
-    if entry is not None and entry.status == "pending":
-        entry.status = "done"
-        entry.created_at = _now()
-        session.add(entry)
-        session.commit()
+    """결과가 제대로 나왔다: 잡아 둔 금액을 확정한다.
+
+    "아직 잡아 둔 상태일 때만" 바꾸는 한 번의 UPDATE 라서, 같은 건을 동시에 확정·환불해도 오류 없이
+    둘 중 하나로 끝나고, 이미 돌려준(또는 확정한) 건에는 아무 일도 하지 않는다.
+    """
+    session.exec(
+        update(AdkEntry)
+        .where(col(AdkEntry.id) == hold_id, col(AdkEntry.status) == "pending")
+        .values(status="done", created_at=_now())
+    )
+    session.commit()
 
 
 def release(session: Session, hold_id: int) -> None:
-    """결과가 나오지 않았다: 잡아 둔 금액을 돌려놓는다."""
-    entry = session.get(AdkEntry, hold_id)
-    if entry is not None and entry.status == "pending":
-        session.delete(entry)
-        session.commit()
+    """결과가 나오지 않았다: 잡아 둔 금액을 돌려놓는다. (한 번의 조건부 DELETE 라서 여러 번 불러도 한 번만)"""
+    session.exec(
+        delete(AdkEntry).where(col(AdkEntry.id) == hold_id, col(AdkEntry.status) == "pending")
+    )
+    session.commit()
 
 
 def get_wallet(session: Session, user_id: int) -> Wallet:

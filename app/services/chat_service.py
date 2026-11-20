@@ -537,21 +537,41 @@ def _ask(
         f"chat:{uuid.uuid4().hex}",
     )
     try:
+        return _answer_and_save(
+            session, user_id, request, question, writer, screen, history, conversation, hold_id
+        )
+    except BaseException:
+        # 답변이 실패했거나, 답변을 만든 뒤 저장하다 DB 오류 등으로 끝내 못 줬다: 잡아 둔 ADK 를 돌려준다.
+        # (돌려주지 않으면 10분 동안 잔액에서 빠진 채로 보인다. 이미 확정한 건에는 아무 일도 하지 않는다)
+        session.rollback()
+        wallet_service.release(session, hold_id)
+        raise
+
+
+def _answer_and_save(
+    session: Session,
+    user_id: int,
+    request: ChatRequest,
+    question: str,
+    writer: ChatWriter,
+    screen: dict,
+    history: list,
+    conversation: "ChatConversation | None",
+    hold_id: int,
+) -> ChatResponse:
+    """AI 답변을 받아 대화에 저장하고, 모두 끝난 뒤에야 ADK 를 확정한다."""
+    try:
         answer = write_answer(writer, screen, history, question)
     except Exception as e:  # noqa: BLE001 - 한도·서버 오류·타임아웃 모두 답변 실패
         logger.warning("챗봇 답변을 만들지 못했어요: %s", e)
         answer = ""
     if not answer:
-        wallet_service.release(session, hold_id)
-        raise chat_failed()
+        raise chat_failed()  # 부른 쪽이 잡아 둔 ADK 를 돌려준다
 
     refused = gives_advice(answer)
     if refused:
         logger.warning("챗봇 답변에 투자 추천·예측이 섞여서 거절 문장으로 바꿨어요.")
         answer = REFUSAL
-        wallet_service.release(session, hold_id)
-    else:
-        wallet_service.settle(session, hold_id)
 
     now = _now()
     if conversation is None:
@@ -581,9 +601,14 @@ def _ask(
     session.commit()
     session.add(answered)
     session.commit()
+    sources = [] if refused else cited_sources(screen, answer)  # 응답을 다 만든 뒤에 확정한다
+    if refused:
+        wallet_service.release(session, hold_id)  # 거절 문장은 값을 받지 않는다
+    else:
+        wallet_service.settle(session, hold_id)  # 답변을 저장한 뒤에야 확정한다
     return ChatResponse(
         answer=answer[:ANSWER_MAX],
-        sources=[] if refused else cited_sources(screen, answer),
+        sources=sources,
         conversation_id=str(conversation.id),
         balance=wallet_service.balance(session, user_id),
     )
