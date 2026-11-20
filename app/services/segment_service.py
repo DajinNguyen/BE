@@ -30,6 +30,9 @@ from app.services import dart, data_store, gemini_keys
 
 logger = logging.getLogger(__name__)
 
+# Claude 호출 상한 (초). 기본값(약 10분)이면 멈춘 호출이 계속 붙잡혀 있어서 Gemini 쪽과 같게 둔다
+CLAUDE_TIMEOUT_SECONDS = 60
+
 EXCERPT_ANCHORS = ("주요 제품", "매출실적", "매출 실적", "매출 및 수주", "매출현황", "부문별 매출")
 EXCERPT_WINDOW = 7_000  # 표 제목부터 이만큼 (표가 길면 잘릴 수 있다)
 MAX_EXCERPT_CHARS = 24_000
@@ -116,7 +119,9 @@ class ClaudeSegmentWriter:
 
     def write(self, excerpt: str) -> SegmentExtraction:
         if self._client is None:
-            self._client = anthropic.Anthropic(api_key=self._settings.anthropic_api_key)
+            self._client = anthropic.Anthropic(
+                api_key=self._settings.anthropic_api_key, timeout=CLAUDE_TIMEOUT_SECONDS
+            )
         response = self._client.messages.parse(
             model=self._settings.anthropic_model,
             max_tokens=2000,

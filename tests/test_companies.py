@@ -240,3 +240,14 @@ def test_two_thousand_companies_each_with_intro_and_unique_code():
     assert all(c.one_liner and c.sector and c.name_en for c in seed.values())
     known = {c for r in data_store.industry_records() for c in r["companies"]}
     assert known <= set(seed)
+
+
+def test_stock_codes_are_capped_to_the_watchlist_size(client):
+    """로그인 없이 부를 수 있는 목록 API 라서, 한 번에 시세를 수천 종목 묻지 못하게 한다."""
+    from app.schemas.watchlist import MAX_WATCHLIST
+
+    ok = ",".join(["005930"] * MAX_WATCHLIST)
+    assert client.get("/api/companies", params={"stock_codes": ok}).status_code == 200
+    too_many = ",".join(["005930"] * (MAX_WATCHLIST + 1))
+    res = client.get("/api/companies", params={"stock_codes": too_many})
+    assert res.status_code == 400 and res.json()["error"]["code"] == "INVALID_PARAM"

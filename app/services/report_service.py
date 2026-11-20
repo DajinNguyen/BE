@@ -62,6 +62,7 @@ SOURCES_BASE = ["금융감독원 DART", "한국거래소"]
 
 # 서버가 재시작되는 등으로 생성이 끝나지 못한 리포트를 실패로 돌리는 기준
 GENERATION_TIMEOUT = timedelta(minutes=5)
+CLAUDE_TIMEOUT_SECONDS = 240  # Claude 한 번 호출의 상한 (초)
 
 NO_FINANCIALS_REASON = "이 기업의 재무제표를 아직 불러오지 못했어요."
 TIMEOUT_REASON = "리포트를 만드는 데 너무 오래 걸려서 멈췄어요. 다시 시도해 주세요."
@@ -121,10 +122,11 @@ class FixtureReportWriter:
 
 
 class GeminiReportWriter:
-    """Gemini가 과부하(503)일 때를 대비해 재시도하고, 그래도 안 되면 목데이터로 대체한다.
+    """Gemini가 과부하(503)일 때를 대비해 재시도하고, 끝내 안 되면 실패로 처리한다.
 
-    클라이언트 미팅 등 데모 중에는 "리포트를 만들지 못했어요" 화면이 뜨는 것 자체가 치명적이라,
-    실제 생성이 끝내 실패해도 화면은 항상 뜨도록 안전망을 둔다.
+    예전에는 실패하면 목데이터(삼성전자 예시 리포트)로 대체했는데, 키가 잘못됐거나 Gemini 가 멈춰도
+    "정상으로 만든 리포트"로 저장되고 ADK 도 차감돼서 장애를 알 수 없었다. 이제는 실패로 남기고
+    잡아 둔 ADK 는 돌려준다. (API 키가 없을 때의 데모용 목데이터는 FixtureReportWriter 가 맡는다)
     """
 
     _MAX_ATTEMPTS = 3
@@ -132,13 +134,12 @@ class GeminiReportWriter:
     # 응답이 없을 때 무한정 기다리지 않도록 요청 하나당 상한을 둔다 (단위: ms).
     # Gemini가 과부하일 때 504(deadline exceeded)가 이 시간만큼 걸려서 돌아오므로,
     # 너무 길게 두면 화면에서 "눌렀는데 몇 분째 안 끝남"으로 느껴진다. 45초로 둬서
-    # 3번 재시도해도 체감상 1분 안팎이면 목데이터로 넘어가게 한다.
+    # 3번 재시도해도 체감상 1분 안팎이면 실패로 알려 주게 한다.
     _REQUEST_TIMEOUT_MS = 45_000
 
     def __init__(self, settings: Settings):
         self._settings = settings
         self._client: gemini_keys.FallbackClient | None = None
-        self._fallback = FixtureReportWriter()
 
     def _get_client(self) -> gemini_keys.FallbackClient:
         if self._client is None:
@@ -173,8 +174,11 @@ class GeminiReportWriter:
                     logger.warning("Gemini rate limited (attempt %d): %s", attempt, e)
                     rate_limited = True
                 else:
-                    logger.exception("Gemini client error, falling back to fixture report")
-                    return await self._fallback.write(context)
+                    # 키 오류·잘못된 요청 등: 다시 해도 같으므로 재시도하지 않고 실패로 알린다
+                    logger.exception("Gemini client error")
+                    raise report_generation_failed(
+                        "AI 연결에 문제가 있어서 리포트를 만들지 못했어요. 잠시 후 다시 시도해 주세요."
+                    ) from e
             except genai_errors.ServerError as e:
                 logger.warning("Gemini server error (attempt %d): %s", attempt, e)
             except (
@@ -188,11 +192,8 @@ class GeminiReportWriter:
             raise report_generation_failed(
                 "지금은 리포트 요청이 많아요. 잠시 후 다시 시도해 주세요."
             )
-        logger.error(
-            "Gemini unavailable after %d attempts, falling back to fixture report",
-            self._MAX_ATTEMPTS,
-        )
-        return await self._fallback.write(context)
+        logger.error("Gemini unavailable after %d attempts", self._MAX_ATTEMPTS)
+        raise report_generation_failed()
 
 
 class ClaudeReportWriter:
@@ -203,8 +204,11 @@ class ClaudeReportWriter:
     def _get_client(self) -> anthropic.AsyncAnthropic:
         if self._client is None:
             key = self._settings.anthropic_api_key
+            # 리포트는 생각하는 시간이 길어서 넉넉히 두되, 생성 제한(GENERATION_TIMEOUT 5분)보다 짧게
             self._client = (
-                anthropic.AsyncAnthropic(api_key=key) if key else anthropic.AsyncAnthropic()
+                anthropic.AsyncAnthropic(api_key=key, timeout=CLAUDE_TIMEOUT_SECONDS)
+                if key
+                else anthropic.AsyncAnthropic(timeout=CLAUDE_TIMEOUT_SECONDS)
             )
         return self._client
 

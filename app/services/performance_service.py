@@ -60,6 +60,9 @@ from app.services.market_clock import KST
 
 logger = logging.getLogger(__name__)
 
+# Claude 호출 상한 (초). 기본값(약 10분)이면 멈춘 호출이 계속 붙잡혀 있어서 Gemini 쪽과 같게 둔다
+CLAUDE_TIMEOUT_SECONDS = 60
+
 MAX_QUARTERS = 8
 YEARS_BACK = 3  # 올해 포함 4개 해의 보고서를 본다 (연초에도 8개 분기가 나오도록)
 # 분기 → (보고서 코드, 공시명)
@@ -161,7 +164,9 @@ class ClaudeReasonWriter:
 
     def write(self, context: dict[str, Any]) -> ReasonsDraft | None:
         if self._client is None:
-            self._client = anthropic.Anthropic(api_key=self._settings.anthropic_api_key)
+            self._client = anthropic.Anthropic(
+                api_key=self._settings.anthropic_api_key, timeout=CLAUDE_TIMEOUT_SECONDS
+            )
         response = self._client.messages.parse(
             model=self._settings.anthropic_model,
             max_tokens=2000,

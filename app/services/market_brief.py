@@ -18,6 +18,9 @@ from app.services import gemini_keys
 
 logger = logging.getLogger(__name__)
 
+# Claude 호출 상한 (초). 기본값(약 10분)이면 멈춘 호출이 계속 붙잡혀 있어서 Gemini 쪽과 같게 둔다
+CLAUDE_TIMEOUT_SECONDS = 45
+
 SYSTEM_PROMPT = """\
 당신은 주식을 처음 시작하는 10대 초보자에게 오늘 주식 시장을 알려주는 선생님이에요.
 사용자 메시지로 오늘의 코스피·코스닥 지수, 산업별 등락률, 시가총액 큰 회사의 등락률, 시장 기사 목록(JSON)이 주어져요.
@@ -105,7 +108,9 @@ class ClaudeBriefWriter:
 
     def write(self, context: dict[str, Any]) -> MarketBrief | None:
         if self._client is None:
-            self._client = anthropic.Anthropic(api_key=self._settings.anthropic_api_key)
+            self._client = anthropic.Anthropic(
+                api_key=self._settings.anthropic_api_key, timeout=CLAUDE_TIMEOUT_SECONDS
+            )
         try:
             response = self._client.messages.parse(
                 model=self._settings.anthropic_model,

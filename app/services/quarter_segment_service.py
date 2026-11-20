@@ -31,6 +31,9 @@ from app.services import ai_retry, dart, gemini_keys
 
 logger = logging.getLogger(__name__)
 
+# Claude 호출 상한 (초). 기본값(약 10분)이면 멈춘 호출이 계속 붙잡혀 있어서 Gemini 쪽과 같게 둔다
+CLAUDE_TIMEOUT_SECONDS = 60
+
 UNITS = {"원": 1, "천원": 1e3, "백만원": 1e6, "억원": 1e8, "십억원": 1e9, "조원": 1e12}
 # 사업별 매출 합계 ÷ 그 분기 DART 매출. 부문 매출은 내부거래를 빼기 전이라 조금 클 수 있다.
 # 누적(6·9개월) 값을 잘못 옮기면 2~3배가 되어 걸러진다.
@@ -142,7 +145,9 @@ class ClaudeQuarterSegmentWriter:
 
     def write(self, source: str) -> QuarterSegmentExtraction | None:
         if self._client is None:
-            self._client = anthropic.Anthropic(api_key=self._settings.anthropic_api_key)
+            self._client = anthropic.Anthropic(
+                api_key=self._settings.anthropic_api_key, timeout=CLAUDE_TIMEOUT_SECONDS
+            )
         response = self._client.messages.parse(
             model=self._settings.anthropic_model,
             max_tokens=2000,
