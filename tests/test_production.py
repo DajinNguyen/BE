@@ -11,6 +11,7 @@ GOOD = dict(
     google_redirect_uri="https://api.dajin.example/api/auth/google/callback",
     database_url="postgresql+psycopg://u:p@db/dajin",
     frontend_origins=["https://dajin.example"],
+    public_base_url="https://dajin.example",
     anthropic_api_key="key",
     naver_prices_enabled=False,
     google_news_enabled=False,
@@ -65,3 +66,13 @@ def test_production_refuses_to_start_when_misconfigured(monkeypatch):
 def test_health_ok(client):
     res = client.get("/api/health")
     assert (res.status_code, res.json()) == (200, {"status": "ok"})
+
+
+def test_disabled_rate_limit_is_warned():
+    _, warnings = check(rate_limit_enabled=False)
+    assert any("RATE_LIMIT_ENABLED" in w for w in warnings)
+
+
+def test_missing_public_base_url_is_warned():
+    _, warnings = check(public_base_url="")
+    assert any("PUBLIC_BASE_URL" in w for w in warnings)

@@ -38,6 +38,9 @@ from app.services import dart, data_store, gemini_keys
 
 logger = logging.getLogger(__name__)
 
+# Claude 호출 상한 (초). 기본값(약 10분)이면 멈춘 호출이 계속 붙잡혀 있어서 Gemini 쪽과 같게 둔다
+CLAUDE_TIMEOUT_SECONDS = 45
+
 FINANCE_INDUSTRY = "finance"
 PEERS_DEFAULT = 4
 PEERS_MAX = 4
@@ -255,7 +258,9 @@ class ClaudeCompareWriter:
 
     def write(self, context: dict[str, Any]) -> AnalysisDraft | None:
         if self._client is None:
-            self._client = anthropic.Anthropic(api_key=self._settings.anthropic_api_key)
+            self._client = anthropic.Anthropic(
+                api_key=self._settings.anthropic_api_key, timeout=CLAUDE_TIMEOUT_SECONDS
+            )
         response = self._client.messages.parse(
             model=self._settings.anthropic_model,
             max_tokens=2000,

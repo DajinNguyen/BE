@@ -117,7 +117,11 @@ def spend(
         select(AdkEntry.id).where(AdkEntry.user_id == user_id, AdkEntry.ref == ref)
     ).first()
     if exists is None:
-        settle(session, hold(session, user_id, price, reason, title, ref))
+        try:
+            settle(session, hold(session, user_id, price, reason, title, ref))
+        except IntegrityError:
+            # 같은 ref 의 요청이 동시에 와서 다른 쪽이 먼저 뺐다: 한 번만 빠지므로 정상으로 본다
+            session.rollback()
     return balance(session, user_id)
 
 

@@ -7,6 +7,7 @@ from app.models.user import User
 from app.models.wallet import AdkEntry
 from app.services import auth_service, upload_service, wallet_service
 from tests.conftest import login_as
+from tests.images import make_jpeg
 
 STOCK = "005930"
 POST = {"category": "free", "title": "제목", "body": "본문"}
@@ -88,7 +89,7 @@ def test_delete_removes_uploaded_photos(client, tmp_path, monkeypatch):
 
     monkeypatch.setattr(get_settings(), "upload_dir", str(tmp_path))
     login_as(client, 1)
-    name = upload_service.save_image(b"\xff\xd8\xff" + b"0" * 10)
+    name = upload_service.save_image(make_jpeg())
     with new_session() as s:
         s.add(
             Post(

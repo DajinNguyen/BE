@@ -47,6 +47,9 @@ from app.services.chat_plan import Plan, Planner
 
 logger = logging.getLogger(__name__)
 
+# Claude 호출 상한 (초). 기본값(약 10분)이면 멈춘 호출이 계속 붙잡혀 있어서 Gemini 쪽과 같게 둔다
+CLAUDE_TIMEOUT_SECONDS = 30
+
 PER_MINUTE = 5  # 같은 사람이 1분에 물을 수 있는 질문 수
 PLAN_WAIT = 4.0  # 의도 읽기를 기다리는 시간(초)
 HISTORY_TURNS = 6  # AI에게 같이 보내는 앞 대화 (질문·답변 합쳐서)
@@ -227,7 +230,9 @@ class ClaudeChatWriter:
 
     def answer(self, screen: dict[str, Any], history: list[tuple[str, str]], question: str) -> str:
         if self._client is None:
-            self._client = anthropic.Anthropic(api_key=self._settings.anthropic_api_key)
+            self._client = anthropic.Anthropic(
+                api_key=self._settings.anthropic_api_key, timeout=CLAUDE_TIMEOUT_SECONDS
+            )
         response = self._client.messages.create(
             model=self._settings.anthropic_model,
             max_tokens=1500,
@@ -279,7 +284,9 @@ def _message_out(message: ChatMessage) -> ChatMessageOut:
 def _conversation(session: Session, user_id: int, conversation_id: str) -> ChatConversation:
     """내 대화만 찾는다. 다른 사람의 대화는 없는 대화와 똑같이 404."""
     found = (
-        session.get(ChatConversation, int(conversation_id)) if conversation_id.isdigit() else None
+        session.get(ChatConversation, int(conversation_id))
+        if conversation_id.isascii() and conversation_id.isdigit() and len(conversation_id) <= 18
+        else None
     )
     if found is None or found.user_id != user_id:
         raise conversation_not_found()

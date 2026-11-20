@@ -159,3 +159,21 @@ def test_segment_note_is_found_by_heading(heading):
 
 def test_segment_note_missing():
     assert dart.segment_note_text("\n1. 일반사항\n본문\n") == ""
+
+
+def test_failure_log_never_contains_the_api_key(tmp_path, monkeypatch, caplog):
+    """DART 주소에는 API 키(crtfc_key)가 들어 있고 httpx 오류 문구는 그 주소를 그대로 담는다."""
+    secret = "SECRET-KEY-MUST-NOT-LEAK"
+
+    def server_error(url, params=None, timeout=None):
+        return httpx.Response(500, request=httpx.Request("GET", url, params=params))
+
+    monkeypatch.setattr(dart.httpx, "get", server_error)
+    client = dart.DartClient(secret, tmp_path)
+    with caplog.at_level("DEBUG"):
+        assert client.company_overview("00106641") is None
+        assert client.single_accounts("00106641", 2025, "11011") is None
+        assert client.latest_annual_report("00106641") is None
+    assert "DART" in caplog.text  # 실패는 여전히 남긴다
+    assert "HTTP 500" in caplog.text  # 원인을 알 수 있게 상태 코드는 남긴다
+    assert secret not in caplog.text

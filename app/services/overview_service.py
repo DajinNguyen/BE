@@ -30,6 +30,9 @@ from app.services import dart, data_store, gemini_keys
 
 logger = logging.getLogger(__name__)
 
+# Claude 호출 상한 (초). 기본값(약 10분)이면 멈춘 호출이 계속 붙잡혀 있어서 Gemini 쪽과 같게 둔다
+CLAUDE_TIMEOUT_SECONDS = 90
+
 MAX_SOURCE_CHARS = 40_000  # 사업의 내용이 이보다 길면 앞부분만 (사업 개요·주요 제품이 앞에 있다)
 MAX_SEGMENTS = 5
 MAX_TIMELINE = 5
@@ -139,7 +142,9 @@ class ClaudeOverviewWriter:
 
     async def write(self, context: dict[str, Any]) -> OverviewContent:
         if self._client is None:
-            self._client = anthropic.AsyncAnthropic(api_key=self._settings.anthropic_api_key)
+            self._client = anthropic.AsyncAnthropic(
+                api_key=self._settings.anthropic_api_key, timeout=CLAUDE_TIMEOUT_SECONDS
+            )
         try:
             response = await self._client.messages.parse(
                 model=self._settings.anthropic_model,

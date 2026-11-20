@@ -11,6 +11,7 @@ AI 글이 아직 없거나 AI 키가 없으면 지수로 만든 기본 문장을
 가장 잘 맞는 기사로 바꾼다 (받지 못하면 예시 기사). 시장 뉴스 목록도 실제 뉴스 검색을 먼저 쓴다.
 """
 
+import asyncio
 import logging
 import math
 import re
@@ -91,7 +92,7 @@ async def market_news(now: datetime | None = None) -> list[NewsArticle]:
 
 async def latest_market_news(now: datetime | None = None) -> list[NewsArticle]:
     """시장 뉴스 목록. 실제 뉴스를 받지 못하면 예시 기사."""
-    live = news_search.latest(MARKET_NEWS_QUERY, MARKET_NEWS_COUNT)
+    live = await asyncio.to_thread(news_search.latest, MARKET_NEWS_QUERY, MARKET_NEWS_COUNT)
     if live is not None:
         return await classify_news_sentiment(live)
     return await market_news(now)
@@ -101,8 +102,12 @@ async def reason_news(now: datetime | None = None) -> dict[str, NewsArticle]:
     """예시 기사 id → 이유 카드에 붙일 기사. 검색은 동시에 한다."""
     samples = await market_news(now)
     queries = {n["id"]: n.get("query") or n["title"] for n in load_json("market.json")["news"]}
-    with ThreadPoolExecutor(max_workers=len(samples) or 1) as pool:
-        found = list(pool.map(news_search.most_relevant, [queries[s.id] for s in samples]))
+
+    def search_all() -> list:
+        with ThreadPoolExecutor(max_workers=len(samples) or 1) as pool:
+            return list(pool.map(news_search.most_relevant, [queries[s.id] for s in samples]))
+
+    found = await asyncio.to_thread(search_all)
     picked = [live or sample for sample, live in zip(samples, found, strict=True)]
     classified = await classify_news_sentiment(picked)
     return {sample.id: article for sample, article in zip(samples, classified, strict=True)}
@@ -356,7 +361,7 @@ def _live_summary(now: datetime | None = None) -> MarketSummary | None:
 
 
 async def get_summary(now: datetime | None = None) -> MarketSummary:
-    live = _live_summary(now)
+    live = await asyncio.to_thread(_live_summary, now)  # 네이버 지수 호출이 동기라 따로 돌린다
     if live is not None:
         return live
     data = load_json("market.json")

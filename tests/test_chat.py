@@ -758,3 +758,9 @@ def test_industry_news_prefers_articles_that_name_the_industry(monkeypatch):
     # 기사를 받지 못해도 대답은 한다
     monkeypatch.setattr(chat_data.news_search, "latest", lambda query, size: None)
     assert chat_data._industry_recent_news(record) == []
+
+
+@pytest.mark.parametrize("bad_id", ["²", "٣", "1" * 40])
+def test_non_ascii_or_huge_conversation_ids_are_plain_404(client, bad_id):
+    login_as(client, 1)
+    assert client.get(f"/api/chat/conversations/{bad_id}").status_code == 404

@@ -99,7 +99,9 @@ def _max_tokens(count: int) -> int:
 
 
 async def _call_claude(settings: Settings, articles: list[NewsArticle]) -> NewsSentimentBatch:
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    client = anthropic.AsyncAnthropic(
+        api_key=settings.anthropic_api_key, timeout=REQUEST_TIMEOUT_SECONDS
+    )
     response = await client.messages.parse(
         model=settings.anthropic_model,
         max_tokens=_max_tokens(len(articles)),

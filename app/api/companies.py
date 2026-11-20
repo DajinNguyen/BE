@@ -3,6 +3,7 @@ from sqlmodel import Session
 
 from app.api.deps import get_overview_writer
 from app.core.db import get_session, new_session
+from app.core.errors import invalid_param
 from app.core.rate_limit import anonymous_ai_budget, rate_limit
 from app.models.overview import CompanyOverviewRecord, CompanySegmentsRecord
 from app.models.performance import CompanyPerformanceRecord, CompanyQuarterSegmentsRecord
@@ -12,6 +13,7 @@ from app.schemas.financials import Financials
 from app.schemas.news import NewsPage
 from app.schemas.performance import PerformanceDetail
 from app.schemas.price import Interval, Period, PriceHistory
+from app.schemas.watchlist import MAX_WATCHLIST
 from app.services import (
     compare_service,
     data_store,
@@ -39,7 +41,12 @@ def search_companies(
     stock_codes: str | None = Query(None, description="쉼표로 구분한 종목코드 (관심 기업 목록용)"),
 ):
     if stock_codes is not None:
-        return data_store.companies_by_codes([c for c in stock_codes.split(",") if c])
+        codes = [c for c in stock_codes.split(",") if c]
+        # 로그인 없이도 부를 수 있어서, 한 번에 수천 종목을 시세 서버에 묻지 못하게 한다.
+        # 관심 기업 최대 개수와 같게 둬서 정상 사용에는 영향이 없다
+        if len(codes) > MAX_WATCHLIST:
+            raise invalid_param(f"종목코드는 한 번에 {MAX_WATCHLIST}개까지 보낼 수 있어요.")
+        return data_store.companies_by_codes(codes)
     return data_store.search_companies(query, limit)
 
 
