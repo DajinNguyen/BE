@@ -65,3 +65,8 @@ def test_production_refuses_to_start_when_misconfigured(monkeypatch):
 def test_health_ok(client):
     res = client.get("/api/health")
     assert (res.status_code, res.json()) == (200, {"status": "ok"})
+
+
+def test_disabled_rate_limit_is_warned():
+    _, warnings = check(rate_limit_enabled=False)
+    assert any("RATE_LIMIT_ENABLED" in w for w in warnings)

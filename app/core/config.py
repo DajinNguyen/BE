@@ -83,6 +83,10 @@ def check_production(settings: Settings) -> tuple[list[str], list[str]]:
     for origin in settings.frontend_origins:
         if not origin.startswith("https://") or "localhost" in origin:
             errors.append(f"FRONTEND_ORIGINS 에 운영 주소(https)만 넣어 주세요: {origin}")
+    if not settings.rate_limit_enabled:
+        warnings.append(
+            "RATE_LIMIT_ENABLED=false 라서 속도 제한이 꺼져 있어요 (AI 호출 비용과 도배를 막지 못해요)"
+        )
     if not (settings.anthropic_api_key or settings.gemini_api_key):
         warnings.append("AI 키가 없어서 리포트가 데모용 목데이터로 나와요")
     if settings.naver_prices_enabled:

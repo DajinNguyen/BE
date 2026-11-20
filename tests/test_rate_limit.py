@@ -71,3 +71,12 @@ def test_anonymous_ai_budget_caps_new_generations(client, limited, monkeypatch):
     finally:
         app.dependency_overrides.pop(compare_service.get_compare_writer, None)
     assert started == []  # 예산을 다 쓰면 새 AI 작성을 시작하지 않는다 (화면은 그대로 나온다)
+
+
+def test_content_report_is_limited_per_user(client, limited):
+    """신고 3건이면 글이 숨겨지므로, 계정 하나가 짧은 시간에 마구 신고하지 못하게 한다."""
+    login_as(client, 1)
+    body = {"target_type": "post", "target_id": "999999", "reason": "spam"}
+    codes = [client.post("/api/reports", json=body).status_code for _ in range(11)]
+    assert codes[-1] == 429
+    assert 429 not in codes[:10]

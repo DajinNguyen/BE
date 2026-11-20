@@ -8,6 +8,7 @@ DART 키가 있으면 회사마다 DART 고유번호·공식 회사명을 붙이
 뉴스는 실제 기사(네이버 검색 API, 키가 없으면 Google 뉴스 RSS)를 쓰고, 받지 못하면 시드 뉴스를 쓴다.
 """
 
+import asyncio
 import json
 from functools import lru_cache
 from pathlib import Path
@@ -290,7 +291,10 @@ async def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
     쪽(page)으로 자르기 전에 그 쪽의 목록을 한 번에 분류한다.
     """
     start = (page - 1) * size + 1
-    result = news_search.company_news(news_query(stock_code), start, size, stock_code)
+    # 뉴스 검색은 동기 HTTP 호출이라, 그대로 부르면 기다리는 동안 서버 전체가 멈춘다
+    result = await asyncio.to_thread(
+        news_search.company_news, news_query(stock_code), start, size, stock_code
+    )
     if result is None:
         articles = await classify_news_sentiment(to_articles(stock_code, get_news(stock_code)))
         return _seed_page(articles, page, size)
@@ -305,7 +309,9 @@ async def get_news_page(stock_code: str, page: int, size: int) -> NewsPage:
 
 async def latest_company_news(stock_code: str, size: int) -> list[NewsArticle]:
     """리포트에 쓰는 최근 뉴스. 실제 뉴스를 받지 못하면 시드 뉴스."""
-    live = news_search.company_news(news_query(stock_code), 1, size, stock_code)
+    live = await asyncio.to_thread(
+        news_search.company_news, news_query(stock_code), 1, size, stock_code
+    )
     articles = (
         live.articles if live is not None else to_articles(stock_code, get_news(stock_code))[:size]
     )

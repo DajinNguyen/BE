@@ -31,6 +31,8 @@ from app.services import dart, upload_service
 from app.services.auth_service import SESSION_COOKIE
 
 logger = logging.getLogger(__name__)
+# httpx 는 INFO 로 요청 주소를 그대로 찍는데, DART 는 주소에 API 키(crtfc_key)가 들어간다
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 @asynccontextmanager

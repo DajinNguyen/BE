@@ -474,3 +474,9 @@ def test_report_reason_image(client, login):
     post_id = _write(client).json()["id"]
     login(2)
     assert _report(client, "post", post_id, "image").status_code == 204
+
+
+@pytest.mark.parametrize("bad_id", ["²", "٣", "９", "1" * 40])
+def test_non_ascii_or_huge_ids_are_plain_404(client, bad_id):
+    """ "²".isdigit() 는 True 인데 int("²") 는 오류라서 예전에는 500 이 났다."""
+    assert client.get(f"/api/posts/{bad_id}").status_code == 404

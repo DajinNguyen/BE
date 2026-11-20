@@ -229,3 +229,19 @@ def test_spend_api_takes_once_per_target(client):
 def test_spend_api_needs_login(client):
     res = client.post("/api/me/wallet/spend", json={"reason": "chat", "target_id": "x"})
     assert res.status_code == 401
+
+
+def test_concurrent_same_spend_is_not_a_server_error(client, monkeypatch):
+    """같은 요청이 동시에 오면 한쪽이 유니크 제약에 걸린다. 500 이 아니라 한 번만 빠진 것으로 본다."""
+    from sqlalchemy.exc import IntegrityError
+
+    login_as(client, 1)
+    real_hold = wallet_service.hold
+
+    def raced(session, user_id, price, reason, title, ref):
+        real_hold(session, user_id, price, reason, title, ref)  # 다른 요청이 먼저 뺐다고 가정
+        raise IntegrityError("INSERT", {}, Exception("uq_adk_entries_user_ref"))
+
+    monkeypatch.setattr(wallet_service, "hold", raced)
+    res = client.post("/api/me/wallet/spend", json={"reason": "report", "target_id": "005930"})
+    assert res.status_code == 200

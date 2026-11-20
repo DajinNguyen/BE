@@ -279,7 +279,9 @@ def _message_out(message: ChatMessage) -> ChatMessageOut:
 def _conversation(session: Session, user_id: int, conversation_id: str) -> ChatConversation:
     """내 대화만 찾는다. 다른 사람의 대화는 없는 대화와 똑같이 404."""
     found = (
-        session.get(ChatConversation, int(conversation_id)) if conversation_id.isdigit() else None
+        session.get(ChatConversation, int(conversation_id))
+        if conversation_id.isascii() and conversation_id.isdigit() and len(conversation_id) <= 18
+        else None
     )
     if found is None or found.user_id != user_id:
         raise conversation_not_found()

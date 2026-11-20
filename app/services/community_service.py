@@ -90,7 +90,7 @@ def _iso(dt: datetime | None) -> str | None:
 
 def _parse_id(raw: str) -> int | None:
     """프론트는 id를 문자열로 다룬다. 숫자가 아니면 없는 글로 본다."""
-    return int(raw) if raw.isdigit() and len(raw) <= 18 else None
+    return int(raw) if raw.isascii() and raw.isdigit() and len(raw) <= 18 else None
 
 
 # --------------------------------------------------------------------------

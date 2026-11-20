@@ -132,7 +132,7 @@ def unlike_post(
     return community_service.set_like(session, post_id, user, liked=False)
 
 
-@router.post("/reports", status_code=204)
+@router.post("/reports", status_code=204, dependencies=[Depends(rate_limit("post_report", 10))])
 def report_target(
     data: ReportInput,
     user: User = Depends(current_user),

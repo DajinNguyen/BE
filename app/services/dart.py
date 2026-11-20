@@ -29,6 +29,14 @@ from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
+
+def _why(error: Exception) -> str:
+    """로그에 남길 실패 이유. httpx 오류 문구에는 요청 주소(crtfc_key 포함)가 들어 있어서 쓰지 않는다."""
+    if isinstance(error, httpx.HTTPStatusError):
+        return f"HTTP {error.response.status_code}"
+    return type(error).__name__
+
+
 BASE_URL = "https://opendart.fss.or.kr/api"
 CORP_CODES_TTL = 24 * 60 * 60  # 하루
 OVERVIEW_TTL = 7 * 24 * 60 * 60  # 일주일
@@ -183,7 +191,7 @@ class DartClient:
                 try:
                     corps = self._download_corps()
                 except (httpx.HTTPError, ValueError, ElementTree.ParseError) as e:
-                    logger.warning("DART 고유번호 목록을 받지 못했어요: %s", e)
+                    logger.warning("DART 고유번호 목록을 받지 못했어요: %s", _why(e))
                     self._corps_retry_at = time.time() + RETRY_AFTER
                     return self._corps or {}
                 self._write_cache("corp_codes.json", {k: asdict(v) for k, v in corps.items()})
@@ -208,7 +216,7 @@ class DartClient:
                 res.raise_for_status()
                 data = res.json()
             except (httpx.HTTPError, ValueError) as e:
-                logger.warning("DART 기업개황을 받지 못했어요 (%s): %s", corp_code, e)
+                logger.warning("DART 기업개황을 받지 못했어요 (%s): %s", corp_code, _why(e))
                 return None
             if data.get("status") != "000":
                 logger.warning("DART 기업개황 오류 (%s): %s", corp_code, data.get("message"))
@@ -242,7 +250,7 @@ class DartClient:
                 res.raise_for_status()
                 data = res.json()
             except (httpx.HTTPError, ValueError) as e:
-                logger.warning("DART 재무제표를 받지 못했어요 (%s): %s", key, e)
+                logger.warning("DART 재무제표를 받지 못했어요 (%s): %s", key, _why(e))
                 return None
             status = data.get("status")
             if status == "013":  # 조회된 데이터 없음 (아직 공시 전 등)
@@ -279,7 +287,7 @@ class DartClient:
                 res.raise_for_status()
                 body = res.json()
             except (httpx.HTTPError, ValueError) as e:
-                logger.warning("DART 사업보고서 목록을 받지 못했어요 (%s): %s", corp_code, e)
+                logger.warning("DART 사업보고서 목록을 받지 못했어요 (%s): %s", corp_code, _why(e))
                 return None
             if body.get("status") not in ("000", "013"):
                 logger.warning("DART 공시 목록 오류 (%s): %s", corp_code, body.get("message"))
@@ -307,7 +315,7 @@ class DartClient:
             main = max(archive.infolist(), key=lambda info: info.file_size)
             document = archive.read(main).decode("utf-8", errors="replace")
         except (httpx.HTTPError, zipfile.BadZipFile, ValueError) as e:
-            logger.warning("DART 사업보고서 원문을 받지 못했어요 (%s): %s", rcept_no, e)
+            logger.warning("DART 사업보고서 원문을 받지 못했어요 (%s): %s", rcept_no, _why(e))
             return None
         return document
 
