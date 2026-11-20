@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 QUOTE_URL = "https://polling.finance.naver.com/api/realtime/domestic/stock"
 CHART_URL = "https://api.stock.naver.com/chart/domestic/item"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
-QUOTE_TTL = 60  # 1분
-CHART_TTL = 60  # 1분 (오늘 캔들이 장중에 계속 바뀐다)
+QUOTE_TTL = 20  # 초 (화면의 현재가와 그래프를 같은 값으로 맞추려고 짧게 둔다)
+CHART_TTL = 20  # 초 (오늘 캔들이 장중에 계속 바뀐다)
 TIMEOUT = 3.0  # 화면이 기다리지 않도록 짧게
 RETRY_AFTER = 60  # 받기에 실패하면 이 시간 동안은 다시 시도하지 않는다
 BATCH_SIZE = 50  # 한 번에 묻는 종목 수
@@ -55,6 +55,7 @@ class Quote:
     trading_value: int  # 오늘 누적 거래대금 (원)
     market_cap: int  # 시가총액 (원)
     traded_at: datetime  # 마지막 체결 시각 (KST)
+    previous_close: int | None = None  # 전일 종가 (원) = 현재가 − 전일 대비 변동. 모르면 None
 
 
 def _int_or_zero(raw: Any) -> int:
@@ -62,14 +63,25 @@ def _int_or_zero(raw: Any) -> int:
     return int(raw) if raw not in (None, "") else 0
 
 
+def _previous_close(price: int, item: dict[str, Any]) -> int | None:
+    """네이버는 전일 종가를 직접 주지 않고 '전일 대비 변동(원)'만 줘서 거꾸로 계산한다."""
+    raw = item.get("compareToPreviousClosePriceRaw")
+    try:
+        return price - int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def _parse_quote(item: dict[str, Any]) -> Quote:
+    price = int(item["closePriceRaw"])  # 현재가가 없으면 쓸 수 없어서 그 종목만 뺀다
     return Quote(
         stock_code=item["itemCode"],
-        price=int(item["closePriceRaw"]),  # 현재가가 없으면 쓸 수 없어서 그 종목만 뺀다
+        price=price,
         change_rate=float(item["fluctuationsRatioRaw"] or 0),
         trading_value=_int_or_zero(item.get("accumulatedTradingValueRaw")),
         market_cap=_int_or_zero(item.get("marketValueFullRaw")),
         traded_at=datetime.fromisoformat(item["localTradedAt"]),
+        previous_close=_previous_close(price, item),
     )
 
 

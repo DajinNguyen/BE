@@ -5,14 +5,14 @@
 """
 
 import random
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from app.core.errors import invalid_param
 from app.schemas.company import CompanyDetail
 from app.schemas.price import Interval, Period, PriceHistory, PricePoint
 from app.services import naver, yahoo
 from app.services.data_store import get_company
-from app.services.market_clock import KST, last_close_date
+from app.services.market_clock import KST, MARKET_CLOSE, last_close_date
 
 # 기간별로 거슬러 올라가는 날 수. 1d·5d는 연휴를 넘겨 받은 뒤 마지막 거래일만 남긴다.
 PERIOD_DAYS: dict[str, int] = {
@@ -175,6 +175,51 @@ def _live(stock_code: str, period: Period, interval: Interval, end: date) -> lis
     return _points(candles)
 
 
+def _same_candle(last: date, today: date, interval: Interval) -> bool:
+    """오늘이 마지막 캔들에 속하는지 (주·월·년 캔들의 date 는 그 기간의 첫날이다)."""
+    if today < last:
+        return False
+    if interval == "week":
+        return (today - last).days < 7
+    if interval == "month":
+        return (today.year, today.month) == (last.year, last.month)
+    if interval == "year":
+        return today.year == last.year
+    return today == last
+
+
+def _with_quote(
+    points: list[PricePoint], stock_code: str, interval: Interval
+) -> tuple[list[PricePoint], int | None]:
+    """마지막(오늘) 캔들을 현재가에 맞춘다. 화면 위쪽 현재가와 그래프가 같은 값이 되게.
+
+    차트 API는 오늘 캔들의 종가를 몇 분 늦게 갱신해서, 현재가 API(마지막 체결 시각이 있는 값)와
+    어긋난다. 현재가가 더 최근이라 종가를 현재가로 바꾸고 고가·저가가 모자라면 넓힌다.
+    (오늘 캔들이 아니면 건드리지 않는다.) 두 번째 값은 전일 종가.
+    """
+    quote = naver.quotes([stock_code]).get(stock_code)
+    if quote is None or not points:
+        return points, None
+    last = points[-1]
+    at = quote.traded_at.astimezone(KST)
+    # 정규장 시간의 체결만 쓴다 (장 마감 뒤 시간외 가격이 정규장 캔들에 섞이지 않게).
+    # 분·시간 캔들은 그 캔들이 시작한 뒤의 체결일 때만 (더 오래된 현재가로 덮지 않는다).
+    if (
+        not _same_candle(last.date, at.date(), interval)
+        or not time(9, 0) <= at.time() <= MARKET_CLOSE
+        or (last.time is not None and f"{at:%H:%M}" < last.time)
+    ):
+        return points, quote.previous_close
+    fixed = last.model_copy(
+        update={
+            "close": quote.price,
+            "high": max(last.high, quote.price),
+            "low": min(last.low, quote.price),
+        }
+    )
+    return [*points[:-1], fixed], quote.previous_close
+
+
 def get_price_history(
     stock_code: str,
     period: Period,
@@ -189,19 +234,27 @@ def get_price_history(
     if interval in HOUR_INTERVALS:
         hourly = _hourly(company, period, interval, end)
         if hourly:
+            points, previous_close = _with_quote(_points(hourly), stock_code, interval)
             return PriceHistory(
                 stock_code=stock_code,
                 period=period,
                 interval=interval,
                 is_sample=False,
-                points=_points(hourly),
+                points=points,
+                previous_close=previous_close,
             )
         interval = "day"  # 야후를 받지 못하면 일 캔들로
 
     live = _live(stock_code, period, interval, end)
     if live:
+        live, previous_close = _with_quote(live, stock_code, interval)
         return PriceHistory(
-            stock_code=stock_code, period=period, interval=interval, is_sample=False, points=live
+            stock_code=stock_code,
+            period=period,
+            interval=interval,
+            is_sample=False,
+            points=live,
+            previous_close=previous_close,
         )
     return PriceHistory(
         stock_code=stock_code,
