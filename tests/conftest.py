@@ -8,6 +8,7 @@ os.environ["UPLOAD_DIR"] = tempfile.mkdtemp(prefix="dajin-uploads-")
 os.environ["DART_API_KEY"] = ""
 # 네이버 시세도 부르지 않는다 (시드 예시 값으로 동작)
 os.environ["NAVER_PRICES_ENABLED"] = "false"
+os.environ["YAHOO_PRICES_ENABLED"] = "false"
 os.environ["NAVER_CLIENT_ID"] = ""
 os.environ["NAVER_CLIENT_SECRET"] = ""
 os.environ["GOOGLE_NEWS_ENABLED"] = "false"

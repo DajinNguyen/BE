@@ -1,5 +1,7 @@
 from datetime import date
 
+import pytest
+
 
 def test_search_matches_korean_english_and_code(client):
     for query in [
@@ -139,9 +141,39 @@ def test_prices_one_year_is_weekly(client):
 
 
 def test_prices_invalid_period(client):
-    res = client.get("/api/companies/005930/prices", params={"period": "5y"})
+    res = client.get("/api/companies/005930/prices", params={"period": "2y"})
     assert res.status_code == 422
     assert res.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+@pytest.mark.parametrize(
+    ("period", "interval", "count"),
+    [("5y", "month", (60, 61)), ("all", "year", (11, 11)), ("3m", "week", (13, 14))],
+)
+def test_sample_prices_by_interval(client, period, interval, count):
+    body = client.get(
+        "/api/companies/005930/prices", params={"period": period, "interval": interval}
+    ).json()
+    assert (body["interval"], body["is_sample"]) == (interval, True)
+    assert count[0] <= len(body["points"]) <= count[1]
+    assert body["points"][-1]["close"] == 128500
+
+
+def test_sample_minute_prices_are_empty(client):
+    body = client.get("/api/companies/005930/prices", params={"period": "1d"}).json()
+    assert (body["interval"], body["points"]) == ("1min", [])
+
+
+@pytest.mark.parametrize(
+    ("period", "interval"),
+    [("1m", "1min"), ("1d", "day"), ("5y", "60min"), ("1d", "halfday")],
+)
+def test_minute_and_hour_intervals_only_for_their_periods(client, period, interval):
+    res = client.get(
+        "/api/companies/005930/prices", params={"period": period, "interval": interval}
+    )
+    assert res.status_code == 400
+    assert res.json()["error"]["code"] == "INVALID_PARAM"
 
 
 def test_prices_unknown_company(client):
