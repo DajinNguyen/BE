@@ -12,6 +12,7 @@ GOOD = dict(
     database_url="postgresql+psycopg://u:p@db/dajin",
     frontend_origins=["https://dajin.example"],
     public_base_url="https://dajin.example",
+    crossword_expose_answers=False,
     anthropic_api_key="key",
     naver_prices_enabled=False,
     google_news_enabled=False,
@@ -76,3 +77,8 @@ def test_disabled_rate_limit_is_warned():
 def test_missing_public_base_url_is_warned():
     _, warnings = check(public_base_url="")
     assert any("PUBLIC_BASE_URL" in w for w in warnings)
+
+
+def test_exposed_crossword_answers_are_warned():
+    _, warnings = check(crossword_expose_answers=True)
+    assert any("CROSSWORD_EXPOSE_ANSWERS" in w for w in warnings)

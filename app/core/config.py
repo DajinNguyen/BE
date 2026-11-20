@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     gemini_api_key_2: str | None = None
     gemini_api_key_3: str | None = None
     gemini_api_key_4: str | None = None
+    # 낱말퀴즈 정답을 퀴즈 응답에 그대로 담아 보낼지. 켜 두면 예전 프론트가 그대로 동작하지만, 누구나 정답을 읽을 수 있고
+    # 서버가 푼 것을 검증할 수 없다. 새 프론트(서버 검증 사용)를 올린 뒤 false 로 바꾼다 (운영 compose 는 false)
+    crossword_expose_answers: bool = True
     dart_api_key: str | None = None
     dart_cache_dir: str = ".cache/dart"
     naver_prices_enabled: bool = True  # 네이버 금융 시세 (비공식, 키 없음)
@@ -94,6 +97,11 @@ def check_production(settings: Settings) -> tuple[list[str], list[str]]:
     if not settings.rate_limit_enabled:
         warnings.append(
             "RATE_LIMIT_ENABLED=false 라서 속도 제한이 꺼져 있어요 (AI 호출 비용과 도배를 막지 못해요)"
+        )
+    if settings.crossword_expose_answers:
+        warnings.append(
+            "CROSSWORD_EXPOSE_ANSWERS=true 라서 낱말퀴즈 정답이 응답에 그대로 들어가요. "
+            "새 프론트를 올린 뒤 false 로 바꿔 주세요"
         )
     if not (settings.anthropic_api_key or settings.gemini_api_key):
         warnings.append("AI 키가 없어서 리포트가 데모용 목데이터로 나와요")

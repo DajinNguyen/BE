@@ -45,6 +45,9 @@ class PuzzleCompletion(BaseModel):
     completed_at: str | None = Field(None, max_length=40)
     # [정답 보기]를 썼는지 (썼으면 보상 개수에 넣지 않는다)
     revealed: bool = Field(validation_alias=AliasChoices("used_reveal", "revealed"))
+    # 마지막으로 채운 칸 ("행,열" → 한 글자). 서버가 정답과 비교한다.
+    # 안 보내는 예전 프론트는 CROSSWORD_EXPOSE_ANSWERS 가 켜져 있는 동안만 보상을 받는다
+    entries: dict[str, str] | None = Field(default=None, max_length=400)
 
 
 class UsageCredits(BaseModel):

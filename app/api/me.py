@@ -27,7 +27,12 @@ def put_term_progress(
     return learning_service.save_progress(session, user.id, body)
 
 
-@router.get("/usage-credits", response_model=UsageCredits)
+@router.get(
+    "/usage-credits",
+    response_model=UsageCredits,
+    # 완료 기록에는 채운 칸(entries)을 남기지 않는다 (예전 응답 모양을 그대로 둔다)
+    response_model_exclude={"completions": {"__all__": {"entries"}}},
+)
 def get_usage_credits(user: User = Depends(current_user), session: Session = Depends(get_session)):
     """내 낱말퀴즈 보상 기록 (예전 프론트용. 지금 프론트는 `GET /api/me/wallet` 을 쓴다)."""
     return credit_service.get_credits(session, user.id)

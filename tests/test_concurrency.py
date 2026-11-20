@@ -319,3 +319,118 @@ def test_postgres_row_lock_alone_prevents_overspending(db):
     granted = [r for r in results if isinstance(r, int)]
     assert len(granted) == 7  # 50 ADK 로 7 ADK 는 7번까지
     assert _balance(engine, user_id) == 1
+
+
+# ---------------------------------------------------------------- 낱말퀴즈 보상 경합
+
+
+@pytest.fixture
+def puzzles_open(db, monkeypatch):
+    """세 퀴즈를 모두 연 상태 (기다리는 시간은 없앤다)."""
+    from app.services import credit_service
+
+    monkeypatch.setattr(credit_service, "MIN_SOLVE_SECONDS", 0)
+    engine, user_id = db
+    with Session(engine) as session:
+        for puzzle_id in PUZZLE_IDS:
+            credit_service.mark_opened(session, user_id, puzzle_id)
+    return engine, user_id
+
+
+PUZZLE_IDS = ["basics-easy", "financials-normal", "market-normal"]
+
+
+def _completion(puzzle_id):
+    from app.schemas.learning import PuzzleCompletion
+    from app.services import crossword_service, data_store
+
+    entries = crossword_service.answer_grid(data_store.get_crossword(puzzle_id))
+    return PuzzleCompletion(puzzle_id=puzzle_id, revealed=False, entries=entries)
+
+
+def _credit_state(engine, user_id):
+    from app.models.learning import UsageCreditsRecord
+
+    with Session(engine) as session:
+        record = session.get(UsageCreditsRecord, user_id)
+        rewards = [
+            e for e in _entries(engine, user_id) if e.reason == "puzzle_reward" and e.amount > 0
+        ]
+        return record, rewards
+
+
+def test_same_verified_completion_at_once_counts_once(puzzles_open):
+    from app.services import credit_service
+
+    engine, user_id = puzzles_open
+    results = _run_together(
+        engine,
+        user_id,
+        lambda s, uid, i: credit_service.complete_puzzle(s, uid, _completion("basics-easy")),
+    )
+    assert not [r for r in results if isinstance(r, Exception)], results
+    record, rewards = _credit_state(engine, user_id)
+    assert record.progress == 1 and record.counted_today == ["basics-easy"]
+    assert rewards == []  # 아직 퀴즈 3개를 못 채웠다
+
+
+def test_three_puzzles_completed_at_once_reward_exactly_once(puzzles_open):
+    from app.services import credit_service
+
+    engine, user_id = puzzles_open
+    results = _run_together(
+        engine,
+        user_id,
+        lambda s, uid, i: credit_service.complete_puzzle(s, uid, _completion(PUZZLE_IDS[i % 3])),
+    )
+    assert not [r for r in results if isinstance(r, Exception)], results
+    record, rewards = _credit_state(engine, user_id)
+    assert (record.rewards_today, record.progress) == (1, 0)
+    assert sorted(record.counted_today) == sorted(PUZZLE_IDS)
+    assert len(rewards) == 1 and rewards[0].amount == wallet_service.PUZZLE_REWARD  # 20 ADK 한 번
+    assert _balance(engine, user_id) == wallet_service.SIGNUP_BONUS + 20
+
+
+def test_first_ever_completions_at_once_do_not_crash(puzzles_open):
+    """이 사용자의 보상 기록이 아직 없을 때(첫 완료) 동시에 와도 기본 키 충돌로 500 이 나지 않는다."""
+    from app.models.learning import UsageCreditsRecord
+    from app.services import credit_service
+
+    engine, user_id = puzzles_open
+    with Session(engine) as session:
+        assert session.get(UsageCreditsRecord, user_id) is None
+    results = _run_together(
+        engine,
+        user_id,
+        lambda s, uid, i: credit_service.complete_puzzle(s, uid, _completion("basics-easy")),
+    )
+    assert not [r for r in results if isinstance(r, Exception)], results
+
+
+@pytest.fixture
+def no_credit_lock(monkeypatch):
+    from app.services import credit_service
+
+    monkeypatch.setattr(
+        credit_service, "_locks", __import__("collections").defaultdict(contextlib.nullcontext)
+    )
+
+
+@pytest.mark.usefixtures("no_credit_lock", "no_process_lock")
+def test_postgres_row_lock_alone_keeps_rewards_exact(puzzles_open):
+    """프로세스 안 잠금 없이(서버가 여러 개일 때처럼) 동시에 와도 보상은 한 번, 퀴즈는 한 번씩만 센다."""
+    from app.services import credit_service
+
+    engine, user_id = puzzles_open
+    if engine.dialect.name != "postgresql":
+        pytest.skip("SQLite 에는 행 잠금(FOR UPDATE)이 없어서 PostgreSQL 에서만 확인해요")
+    results = _run_together(
+        engine,
+        user_id,
+        lambda s, uid, i: credit_service.complete_puzzle(s, uid, _completion(PUZZLE_IDS[i % 3])),
+    )
+    other = [r for r in results if isinstance(r, Exception)]
+    assert not other, other
+    record, rewards = _credit_state(engine, user_id)
+    assert (record.rewards_today, record.progress) == (1, 0)
+    assert len(rewards) == 1
