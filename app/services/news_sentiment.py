@@ -1,13 +1,20 @@
 """뉴스 호재/악재(sentiment) 판단.
 
-요청마다 AI(Claude 또는 Gemini)로 새로 계산한다 — 저장하지 않는다 (PM 결정).
-기사 목록 전체를 한 번에 AI에 보내 호재/악재 수준과 이유를 받아온다 (기사 하나당 호출하지 않는다).
-AI 키가 없거나 호출이 실패·시간 초과하면 화면이 항상 뜨도록 모든 기사를 "보통"으로 표시한다.
+AI(Claude 또는 Gemini)로 계산하고 DB에는 저장하지 않는다 (PM 결정).
+기사 목록을 한 번에 AI에 보내 호재/악재 수준과 이유를 받아온다 (기사 하나당 호출하지 않는다).
+
+- 같은 기사는 같은 판단이라, 판단한 결과를 서버 메모리에 `CACHE_TTL` 동안 기억한다.
+  예전에는 화면을 열 때마다 모든 기사를 다시 물어봐서, 무료 한도(분당 15번)와 Gemini 혼잡(503)에
+  자주 걸렸고, 그때마다 모든 기사가 "보통 · 지금은 판단하기 어려워요"로 보였다.
+- 처음 보는 기사만 AI에 보낸다. 혼잡(503)·한도(429)면 잠깐 쉬고 한 번 더 물어본다.
+- 그래도 실패하면 그 기사들만 "보통"으로 보여주고 기억하지 않는다 (다음 요청에 다시 물어본다).
 """
 
 import asyncio
 import json
 import logging
+import time
+from collections import OrderedDict
 from typing import Literal
 
 import anthropic
@@ -27,6 +34,13 @@ FALLBACK_REASON = "지금은 판단하기 어려워요"
 
 # AI 응답을 무한정 기다리지 않도록 호출 하나당 상한을 둔다 (단위: 초).
 REQUEST_TIMEOUT_SECONDS = 20.0
+RETRY_DELAY_SECONDS = 2.0  # 혼잡·한도 오류 뒤 다시 물어보기 전에 쉬는 시간
+RETRY_ERRORS = ("503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "overloaded", "rate_limit")
+CACHE_TTL = 12 * 60 * 60  # 판단한 결과를 기억하는 시간 (초)
+CACHE_SIZE = 5_000
+
+# (기사 주소, 제목) → (기억한 시각, 수준, 이유)
+_cache: "OrderedDict[tuple[str, str], tuple[float, str, str]]" = OrderedDict()
 
 SYSTEM_PROMPT = """\
 당신은 주식을 처음 시작하는 10대 초보자에게 뉴스가 좋은 소식인지 나쁜 소식인지 설명해 주는 선생님이에요.
@@ -116,49 +130,88 @@ async def _call_gemini(settings: Settings, articles: list[NewsArticle]) -> NewsS
     return response.parsed
 
 
+def _key(article: NewsArticle) -> tuple[str, str]:
+    return (article.url, article.title)
+
+
+def _remembered(article: NewsArticle) -> tuple[str, str] | None:
+    hit = _cache.get(_key(article))
+    if hit is None or time.time() - hit[0] > CACHE_TTL:
+        return None
+    return hit[1], hit[2]
+
+
+def _remember(article: NewsArticle, sentiment: str, reason: str) -> None:
+    _cache[_key(article)] = (time.time(), sentiment, reason)
+    _cache.move_to_end(_key(article))
+    while len(_cache) > CACHE_SIZE:
+        _cache.popitem(last=False)
+
+
+def clear_cache() -> None:
+    _cache.clear()
+
+
+def _retryable(error: Exception) -> bool:
+    """혼잡·한도 오류만 다시 물어본다 (시간 초과는 다시 기다리면 화면이 너무 늦어진다)."""
+    if isinstance(error, asyncio.TimeoutError):
+        return False
+    return any(word in str(error) for word in RETRY_ERRORS)
+
+
+async def _ask(settings: Settings, articles: list[NewsArticle]) -> NewsSentimentBatch | None:
+    """AI에 물어본다. 키가 없으면 None. 혼잡·한도 오류면 한 번 더 물어본다."""
+    if settings.anthropic_api_key:
+        call = _call_claude
+    elif settings.gemini_api_key:
+        call = _call_gemini
+    else:
+        return None
+    try:
+        return await asyncio.wait_for(call(settings, articles), timeout=REQUEST_TIMEOUT_SECONDS)
+    except Exception as e:  # noqa: BLE001
+        if not _retryable(e):
+            raise
+        logger.warning("뉴스 호재/악재 판단이 혼잡해서 다시 물어봐요: %s", str(e)[:80])
+    await asyncio.sleep(RETRY_DELAY_SECONDS)
+    return await asyncio.wait_for(call(settings, articles), timeout=REQUEST_TIMEOUT_SECONDS)
+
+
 async def classify_news_sentiment(
     articles: list[NewsArticle], settings: Settings | None = None
 ) -> list[NewsArticle]:
-    """기사 목록 전체를 한 번에 분류해서 `sentiment`/`sentiment_reason` 이 채워진 새 목록을 돌려준다.
+    """`sentiment`/`sentiment_reason` 이 채워진 새 목록을 돌려준다.
 
-    목록이 비어 있으면 AI를 부르지 않고 그대로 돌려준다.
-    AI 키가 없거나 호출이 실패·시간 초과하면 모든 기사를 "보통"으로 대체한다 (항상 화면이 뜨도록).
+    목록이 비어 있으면 AI를 부르지 않고 그대로 돌려준다. 기억해 둔 기사는 AI에 다시 묻지 않는다.
+    AI 키가 없거나 호출이 실패·시간 초과하면 새 기사만 "보통"으로 대체한다 (항상 화면이 뜨도록).
     """
     if not articles:
         return articles
 
     settings = settings or get_settings()
+    known = {a.id: _remembered(a) for a in articles}
+    unknown = list({a.id: a for a in articles if known[a.id] is None}.values())
 
-    try:
-        if settings.anthropic_api_key:
-            batch = await asyncio.wait_for(
-                _call_claude(settings, articles), timeout=REQUEST_TIMEOUT_SECONDS
-            )
-        elif settings.gemini_api_key:
-            batch = await asyncio.wait_for(
-                _call_gemini(settings, articles), timeout=REQUEST_TIMEOUT_SECONDS
-            )
-        else:
-            return _fallback(articles)
-    except Exception:  # noqa: BLE001 - AI 실패는 화면을 막지 않고 "보통"으로 대체한다
-        logger.exception("News sentiment classification failed, falling back to neutral")
-        return _fallback(articles)
+    results: dict[str, NewsSentimentResult] = {}
+    if unknown:
+        try:
+            batch = await _ask(settings, unknown)
+        except Exception:  # noqa: BLE001 - AI 실패는 화면을 막지 않고 "보통"으로 대체한다
+            logger.warning("News sentiment classification failed, falling back to neutral")
+            batch = None
+        if batch is not None:
+            results = {r.id: r for r in batch.items}
+            for a in unknown:
+                if a.id in results:
+                    _remember(a, results[a.id].sentiment, results[a.id].reason)
 
-    results = {r.id: r for r in batch.items}
     updated = []
     for a in articles:
-        result = results.get(a.id)
-        if result is None:
-            # 모델이 일부 기사를 빠뜨렸으면 그 기사만 "보통"으로 대체한다
-            updated.append(
-                a.model_copy(
-                    update={"sentiment": FALLBACK_SENTIMENT, "sentiment_reason": FALLBACK_REASON}
-                )
-            )
-        else:
-            updated.append(
-                a.model_copy(
-                    update={"sentiment": result.sentiment, "sentiment_reason": result.reason}
-                )
-            )
+        if known[a.id] is not None:
+            sentiment, reason = known[a.id]
+        elif a.id in results:
+            sentiment, reason = results[a.id].sentiment, results[a.id].reason
+        else:  # AI가 실패했거나 일부 기사를 빠뜨렸으면 그 기사만 "보통"
+            sentiment, reason = FALLBACK_SENTIMENT, FALLBACK_REASON
+        updated.append(a.model_copy(update={"sentiment": sentiment, "sentiment_reason": reason}))
     return updated

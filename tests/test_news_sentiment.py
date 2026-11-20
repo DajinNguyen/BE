@@ -111,3 +111,71 @@ def test_saved_report_news_without_sentiment_reads_as_neutral():
     point = _migrate_point({"title": "실적", "detail": {"related_news": [old]}}, "005930")
     detail = KeyPointDetail(**point["detail"])
     assert detail.related_news[0].sentiment == "neutral"
+
+
+def _good(module, ids):
+    return module.NewsSentimentBatch(
+        items=[module.NewsSentimentResult(id=i, sentiment="good", reason="좋아요") for i in ids]
+    )
+
+
+def test_same_articles_are_not_asked_again(monkeypatch):
+    """화면을 열 때마다 다시 물어보면 무료 한도·혼잡에 걸려서 전부 "보통"이 됐다."""
+    import app.services.news_sentiment as module
+
+    asked = []
+
+    async def fake_call(settings, articles):
+        asked.append([a.id for a in articles])
+        return _good(module, [a.id for a in articles])
+
+    monkeypatch.setattr(module, "_call_claude", fake_call)
+    settings = Settings(anthropic_api_key="fake-key", gemini_api_key=None)
+    first = _article("1")
+    second = _article("2").model_copy(update={"url": "https://example.com/news/2"})
+
+    asyncio.run(classify_news_sentiment([first], settings=settings))
+    result = asyncio.run(classify_news_sentiment([first, second], settings=settings))
+
+    assert [a.sentiment for a in result] == ["good", "good"]
+    assert asked == [["1"], ["2"]]  # 두 번째에는 처음 보는 기사만 물어본다
+
+
+def test_failed_result_is_not_remembered(monkeypatch):
+    import app.services.news_sentiment as module
+
+    calls = {"n": 0}
+
+    async def flaky(settings, articles):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("AI 호출 실패")
+        return _good(module, [a.id for a in articles])
+
+    monkeypatch.setattr(module, "_call_claude", flaky)
+    settings = Settings(anthropic_api_key="fake-key", gemini_api_key=None)
+    assert asyncio.run(classify_news_sentiment([_article("1")], settings=settings))[
+        0
+    ].sentiment == ("neutral")
+    # 실패는 기억하지 않아서 다음 요청에 다시 물어본다
+    assert asyncio.run(classify_news_sentiment([_article("1")], settings=settings))[
+        0
+    ].sentiment == ("good")
+
+
+def test_busy_model_is_asked_once_more(monkeypatch):
+    import app.services.news_sentiment as module
+
+    calls = {"n": 0}
+
+    async def busy_then_ok(settings, articles):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("503 UNAVAILABLE. This model is currently experiencing high demand.")
+        return _good(module, [a.id for a in articles])
+
+    monkeypatch.setattr(module, "_call_claude", busy_then_ok)
+    monkeypatch.setattr(module, "RETRY_DELAY_SECONDS", 0)
+    settings = Settings(anthropic_api_key="fake-key", gemini_api_key=None)
+    result = asyncio.run(classify_news_sentiment([_article("1")], settings=settings))
+    assert (result[0].sentiment, calls["n"]) == ("good", 2)

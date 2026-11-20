@@ -126,6 +126,14 @@ def _no_consent_gate(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _fresh_news_sentiment():
+    """뉴스 호재/악재 기억은 테스트마다 비운다 (같은 기사로 다른 결과를 시험하므로)."""
+    from app.services import news_sentiment
+
+    news_sentiment.clear_cache()
+
+
+@pytest.fixture(autouse=True)
 def _no_rate_limit(monkeypatch):
     """속도 제한은 전용 테스트에서만 켠다 (다른 테스트가 같은 주소로 많이 요청하므로)."""
     from app.core import rate_limit
