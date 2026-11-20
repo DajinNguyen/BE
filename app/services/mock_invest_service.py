@@ -1,8 +1,9 @@
-"""모의투자: 앰똥깡(ADK)을 가상 현금으로 써서 지연 시세로 사고판다.
+"""모의투자: 앰똥깡(ADK)을 가상 현금(원)으로 환전해서 지연 시세로 사고판다.
 
-- 가상 현금 = ADK 잔액 × `ADK_TO_WON`. 모의투자 전용 돈은 따로 없다 (초기화도 없다).
-- 사면 지갑에서 ADK가 빠지고(spend), 팔면 돌아온다(earn). 그래서 모의투자에서 잃으면
-  AI 리포트·챗봇에 쓸 ADK도 줄어든다.
+- 환전: 1 ADK = 가상 `ADK_TO_WON` 원. 정수 ADK만, 되돌릴 수 없다 (초기화도 없다).
+- 가상 현금 = 환전한 돈 + 판 돈 − 산 돈. 사고팔아도 앰똥깡 지갑은 그대로라 소수 ADK가 생기지 않는다.
+- 환전 기능 전에 앰똥깡으로 바로 사고판 체결(paid_with=None)은 가상 현금 계산에서 뺀다
+  (그때 이미 지갑에서 빠지고 돌아왔다). 그때 산 주식을 지금 팔면 가상 현금으로 들어온다.
 - 체결 가격은 서버가 정한다: 주문을 받은 때의 시세(`GET /api/companies/{code}` 의 current_price 와 같은 값).
   장이 끝난 뒤·주말에는 마지막 체결가(그날 종가)로 체결한다.
 - 보유 종목은 저장하지 않고 체결 내역을 더해서 구한다 (평균 산 가격은 이동평균).
@@ -16,10 +17,18 @@ from datetime import UTC, datetime, timedelta
 
 from sqlmodel import Session, col, select
 
-from app.core.errors import data_not_found, insufficient_quantity, invalid_quantity
-from app.models.mock_invest import MockTrade
+from app.core.errors import (
+    data_not_found,
+    insufficient_cash,
+    insufficient_quantity,
+    invalid_exchange_amount,
+    invalid_quantity,
+)
+from app.models.mock_invest import MockExchange, MockTrade
 from app.schemas.company import CompanyDetail
 from app.schemas.mock_invest import (
+    MockExchangeItem,
+    MockExchangeResult,
     MockHolding,
     MockOrderResult,
     MockPortfolio,
@@ -33,6 +42,7 @@ TRADE_HISTORY_COUNT = 50
 # 같은 주문(종목·사기/팔기·수량)이 이 시간 안에 다시 오면 두 번 누른 것으로 보고 한 번만 체결한다
 DUPLICATE_WINDOW = timedelta(seconds=3)
 REASON = "mock_invest"
+PAID_WITH_WON = "won"
 
 # 같은 사용자의 주문이 겹치지 않게 한다 (잔액·보유 수량 확인 → 체결)
 _locks: defaultdict[int, threading.Lock] = defaultdict(threading.Lock)
@@ -79,6 +89,25 @@ def _positions(trades: list[MockTrade]) -> dict[str, _Position]:
             if p.quantity <= 0:
                 p.quantity, p.cost = 0, 0.0
     return {code: p for code, p in positions.items() if p.quantity > 0}
+
+
+def _exchanges(session: Session, user_id: int) -> list[MockExchange]:
+    return list(
+        session.exec(
+            select(MockExchange)
+            .where(MockExchange.user_id == user_id)
+            .order_by(col(MockExchange.created_at), col(MockExchange.id))
+        ).all()
+    )
+
+
+def _cash(exchanges: list[MockExchange], trades: list[MockTrade]) -> int:
+    """가상 현금 (원) = 환전한 돈 + 판 돈 − 산 돈 (환전 기능 전 체결은 빼고)."""
+    won = sum(e.won for e in exchanges)
+    for t in trades:
+        if t.paid_with == PAID_WITH_WON:
+            won += t.amount if t.side == "sell" else -t.amount
+    return won
 
 
 def _price(company: CompanyDetail) -> int:
@@ -132,14 +161,14 @@ def get_portfolio(session: Session, user_id: int) -> MockPortfolio:
             )
         )
 
-    cash_adk = wallet_service.balance(session, user_id)
-    cash = round(cash_adk * ADK_TO_WON)
+    exchanges = _exchanges(session, user_id)
+    cash = _cash(exchanges, trades)
     evaluation = sum(h.evaluation for h in holdings)
     profit = evaluation - total_cost
     return MockPortfolio(
-        started=bool(trades),
+        started=bool(trades or exchanges),
         adk_to_won=ADK_TO_WON,
-        cash_adk=cash_adk,
+        adk_balance=wallet_service.balance(session, user_id),
         cash=cash,
         evaluation=evaluation,
         total_asset=cash + evaluation,
@@ -201,17 +230,13 @@ def _recent_duplicate(
     return None
 
 
-def _title(name: str, quantity: int, side: str) -> str:
-    return f"모의투자 · {name} {quantity:,}주 {'사기' if side == 'buy' else '팔기'}"
-
-
 def place_order(
     session: Session, user_id: int, stock_code: str, side: str, quantity: object
 ) -> MockOrderResult:
     """사기·팔기. 체결 가격과 ADK 계산은 모두 서버가 한다.
 
     - 수량이 정수 1~`MAX_ORDER_QUANTITY` 가 아니면 400 `INVALID_QUANTITY`
-    - 살 ADK가 모자라면 400 `INSUFFICIENT_BALANCE`, 가진 것보다 많이 팔면 400 `INSUFFICIENT_QUANTITY`
+    - 살 가상 현금이 모자라면 400 `INSUFFICIENT_CASH`, 가진 것보다 많이 팔면 400 `INSUFFICIENT_QUANTITY`
     - 없는 종목이면 404 `COMPANY_NOT_FOUND`
     """
     quantity = _check_quantity(quantity)
@@ -234,9 +259,6 @@ def _execute(
     session: Session, user_id: int, company: CompanyDetail, side: str, quantity: int, price: int
 ) -> MockTrade:
     amount = price * quantity
-    amount_adk = wallet_service.adk(amount / ADK_TO_WON)
-    title = _title(company.name, quantity, side)
-    ref = f"mock:{uuid.uuid4().hex}"
     trade = MockTrade(
         user_id=user_id,
         stock_code=company.stock_code,
@@ -245,23 +267,77 @@ def _execute(
         quantity=quantity,
         price=price,
         amount=amount,
-        amount_adk=amount_adk,
+        amount_adk=0,
+        paid_with=PAID_WITH_WON,
         created_at=_now(),
     )
 
+    trades = _trades(session, user_id)
     if side == "buy":
-        # 잔액이 모자라면 여기서 400 INSUFFICIENT_BALANCE (아무것도 저장되지 않는다)
-        hold_id = wallet_service.hold(session, user_id, amount_adk, REASON, title, ref)
-        session.add(trade)
-        wallet_service.settle(session, hold_id)  # 체결과 ADK 확정을 한 번에 저장한다
+        cash = _cash(_exchanges(session, user_id), trades)
+        if amount > cash:
+            raise insufficient_cash(amount, cash)  # 아무것도 저장되지 않는다
     else:
-        held = _positions(_trades(session, user_id)).get(company.stock_code)
+        held = _positions(trades).get(company.stock_code)
         held_quantity = held.quantity if held else 0
         if quantity > held_quantity:
             raise insufficient_quantity(held_quantity)
-        session.add(trade)
-        wallet_service.grant(session, user_id, amount_adk, REASON, title, ref)
 
-    session.commit()  # 위에서 이미 저장됐지만, 혹시 남은 것이 있으면 저장한다
+    session.add(trade)
+    session.commit()
     session.refresh(trade)
     return trade
+
+
+# ---------------------------------------------------------------------- 환전
+
+
+def _check_adk(adk: object) -> int:
+    # bool 은 int 의 하위 타입이라 따로 막는다. 2.0 처럼 소수점이 붙은 값도 받지 않는다
+    if isinstance(adk, bool) or not isinstance(adk, int) or adk < 1:
+        raise invalid_exchange_amount()
+    return adk
+
+
+def _exchange_item(e: MockExchange) -> MockExchangeItem:
+    return MockExchangeItem(id=str(e.id), adk=e.adk, won=e.won, created_at=_aware(e.created_at))
+
+
+def _recent_exchange(session: Session, user_id: int, adk: int) -> MockExchange | None:
+    last = session.exec(
+        select(MockExchange)
+        .where(MockExchange.user_id == user_id)
+        .order_by(col(MockExchange.created_at).desc(), col(MockExchange.id).desc())
+    ).first()
+    if last is not None and last.adk == adk and _now() - _aware(last.created_at) < DUPLICATE_WINDOW:
+        return last
+    return None
+
+
+def exchange(session: Session, user_id: int, adk: object) -> MockExchangeResult:
+    """앰똥깡 → 가상 현금 환전 (1 ADK = 가상 1만 원). 되돌릴 수 없다.
+
+    - 정수 1 ADK 이상이 아니면 400 `INVALID_AMOUNT`
+    - 앰똥깡이 모자라면 400 `INSUFFICIENT_BALANCE`
+    - 같은 양을 연달아 보내면(3초 안) 한 번만 환전한다
+    """
+    adk = _check_adk(adk)
+    with _locks[user_id]:
+        record = _recent_exchange(session, user_id, adk)
+        if record is None:
+            won = adk * ADK_TO_WON
+            record = MockExchange(user_id=user_id, adk=adk, won=won, created_at=_now())
+            title = f"모의투자 · {adk:,} ADK를 가상 {won:,}원으로 환전"
+            ref = f"mock-exchange:{uuid.uuid4().hex}"
+            # 잔액이 모자라면 여기서 400 INSUFFICIENT_BALANCE (아무것도 저장되지 않는다)
+            hold_id = wallet_service.hold(session, user_id, adk, REASON, title, ref)
+            session.add(record)
+            wallet_service.settle(session, hold_id)  # 환전과 ADK 확정을 한 번에 저장한다
+            session.commit()
+            session.refresh(record)
+
+    return MockExchangeResult(
+        exchange=_exchange_item(record),
+        balance=wallet_service.balance(session, user_id),
+        portfolio=get_portfolio(session, user_id),
+    )

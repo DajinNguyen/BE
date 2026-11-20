@@ -68,6 +68,21 @@ def invalid_quantity(max_quantity: int) -> AppError:
     )
 
 
+def insufficient_cash(required: int, cash: int) -> AppError:
+    """모의투자 가상 현금이 모자라서 살 수 없다. 앰똥깡을 환전하면 늘어난다."""
+    return AppError(
+        400,
+        "INSUFFICIENT_CASH",
+        f"가상 현금이 모자라요. {required:,}원이 필요한데 지금 {cash:,}원이 있어요. "
+        "앰똥깡을 환전해 주세요.",
+        {"required": required, "cash": cash},
+    )
+
+
+def invalid_exchange_amount() -> AppError:
+    return AppError(400, "INVALID_AMOUNT", "환전할 앰똥깡은 1 ADK부터 1 ADK 단위로 정해 주세요.")
+
+
 def insufficient_quantity(held: int) -> AppError:
     """가진 수량보다 많이 팔려고 한다."""
     return AppError(
