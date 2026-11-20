@@ -653,6 +653,11 @@ async def run_generation(
         _save_failure(stock_code, report_generation_failed().detail, session_factory)
         _close_hold(hold_id, False, session_factory)
         return
+    except asyncio.CancelledError:
+        # 서버를 끄거나 작업이 취소됐다: 리포트가 안 나왔으니 잡아 둔 ADK 를 돌려주고 실패로 남긴다
+        _save_failure(stock_code, report_generation_failed().detail, session_factory)
+        _close_hold(hold_id, False, session_factory)
+        raise
 
     with session_factory() as session:
         record = session.get(ReportRecord, stock_code) or ReportRecord(
