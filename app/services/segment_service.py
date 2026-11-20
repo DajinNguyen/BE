@@ -19,7 +19,6 @@ from functools import lru_cache
 from typing import Any, Protocol
 
 import anthropic
-from google import genai
 from google.genai import types as genai_types
 from pydantic import BaseModel
 from sqlmodel import Session
@@ -27,7 +26,7 @@ from sqlmodel import Session
 from app.core.config import Settings, get_settings
 from app.models.overview import CompanySegmentsRecord
 from app.schemas.financials import Financials, SegmentRevenue, Segments
-from app.services import dart, data_store
+from app.services import dart, data_store, gemini_keys
 
 logger = logging.getLogger(__name__)
 
@@ -91,14 +90,11 @@ class GeminiSegmentWriter:
 
     def __init__(self, settings: Settings):
         self._settings = settings
-        self._client: genai.Client | None = None
+        self._client: gemini_keys.FallbackClient | None = None
 
     def write(self, excerpt: str) -> SegmentExtraction:
         if self._client is None:
-            self._client = genai.Client(
-                api_key=self._settings.gemini_api_key,
-                http_options=genai_types.HttpOptions(timeout=self._REQUEST_TIMEOUT_MS),
-            )
+            self._client = gemini_keys.client(self._settings, self._REQUEST_TIMEOUT_MS)
         response = self._client.models.generate_content(
             model=self._settings.gemini_model,
             contents=excerpt,

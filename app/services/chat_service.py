@@ -18,7 +18,6 @@ from functools import lru_cache
 from typing import Any, Protocol
 
 import anthropic
-from google import genai
 from google.genai import types as genai_types
 from sqlalchemy import func
 from sqlmodel import Session, col, select
@@ -43,7 +42,7 @@ from app.schemas.chat import (
     ChatResponse,
     ChatSource,
 )
-from app.services import chat_data, chat_plan, wallet_service
+from app.services import chat_data, chat_plan, gemini_keys, wallet_service
 from app.services.chat_plan import Plan, Planner
 
 logger = logging.getLogger(__name__)
@@ -201,14 +200,11 @@ class GeminiChatWriter:
 
     def __init__(self, settings: Settings):
         self._settings = settings
-        self._client: genai.Client | None = None
+        self._client: gemini_keys.FallbackClient | None = None
 
     def answer(self, screen: dict[str, Any], history: list[tuple[str, str]], question: str) -> str:
         if self._client is None:
-            self._client = genai.Client(
-                api_key=self._settings.gemini_api_key,
-                http_options=genai_types.HttpOptions(timeout=self._REQUEST_TIMEOUT_MS),
-            )
+            self._client = gemini_keys.client(self._settings, self._REQUEST_TIMEOUT_MS)
         turns = [*history, ("user", _last_message(screen, question))]
         response = self._client.models.generate_content(
             model=self._settings.gemini_model,

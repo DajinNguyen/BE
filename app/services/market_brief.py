@@ -10,11 +10,11 @@ from functools import lru_cache
 from typing import Any, Protocol
 
 import anthropic
-from google import genai
 from google.genai import types as genai_types
 from pydantic import BaseModel
 
 from app.core.config import Settings, get_settings
+from app.services import gemini_keys
 
 logger = logging.getLogger(__name__)
 
@@ -75,14 +75,11 @@ class GeminiBriefWriter:
 
     def __init__(self, settings: Settings):
         self._settings = settings
-        self._client: genai.Client | None = None
+        self._client: gemini_keys.FallbackClient | None = None
 
     def write(self, context: dict[str, Any]) -> MarketBrief | None:
         if self._client is None:
-            self._client = genai.Client(
-                api_key=self._settings.gemini_api_key,
-                http_options=genai_types.HttpOptions(timeout=self._REQUEST_TIMEOUT_MS),
-            )
+            self._client = gemini_keys.client(self._settings, self._REQUEST_TIMEOUT_MS)
         try:
             response = self._client.models.generate_content(
                 model=self._settings.gemini_model,
