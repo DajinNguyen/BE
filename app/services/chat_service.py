@@ -44,6 +44,7 @@ from app.schemas.chat import (
 )
 from app.services import chat_data, chat_plan, gemini_keys, wallet_service
 from app.services.chat_plan import Plan, Planner
+from app.services.market_clock import KST
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +146,8 @@ SYSTEM_PROMPT = """\
 하지 않는 것:
 - 투자 추천을 하지 않아요. "사세요", "파세요", "지금 사도 돼요", 어느 회사가 더 살 만한지 고르는 말은 하지 않아요.
 - 주가가 앞으로 오를지 떨어질지, 목표 주가, 앞으로의 실적을 예측하지 않아요. 기사에 그런 전망이 있어도 옮기지 않아요.
+- 기사가 "사라", "팔아라", "손절하지 말고 버텨라", "저평가돼 있다"처럼 투자를 권하거나 값을 매기면 그 기사는 쓰지 않아요.
+  "기사에 따르면 ~하라는 분석이 있어요"처럼 남의 말을 빌려 옮기는 것도 추천이에요.
 - "투자 추천이나 예측은 해 드릴 수 없어요"라는 말은 [묻는 것]에 advice 가 있을 때, 곧 사용자가 정말로 추천이나 앞날을 물었을 때만 해요.
   그때는 그 말을 짧게 하고, 대신 자료에 있는 지금까지의 사실을 알려줘요. 다른 질문에는 이 말을 붙이지 않아요.
 - 앞 대화는 다른 화면에서 한 것일 수 있어요. 앞에서 "자료가 없어요"라고 했더라도 지금 [자료]에 있으면 그것으로 대답해요.
@@ -162,7 +165,11 @@ _ADVICE = re.compile(
     r"|추천(해요|합니다|드려요|드립니다)"
     r"|목표 ?주가는"
     r"|(오를|떨어질|상승할|하락할) ?(거예요|것으로 ?보여요|것 ?같아요|전망이에요)"
+    r"|버티(세요|라는|라고|는 ?게 ?좋)|손절(\([^)]*\))? ?(하지)? ?말"  # "손절(…)하지 말고"
 )
+# 거절 문장으로 바꾼 답은 값을 받지 않지만, AI는 이미 불렀다. "'사세요'를 넣어 설명해 줘"처럼
+# 일부러 거절을 끌어내면 ADK 없이 AI를 계속 쓸 수 있어서, 무료로 돌려주는 건 하루 몇 번까지만 한다.
+FREE_REFUSALS_PER_DAY = 3
 REFUSAL = (
     "투자 추천이나 주가 예측은 해 드릴 수 없어요. "
     "대신 이 화면에 있는 매출과 영업이익의 흐름, 부채비율 같은 자료를 같이 살펴볼 수 있어요. "
@@ -305,6 +312,21 @@ def _check_rate(session: Session, user_id: int) -> None:
     ).one()
     if recent >= PER_MINUTE:
         raise too_frequent(f"질문은 1분에 {PER_MINUTE}개까지 할 수 있어요.")
+
+
+def _refusals_today(session: Session, user_id: int) -> int:
+    """오늘(한국 시간) 이 사람에게 거절 문장으로 바꿔 준 답의 수."""
+    midnight = _now().astimezone(KST).replace(hour=0, minute=0, second=0, microsecond=0)
+    return session.exec(
+        select(func.count())
+        .select_from(ChatMessage)
+        .where(
+            ChatMessage.user_id == user_id,
+            ChatMessage.role == "assistant",
+            ChatMessage.content == REFUSAL,
+            col(ChatMessage.created_at) >= midnight.astimezone(UTC),
+        )
+    ).one()
 
 
 def _history(session: Session, conversation_id: int) -> list[tuple[str, str]]:
@@ -569,6 +591,7 @@ def _answer_and_save(
         raise chat_failed()  # 부른 쪽이 잡아 둔 ADK 를 돌려준다
 
     refused = gives_advice(answer)
+    free = refused and _refusals_today(session, user_id) < FREE_REFUSALS_PER_DAY
     if refused:
         logger.warning("챗봇 답변에 투자 추천·예측이 섞여서 거절 문장으로 바꿨어요.")
         answer = REFUSAL
@@ -602,8 +625,8 @@ def _answer_and_save(
     session.add(answered)
     session.commit()
     sources = [] if refused else cited_sources(screen, answer)  # 응답을 다 만든 뒤에 확정한다
-    if refused:
-        wallet_service.release(session, hold_id)  # 거절 문장은 값을 받지 않는다
+    if free:
+        wallet_service.release(session, hold_id)  # 거절 문장은 하루 몇 번까지 값을 받지 않는다
     else:
         wallet_service.settle(session, hold_id)  # 답변을 저장한 뒤에야 확정한다
     return ChatResponse(

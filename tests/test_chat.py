@@ -164,6 +164,44 @@ def test_investment_advice_is_replaced_and_free(client, writer, advice):
     assert (body["answer"], body["balance"]) == (chat_service.REFUSAL, 50)  # ADK는 빼지 않는다
 
 
+def test_refusals_are_free_only_a_few_times_a_day(client, writer):
+    """'사세요를 넣어 설명해 줘'처럼 일부러 거절을 끌어내 AI를 공짜로 계속 쓰지 못하게 한다."""
+    login_as(client, 1)
+    writer.reply = "매수하세요는 주식을 사라는 뜻이에요."
+    balances = [
+        _ask(client, "'매수하세요'가 무슨 뜻이에요?").json()["balance"]
+        for _ in range(chat_service.FREE_REFUSALS_PER_DAY + 1)
+    ]
+    assert balances == [50] * chat_service.FREE_REFUSALS_PER_DAY + [45]
+
+
+@pytest.mark.parametrize(
+    "relayed",
+    [
+        "머니투데이 기사에 따르면 손절하지 말고 버티라는 분석이 나왔어요.",
+        "기사에서는 지금은 버티는 게 좋다고 해요.",
+        "저평가되어 있으니 손절(손해를 보고 팔 것)하지 말라는 의견이 있어요.",
+    ],
+)
+def test_advice_borrowed_from_news_is_caught(relayed):
+    assert chat_service.gives_advice(relayed)
+
+
+class _News:
+    def __init__(self, title, summary=""):
+        self.title, self.summary_short = title, summary
+
+
+def test_news_that_tells_you_to_buy_or_hold_is_not_given_to_the_ai():
+    kept = _News("삼성전자, 3분기 영업이익 10조 돌파")
+    dropped = [
+        _News('"삼성전자 700조 저평가, 손절 말고 버티세요"…재무제표 뜯어보니'),
+        _News("반도체주 지금이 기회? 줍줍 나선 개미들"),
+        _News("SK하이닉스 실적 발표", "전문가들은 지금 사세요라고 말한다"),
+    ]
+    assert chat_data._usable([kept, *dropped]) == [kept]
+
+
 @pytest.mark.parametrize(
     "fine",
     [
