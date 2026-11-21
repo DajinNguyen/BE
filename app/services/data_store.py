@@ -10,6 +10,7 @@ DART 키가 있으면 회사마다 DART 고유번호·공식 회사명을 붙이
 
 import asyncio
 import json
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -22,7 +23,7 @@ from app.schemas.financials import Financials, Segments
 from app.schemas.industry import IndustryRef
 from app.schemas.news import NewsArticle, NewsItem, NewsPage
 from app.schemas.term import Term
-from app.services import dart, dart_financials, naver, news_search
+from app.services import crossword_generator, dart, dart_financials, naver, news_search
 from app.services.market_clock import last_close_date
 from app.services.news_sentiment import FALLBACK_REASON, FALLBACK_SENTIMENT, classify_news_sentiment
 
@@ -325,20 +326,42 @@ def get_terms() -> list[Term]:
 
 @lru_cache
 def _crosswords() -> dict[str, CrosswordPuzzle]:
+    """예전에 손으로 만든 퀴즈 3판. 목록에는 안 나오지만, 풀던 판을 열 수 있게 id 로는 계속 열린다."""
     return {p["id"]: CrosswordPuzzle(**p) for p in load_json("crosswords.json")}
 
 
+@lru_cache
+def _crossword_bank() -> (
+    tuple[tuple[crossword_generator.BankWord, ...], tuple[tuple[str, str, str], ...]]
+):
+    bank = tuple(crossword_generator.BankWord(**w) for w in load_json("crossword_words.json"))
+    terms = tuple((t.id, t.category, t.level) for t in get_terms())
+    return bank, terms
+
+
+def daily_crosswords(day: date) -> list[CrosswordPuzzle]:
+    return crossword_generator.cached_day(day, *_crossword_bank())
+
+
 def list_crosswords() -> list[CrosswordSummary]:
+    """오늘(KST)의 퀴즈 3판. 날마다 새 판이 나온다."""
     return [
         CrosswordSummary(
             id=p.id, title=p.title, difficulty=p.difficulty, size=p.size, word_count=len(p.words)
         )
-        for p in _crosswords().values()
+        for p in daily_crosswords(crossword_generator.today())
     ]
 
 
 def get_crossword(puzzle_id: str) -> CrosswordPuzzle:
     puzzle = _crosswords().get(puzzle_id)
-    if puzzle is None:
+    if puzzle is not None:
+        return puzzle
+    parsed = crossword_generator.parse_id(puzzle_id)
+    if parsed is None or not crossword_generator.is_open(parsed[0]):
         raise puzzle_not_found()
-    return puzzle
+    day, slot = parsed
+    puzzles = daily_crosswords(day)
+    if slot > len(puzzles):
+        raise puzzle_not_found()
+    return puzzles[slot - 1]

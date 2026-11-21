@@ -1,0 +1,727 @@
+[
+  {
+    "answer": "주식",
+    "term_id": "stock",
+    "clue": "회사의 주인 권리를 잘게 나눈 조각"
+  },
+  {
+    "answer": "주주",
+    "term_id": "shareholder",
+    "clue": "주식을 가진 사람"
+  },
+  {
+    "answer": "주가",
+    "term_id": "stock_price",
+    "clue": "주식 1주의 가격"
+  },
+  {
+    "answer": "상장",
+    "term_id": "listing",
+    "clue": "거래소에서 누구나 사고팔 수 있게 등록"
+  },
+  {
+    "answer": "종목코드",
+    "term_id": "stock_code",
+    "clue": "회사마다 붙는 6자리 번호"
+  },
+  {
+    "answer": "배당",
+    "term_id": "dividend",
+    "clue": "회사가 번 돈을 주주에게 나눠 줌"
+  },
+  {
+    "answer": "배당금",
+    "term_id": "dividend",
+    "clue": "주주가 나눠 받는 회사의 이익 돈"
+  },
+  {
+    "answer": "공시",
+    "term_id": "disclosure",
+    "clue": "회사가 중요한 정보를 공식적으로 알림"
+  },
+  {
+    "answer": "사업보고서",
+    "term_id": "business_report",
+    "clue": "1년에 한 번 내는 회사의 공식 보고서"
+  },
+  {
+    "answer": "전자공시",
+    "term_id": "dart",
+    "clue": "DART에서 보는 인터넷 공식 발표"
+  },
+  {
+    "answer": "회계연도",
+    "term_id": "fiscal_year",
+    "clue": "회사가 돈 계산을 끊는 1년 단위"
+  },
+  {
+    "answer": "분기",
+    "term_id": "quarter",
+    "clue": "1년을 3개월씩 넷으로 나눈 기간"
+  },
+  {
+    "answer": "연결기준",
+    "term_id": "consolidated",
+    "clue": "엄마 회사와 자회사 실적을 합친 기준"
+  },
+  {
+    "answer": "매수",
+    "term_id": "buy",
+    "clue": "주식을 사는 것"
+  },
+  {
+    "answer": "매도",
+    "term_id": "sell",
+    "clue": "주식을 파는 것"
+  },
+  {
+    "answer": "주주총회",
+    "term_id": "shareholders_meeting",
+    "clue": "주주들이 모여 회사 일을 정하는 회의"
+  },
+  {
+    "answer": "주총",
+    "term_id": "shareholders_meeting",
+    "clue": "주주들의 회의를 줄여 부르는 말"
+  },
+  {
+    "answer": "지분",
+    "term_id": "stake",
+    "clue": "회사 주식 가운데 가진 몫"
+  },
+  {
+    "answer": "재무제표",
+    "term_id": "financial_statements",
+    "clue": "회사의 돈 사정을 정리한 공식 성적표"
+  },
+  {
+    "answer": "매출액",
+    "term_id": "revenue",
+    "clue": "물건·서비스를 팔아 들어온 돈의 합"
+  },
+  {
+    "answer": "매출",
+    "term_id": "revenue",
+    "clue": "팔아서 벌어들인 돈"
+  },
+  {
+    "answer": "영업이익",
+    "term_id": "operating_income",
+    "clue": "장사로 번 돈에서 장사 비용을 뺀 돈"
+  },
+  {
+    "answer": "순이익",
+    "term_id": "net_income",
+    "clue": "이자·세금까지 빼고 마지막에 남은 돈"
+  },
+  {
+    "answer": "당기순이익",
+    "term_id": "net_income",
+    "clue": "그 기간에 최종적으로 남은 이익"
+  },
+  {
+    "answer": "현금흐름",
+    "term_id": "cash_flow",
+    "clue": "실제 돈이 들어오고 나간 기록"
+  },
+  {
+    "answer": "매출원가",
+    "term_id": "cost_of_sales",
+    "clue": "팔린 물건을 만드는 데 든 돈"
+  },
+  {
+    "answer": "매출총이익",
+    "term_id": "gross_profit",
+    "clue": "매출에서 원가만 뺀 돈"
+  },
+  {
+    "answer": "판관비",
+    "term_id": "sga",
+    "clue": "광고비·월급·임대료 같은 운영 비용"
+  },
+  {
+    "answer": "자산",
+    "term_id": "assets",
+    "clue": "회사가 가진 모든 재산"
+  },
+  {
+    "answer": "총자산",
+    "term_id": "assets",
+    "clue": "현금·공장·받을 돈까지 다 더한 재산"
+  },
+  {
+    "answer": "부채",
+    "term_id": "liabilities",
+    "clue": "앞으로 갚아야 하는 돈"
+  },
+  {
+    "answer": "자본",
+    "term_id": "equity",
+    "clue": "재산에서 빚을 빼고 남은 회사 몫"
+  },
+  {
+    "answer": "자기자본",
+    "term_id": "equity",
+    "clue": "빚이 아닌 회사 자기 돈"
+  },
+  {
+    "answer": "순자산",
+    "term_id": "equity",
+    "clue": "가진 재산에서 갚을 돈을 뺀 나머지"
+  },
+  {
+    "answer": "재무상태표",
+    "term_id": "balance_sheet",
+    "clue": "재산과 빚, 자기 돈을 보여주는 표"
+  },
+  {
+    "answer": "대차대조표",
+    "term_id": "balance_sheet",
+    "clue": "재무상태표의 옛 이름"
+  },
+  {
+    "answer": "손익계산서",
+    "term_id": "income_statement",
+    "clue": "얼마 벌고 쓰고 남았는지 보여주는 표"
+  },
+  {
+    "answer": "설비투자",
+    "term_id": "capex",
+    "clue": "공장·기계를 새로 짓거나 사는 데 쓴 돈"
+  },
+  {
+    "answer": "시설투자",
+    "term_id": "capex",
+    "clue": "공장이나 장비에 들이는 돈"
+  },
+  {
+    "answer": "감가상각",
+    "term_id": "depreciation",
+    "clue": "비싼 기계값을 쓰는 기간에 나눠 비용 처리"
+  },
+  {
+    "answer": "적자",
+    "term_id": "deficit",
+    "clue": "번 돈보다 쓴 돈이 많은 상태"
+  },
+  {
+    "answer": "흑자",
+    "term_id": "surplus",
+    "clue": "쓴 돈보다 번 돈이 많은 상태"
+  },
+  {
+    "answer": "실적",
+    "term_id": "earnings",
+    "clue": "회사가 일정 기간 팔고 남긴 결과"
+  },
+  {
+    "answer": "영업손실",
+    "term_id": "operating_loss",
+    "clue": "장사 비용이 번 돈보다 많아 생긴 손해"
+  },
+  {
+    "answer": "영업이익률",
+    "term_id": "operating_margin",
+    "clue": "100원 팔 때 장사로 남는 돈의 비율"
+  },
+  {
+    "answer": "순이익률",
+    "term_id": "net_margin",
+    "clue": "100원 팔아 최종적으로 남는 비율"
+  },
+  {
+    "answer": "부채비율",
+    "term_id": "debt_ratio",
+    "clue": "자기 돈에 비해 빚이 얼마인지"
+  },
+  {
+    "answer": "유동비율",
+    "term_id": "current_ratio",
+    "clue": "1년 안에 갚을 빚 대비 바로 쓸 재산"
+  },
+  {
+    "answer": "자기자본이익률",
+    "term_id": "roe",
+    "clue": "ROE를 우리말로"
+  },
+  {
+    "answer": "주가수익비율",
+    "term_id": "per",
+    "clue": "PER을 우리말로"
+  },
+  {
+    "answer": "주가순자산비율",
+    "term_id": "pbr",
+    "clue": "PBR을 우리말로"
+  },
+  {
+    "answer": "주당순이익",
+    "term_id": "eps",
+    "clue": "EPS를 우리말로"
+  },
+  {
+    "answer": "주당순자산",
+    "term_id": "bps",
+    "clue": "BPS를 우리말로"
+  },
+  {
+    "answer": "배당수익률",
+    "term_id": "dividend_yield",
+    "clue": "주가에 비해 1년 배당이 몇 %인지"
+  },
+  {
+    "answer": "증가율",
+    "term_id": "growth_rate",
+    "clue": "이전보다 몇 % 늘었는지"
+  },
+  {
+    "answer": "성장률",
+    "term_id": "growth_rate",
+    "clue": "얼마나 빨리 커졌는지 보여주는 %"
+  },
+  {
+    "answer": "수익률",
+    "term_id": "return_rate",
+    "clue": "넣은 돈 대비 벌거나 잃은 비율"
+  },
+  {
+    "answer": "점유율",
+    "term_id": "market_share",
+    "clue": "전체 시장에서 한 회사가 차지한 몫"
+  },
+  {
+    "answer": "시가총액",
+    "term_id": "market_cap",
+    "clue": "회사 주식을 지금 가격으로 다 산 값"
+  },
+  {
+    "answer": "시총",
+    "term_id": "market_cap",
+    "clue": "회사의 몸값을 줄여 부르는 말"
+  },
+  {
+    "answer": "코스피",
+    "term_id": "kospi",
+    "clue": "우리나라 대표 주식 시장"
+  },
+  {
+    "answer": "코스닥",
+    "term_id": "kosdaq",
+    "clue": "기술·벤처 기업이 많은 주식 시장"
+  },
+  {
+    "answer": "유가증권시장",
+    "term_id": "kospi",
+    "clue": "코스피의 정식 이름"
+  },
+  {
+    "answer": "한국거래소",
+    "term_id": "krx",
+    "clue": "우리나라 주식 시장을 운영하는 기관"
+  },
+  {
+    "answer": "주가지수",
+    "term_id": "market_index",
+    "clue": "시장 전체 흐름을 나타낸 숫자"
+  },
+  {
+    "answer": "거래대금",
+    "term_id": "trading_value",
+    "clue": "하루 동안 사고팔린 금액의 합"
+  },
+  {
+    "answer": "거래량",
+    "term_id": "trading_volume",
+    "clue": "하루 동안 사고팔린 주식 수"
+  },
+  {
+    "answer": "등락률",
+    "term_id": "change_rate",
+    "clue": "어제보다 몇 % 오르거나 내렸는지"
+  },
+  {
+    "answer": "투자경고",
+    "term_id": "investment_warning",
+    "clue": "주가가 너무 급해 거래소가 조심하라는 표시"
+  },
+  {
+    "answer": "관리종목",
+    "term_id": "administrative_issue",
+    "clue": "문제가 있어 거래소가 지켜보는 종목"
+  },
+  {
+    "answer": "기준금리",
+    "term_id": "interest_rate",
+    "clue": "한국은행이 정하는 이자율의 기준"
+  },
+  {
+    "answer": "환율",
+    "term_id": "exchange_rate",
+    "clue": "우리 돈과 다른 나라 돈을 바꾸는 비율"
+  },
+  {
+    "answer": "호가",
+    "term_id": "bid_ask",
+    "clue": "이 값에 사겠다·팔겠다고 부르는 가격"
+  },
+  {
+    "answer": "체결",
+    "term_id": "execution",
+    "clue": "사고파는 가격이 맞아 거래가 이뤄짐"
+  },
+  {
+    "answer": "시가",
+    "term_id": "opening_price",
+    "clue": "장이 열리고 처음 거래된 가격"
+  },
+  {
+    "answer": "종가",
+    "term_id": "closing_price",
+    "clue": "장이 닫힐 때 마지막 가격"
+  },
+  {
+    "answer": "고가",
+    "term_id": "high_price",
+    "clue": "하루 중 가장 높았던 가격"
+  },
+  {
+    "answer": "저가",
+    "term_id": "low_price",
+    "clue": "하루 중 가장 낮았던 가격"
+  },
+  {
+    "answer": "상한가",
+    "term_id": "upper_limit",
+    "clue": "하루에 오를 수 있는 끝 가격"
+  },
+  {
+    "answer": "하한가",
+    "term_id": "lower_limit",
+    "clue": "하루에 내려갈 수 있는 끝 가격"
+  },
+  {
+    "answer": "양봉",
+    "term_id": "bullish_candle",
+    "clue": "끝값이 시작값보다 높은 빨간 캔들"
+  },
+  {
+    "answer": "음봉",
+    "term_id": "bearish_candle",
+    "clue": "끝값이 시작값보다 낮은 파란 캔들"
+  },
+  {
+    "answer": "이동평균선",
+    "term_id": "moving_average",
+    "clue": "최근 며칠 평균 가격을 이은 선"
+  },
+  {
+    "answer": "거래정지",
+    "term_id": "trading_halt",
+    "clue": "잠시 사고팔지 못하게 막음"
+  },
+  {
+    "answer": "상장폐지",
+    "term_id": "delisting",
+    "clue": "거래소 목록에서 빠짐"
+  },
+  {
+    "answer": "공매도",
+    "term_id": "short_selling",
+    "clue": "빌린 주식을 먼저 팔고 나중에 갚기"
+  },
+  {
+    "answer": "인플레이션",
+    "term_id": "inflation",
+    "clue": "물건값이 전반적으로 계속 오름"
+  },
+  {
+    "answer": "물가",
+    "term_id": "price_level",
+    "clue": "물건·서비스 값의 평균 수준"
+  },
+  {
+    "answer": "경기",
+    "term_id": "economy_cycle",
+    "clue": "나라 경제가 돌아가는 활발함"
+  },
+  {
+    "answer": "호황",
+    "term_id": "boom",
+    "clue": "경제가 아주 잘 돌아가는 때"
+  },
+  {
+    "answer": "불황",
+    "term_id": "recession",
+    "clue": "경제가 잘 안 돌아가는 때"
+  },
+  {
+    "answer": "불경기",
+    "term_id": "recession",
+    "clue": "장사가 안되고 경제가 가라앉은 때"
+  },
+  {
+    "answer": "채권",
+    "term_id": "bond",
+    "clue": "돈을 빌리며 이자와 함께 갚겠다는 증서"
+  },
+  {
+    "answer": "펀드",
+    "term_id": "fund",
+    "clue": "여러 사람 돈을 모아 대신 투자하는 상품"
+  },
+  {
+    "answer": "상장지수펀드",
+    "term_id": "etf",
+    "clue": "ETF를 우리말로"
+  },
+  {
+    "answer": "시장가",
+    "term_id": "market_order",
+    "clue": "지금 거래되는 가격으로 바로 하는 주문"
+  },
+  {
+    "answer": "지정가",
+    "term_id": "limit_order",
+    "clue": "원하는 가격을 정해 넣는 주문"
+  },
+  {
+    "answer": "수출",
+    "term_id": "export",
+    "clue": "다른 나라에 물건을 파는 것"
+  },
+  {
+    "answer": "수입",
+    "term_id": "import_goods",
+    "clue": "다른 나라 물건을 사 오는 것"
+  },
+  {
+    "answer": "기관투자자",
+    "term_id": "institutional_investor",
+    "clue": "연금·보험사처럼 큰돈을 굴리는 투자자"
+  },
+  {
+    "answer": "개인투자자",
+    "term_id": "individual_investor",
+    "clue": "자기 돈으로 직접 투자하는 일반 사람"
+  },
+  {
+    "answer": "변동성",
+    "term_id": "volatility",
+    "clue": "가격이 얼마나 크게 오르내리는지"
+  },
+  {
+    "answer": "반등",
+    "term_id": "rebound",
+    "clue": "떨어지던 가격이 다시 오름"
+  },
+  {
+    "answer": "급등",
+    "term_id": "surge",
+    "clue": "짧은 시간에 크게 오름"
+  },
+  {
+    "answer": "급락",
+    "term_id": "plunge",
+    "clue": "짧은 시간에 크게 떨어짐"
+  },
+  {
+    "answer": "강세장",
+    "term_id": "bull_market",
+    "clue": "주가가 오래 오르는 시장"
+  },
+  {
+    "answer": "약세장",
+    "term_id": "bear_market",
+    "clue": "주가가 오래 내리는 시장"
+  },
+  {
+    "answer": "배당락",
+    "term_id": "ex_dividend",
+    "clue": "배당 권리가 사라져 주가가 낮아짐"
+  },
+  {
+    "answer": "증권사",
+    "term_id": "brokerage",
+    "clue": "주식 주문을 대신 넣어 주는 회사"
+  },
+  {
+    "answer": "계좌",
+    "term_id": "account",
+    "clue": "돈과 주식을 넣어 두는 나만의 통장"
+  },
+  {
+    "answer": "예수금",
+    "term_id": "deposit_cash",
+    "clue": "계좌에 있어 바로 쓸 수 있는 현금"
+  },
+  {
+    "answer": "액면가",
+    "term_id": "par_value",
+    "clue": "주식을 처음 만들 때 적은 1주의 기준 값"
+  },
+  {
+    "answer": "액면분할",
+    "term_id": "stock_split",
+    "clue": "1주를 여러 주로 잘게 나눔"
+  },
+  {
+    "answer": "유상증자",
+    "term_id": "paid_in_capital_increase",
+    "clue": "새 주식을 팔아 돈을 모음"
+  },
+  {
+    "answer": "무상증자",
+    "term_id": "bonus_issue",
+    "clue": "새 주식을 주주에게 공짜로 나눠 줌"
+  },
+  {
+    "answer": "자사주",
+    "term_id": "treasury_stock",
+    "clue": "회사가 사들인 자기 회사 주식"
+  },
+  {
+    "answer": "자기주식",
+    "term_id": "treasury_stock",
+    "clue": "회사가 스스로 가진 자기 주식"
+  },
+  {
+    "answer": "우선주",
+    "term_id": "preferred_stock",
+    "clue": "투표권 대신 배당을 먼저 받는 주식"
+  },
+  {
+    "answer": "보통주",
+    "term_id": "common_stock",
+    "clue": "투표할 수 있는 일반적인 주식"
+  },
+  {
+    "answer": "대주주",
+    "term_id": "major_shareholder",
+    "clue": "주식을 아주 많이 가진 주주"
+  },
+  {
+    "answer": "최대주주",
+    "term_id": "major_shareholder",
+    "clue": "주식을 가장 많이 가진 주주"
+  },
+  {
+    "answer": "소액주주",
+    "term_id": "minority_shareholder",
+    "clue": "주식을 조금 가진 일반 주주"
+  },
+  {
+    "answer": "분산투자",
+    "term_id": "diversification",
+    "clue": "여러 곳에 나눠 투자하기"
+  },
+  {
+    "answer": "장기투자",
+    "term_id": "long_term_investing",
+    "clue": "좋은 회사를 몇 년 이상 가져가기"
+  },
+  {
+    "answer": "손절매",
+    "term_id": "stop_loss",
+    "clue": "손해를 키우지 않으려 싸게라도 팔기"
+  },
+  {
+    "answer": "원금",
+    "term_id": "principal",
+    "clue": "처음에 넣은 돈"
+  },
+  {
+    "answer": "복리",
+    "term_id": "compound_interest",
+    "clue": "이자에 다시 이자가 붙는 방식"
+  },
+  {
+    "answer": "단리",
+    "term_id": "simple_interest",
+    "clue": "처음 넣은 돈에만 이자가 붙는 방식"
+  },
+  {
+    "answer": "매매",
+    "term_id": "trading",
+    "clue": "사고파는 일"
+  },
+  {
+    "answer": "시세차익",
+    "term_id": "capital_gain",
+    "clue": "싸게 사서 비싸게 판 가격 차이"
+  },
+  {
+    "answer": "분할매수",
+    "term_id": "split_buying",
+    "clue": "여러 번에 나눠 사기"
+  },
+  {
+    "answer": "자회사",
+    "term_id": "subsidiary",
+    "clue": "엄마 회사가 거느린 회사"
+  },
+  {
+    "answer": "지주회사",
+    "term_id": "holding_company",
+    "clue": "다른 회사들을 거느리는 것이 주된 일인 회사"
+  },
+  {
+    "answer": "계열사",
+    "term_id": "affiliate",
+    "clue": "같은 그룹에 속한 회사들"
+  },
+  {
+    "answer": "반도체",
+    "term_id": "semiconductor",
+    "clue": "계산하고 기억하는 아주 작은 전자 부품"
+  },
+  {
+    "answer": "메모리반도체",
+    "term_id": "memory_semiconductor",
+    "clue": "정보를 저장하는 반도체"
+  },
+  {
+    "answer": "비메모리",
+    "term_id": "system_semiconductor",
+    "clue": "계산·명령을 처리하는 반도체"
+  },
+  {
+    "answer": "낸드플래시",
+    "term_id": "nand",
+    "clue": "전원이 꺼져도 남는 저장용 메모리"
+  },
+  {
+    "answer": "낸드",
+    "term_id": "nand",
+    "clue": "사진·영상을 저장하는 메모리를 줄인 말"
+  },
+  {
+    "answer": "파운드리",
+    "term_id": "foundry",
+    "clue": "남이 설계한 반도체를 대신 만들어 주는 사업"
+  },
+  {
+    "answer": "전기차",
+    "term_id": "electric_vehicle",
+    "clue": "배터리 전기로 움직이는 자동차"
+  },
+  {
+    "answer": "이차전지",
+    "term_id": "secondary_battery",
+    "clue": "여러 번 충전해 다시 쓰는 배터리"
+  },
+  {
+    "answer": "플랫폼",
+    "term_id": "platform_business",
+    "clue": "사람과 판매자가 모여 거래하는 서비스"
+  },
+  {
+    "answer": "공급망",
+    "term_id": "supply_chain",
+    "clue": "원료부터 소비자까지 이어진 회사들의 연결"
+  },
+  {
+    "answer": "경기민감주",
+    "term_id": "cyclical_industry",
+    "clue": "경제 상황에 따라 크게 오르내리는 주식"
+  }
+]
