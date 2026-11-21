@@ -809,5 +809,712 @@
     "level": "intermediate",
     "easy": "경제 상황이 좋을 때 크게 잘되고, 나쁠 때 크게 어려워지는 산업이에요. 반도체·자동차가 대표적이에요.",
     "example": "날씨에 따라 손님 수가 크게 바뀌는 바닷가 가게처럼, 경기에 따라 실적이 크게 오르내려요."
+  },
+  {
+    "id": "brokerage",
+    "term": "증권사",
+    "aliases": [
+      "증권사",
+      "증권회사"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "주식을 사고팔 수 있게 주문을 대신 넣어 주는 회사예요. 증권사 앱으로 주식을 거래해요.",
+    "example": "은행에서 통장을 만들듯, 주식을 하려면 증권사에서 계좌를 만들어요."
+  },
+  {
+    "id": "account",
+    "term": "계좌",
+    "aliases": [
+      "계좌",
+      "증권계좌"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "돈과 주식을 넣어 두고 거래 기록을 남기는 나만의 통장이에요.",
+    "example": "증권 계좌에 돈을 넣어야 그 돈으로 주식을 살 수 있어요."
+  },
+  {
+    "id": "deposit_cash",
+    "term": "예수금",
+    "aliases": [
+      "예수금"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "증권 계좌에 들어 있어서 바로 주식을 살 수 있는 현금이에요.",
+    "example": "계좌에 10만 원을 넣었다면 예수금이 10만 원이에요."
+  },
+  {
+    "id": "bid_ask",
+    "term": "호가",
+    "aliases": [],
+    "category": "market",
+    "level": "beginner",
+    "easy": "주식을 이 가격에 사겠다, 팔겠다고 부르는 가격이에요.",
+    "example": "시장에서 '사과 한 개 천 원에 팔아요'라고 외치는 가격과 비슷해요."
+  },
+  {
+    "id": "execution",
+    "term": "체결",
+    "aliases": [],
+    "category": "market",
+    "level": "beginner",
+    "easy": "사려는 사람과 팔려는 사람의 가격이 맞아서 거래가 실제로 이뤄지는 거예요.",
+    "example": "주문을 넣고 '체결됐어요' 알림이 와야 정말 산 거예요."
+  },
+  {
+    "id": "opening_price",
+    "term": "시가",
+    "aliases": [],
+    "category": "market",
+    "level": "beginner",
+    "easy": "그날 주식시장이 열리고 처음 거래된 가격이에요.",
+    "example": "오전 9시에 첫 거래가 1만 원이었다면 그날 시가는 1만 원이에요."
+  },
+  {
+    "id": "closing_price",
+    "term": "종가",
+    "aliases": [
+      "종가"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "그날 주식시장이 닫힐 때 마지막으로 정해진 가격이에요.",
+    "example": "뉴스에서 '오늘 삼성전자 종가는…'이라고 하면 장 마감 가격이에요."
+  },
+  {
+    "id": "high_price",
+    "term": "고가",
+    "aliases": [],
+    "category": "market",
+    "level": "beginner",
+    "easy": "하루 동안 거래된 가격 가운데 가장 높은 가격이에요.",
+    "example": "오전에 잠깐 1만 2천 원까지 올랐다면 그날 고가는 1만 2천 원이에요."
+  },
+  {
+    "id": "low_price",
+    "term": "저가",
+    "aliases": [],
+    "category": "market",
+    "level": "beginner",
+    "easy": "하루 동안 거래된 가격 가운데 가장 낮은 가격이에요.",
+    "example": "오후에 9천 원까지 내려갔다면 그날 저가는 9천 원이에요."
+  },
+  {
+    "id": "upper_limit",
+    "term": "상한가",
+    "aliases": [
+      "상한가"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "하루에 오를 수 있는 가장 높은 가격이에요. 우리나라는 전날 종가보다 30%까지예요.",
+    "example": "좋은 소식에 사람들이 몰려 30% 올라 멈추면 '상한가'라고 해요."
+  },
+  {
+    "id": "lower_limit",
+    "term": "하한가",
+    "aliases": [
+      "하한가"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "하루에 내려갈 수 있는 가장 낮은 가격이에요. 전날 종가보다 30%까지예요.",
+    "example": "나쁜 소식에 30% 떨어져 더 못 내려가면 '하한가'라고 해요."
+  },
+  {
+    "id": "bullish_candle",
+    "term": "양봉",
+    "aliases": [
+      "양봉"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "시작 가격보다 끝 가격이 높게 끝난 캔들이에요. 우리나라 차트에서는 빨간색이에요.",
+    "example": "1만 원에 시작해서 1만 1천 원에 끝났다면 빨간 양봉이 그려져요."
+  },
+  {
+    "id": "bearish_candle",
+    "term": "음봉",
+    "aliases": [
+      "음봉"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "시작 가격보다 끝 가격이 낮게 끝난 캔들이에요. 우리나라 차트에서는 파란색이에요.",
+    "example": "1만 원에 시작해서 9천 원에 끝났다면 파란 음봉이 그려져요."
+  },
+  {
+    "id": "moving_average",
+    "term": "이동평균선",
+    "aliases": [
+      "이동평균선",
+      "이평선"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "최근 며칠 동안의 평균 가격을 이어서 그린 선이에요. 주가의 큰 흐름을 보여줘요.",
+    "example": "5일 이동평균선은 최근 5일 종가의 평균을 날마다 이어 그린 선이에요."
+  },
+  {
+    "id": "trading_halt",
+    "term": "거래정지",
+    "aliases": [
+      "거래정지"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "중요한 일이 생겨서 거래소가 그 주식을 잠시 사고팔지 못하게 막는 거예요.",
+    "example": "회사에 큰 문제가 생기면 투자자를 보호하려고 거래정지가 될 수 있어요."
+  },
+  {
+    "id": "delisting",
+    "term": "상장폐지",
+    "aliases": [
+      "상장폐지"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "거래소에서 그 회사 주식을 더 이상 사고팔 수 없게 목록에서 빼는 거예요.",
+    "example": "상장폐지가 되면 주식을 팔기가 아주 어려워져요."
+  },
+  {
+    "id": "par_value",
+    "term": "액면가",
+    "aliases": [
+      "액면가",
+      "액면가액"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "주식을 처음 만들 때 주권에 적어 둔 1주의 기준 가격이에요. 지금 주가와는 달라요.",
+    "example": "액면가가 100원인 주식도 주가는 수만 원일 수 있어요."
+  },
+  {
+    "id": "stock_split",
+    "term": "액면분할",
+    "aliases": [
+      "액면분할"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "주식 1주를 여러 주로 잘게 나누는 거예요. 회사 가치는 그대로고 1주 가격만 낮아져요.",
+    "example": "피자 한 판을 4조각에서 8조각으로 자르는 것과 같아요."
+  },
+  {
+    "id": "paid_in_capital_increase",
+    "term": "유상증자",
+    "aliases": [
+      "유상증자"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "회사가 새 주식을 만들어 팔아서 돈을 모으는 거예요.",
+    "example": "새 공장을 짓느라 돈이 필요할 때 유상증자를 하기도 해요."
+  },
+  {
+    "id": "bonus_issue",
+    "term": "무상증자",
+    "aliases": [
+      "무상증자"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "회사가 주주들에게 새 주식을 공짜로 나눠 주는 거예요.",
+    "example": "1주를 가진 주주에게 1주를 더 주면 주식 수가 2배가 돼요."
+  },
+  {
+    "id": "treasury_stock",
+    "term": "자사주",
+    "aliases": [
+      "자사주",
+      "자기주식"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "회사가 스스로 사들여 가지고 있는 자기 회사 주식이에요.",
+    "example": "회사가 자사주를 사면 시장에 도는 주식이 줄어요."
+  },
+  {
+    "id": "short_selling",
+    "term": "공매도",
+    "aliases": [
+      "공매도"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "주식을 빌려서 먼저 팔고, 나중에 싸게 다시 사서 갚는 방법이에요. 주가가 떨어질 때 이익이 나요.",
+    "example": "1만 원에 빌려 판 주식을 8천 원에 사서 갚으면 2천 원이 남아요."
+  },
+  {
+    "id": "preferred_stock",
+    "term": "우선주",
+    "aliases": [
+      "우선주"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "투표권은 없지만 배당을 보통주보다 먼저, 조금 더 받는 주식이에요.",
+    "example": "이름 뒤에 '우'가 붙은 종목이 우선주예요. 예: 삼성전자우"
+  },
+  {
+    "id": "common_stock",
+    "term": "보통주",
+    "aliases": [
+      "보통주"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "주주총회에서 투표할 수 있는 일반적인 주식이에요.",
+    "example": "우리가 흔히 사는 주식은 대부분 보통주예요."
+  },
+  {
+    "id": "major_shareholder",
+    "term": "대주주",
+    "aliases": [
+      "대주주",
+      "최대주주"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "회사 주식을 가장 많이, 또는 아주 많이 가진 주주예요.",
+    "example": "창업자 가족이 회사의 대주주인 경우가 많아요."
+  },
+  {
+    "id": "minority_shareholder",
+    "term": "소액주주",
+    "aliases": [
+      "소액주주"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "회사 주식을 조금 가진 일반 주주예요.",
+    "example": "앱으로 주식 몇 주를 산 우리도 소액주주예요."
+  },
+  {
+    "id": "diversification",
+    "term": "분산투자",
+    "aliases": [
+      "분산투자"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "여러 회사·여러 종류에 돈을 나눠서 투자하는 거예요. 한 곳이 나빠도 피해가 줄어요.",
+    "example": "달걀을 한 바구니에 담지 말라는 말과 같은 뜻이에요."
+  },
+  {
+    "id": "long_term_investing",
+    "term": "장기투자",
+    "aliases": [
+      "장기투자"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "좋은 회사를 골라 몇 년 이상 오래 가지고 가는 투자 방법이에요.",
+    "example": "매일 가격을 보지 않고 회사가 크는 걸 기다리는 방법이에요."
+  },
+  {
+    "id": "stop_loss",
+    "term": "손절매",
+    "aliases": [
+      "손절매",
+      "손절"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "손해를 더 키우지 않으려고 산 가격보다 싸게라도 파는 거예요.",
+    "example": "10% 떨어지면 판다고 미리 정해 두는 것도 손절매 계획이에요."
+  },
+  {
+    "id": "return_rate",
+    "term": "수익률",
+    "aliases": [
+      "수익률"
+    ],
+    "category": "indicator",
+    "level": "beginner",
+    "easy": "넣은 돈에 비해 몇 %를 벌거나 잃었는지 보여주는 비율이에요.",
+    "example": "10만 원을 넣어 11만 원이 되면 수익률은 10%예요."
+  },
+  {
+    "id": "principal",
+    "term": "원금",
+    "aliases": [],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "처음에 넣은 돈이에요. 이자나 수익을 빼고 남은 처음 금액이에요.",
+    "example": "원금 10만 원에 이자 1천 원이 붙으면 모두 10만 1천 원이에요."
+  },
+  {
+    "id": "compound_interest",
+    "term": "복리",
+    "aliases": [
+      "복리"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "이자에도 다시 이자가 붙는 방식이에요. 오래 둘수록 돈이 빨리 불어나요.",
+    "example": "눈덩이를 굴리면 점점 더 빨리 커지는 것과 비슷해요."
+  },
+  {
+    "id": "simple_interest",
+    "term": "단리",
+    "aliases": [],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "처음 넣은 돈(원금)에만 이자가 붙는 방식이에요.",
+    "example": "원금 100만 원에 해마다 5만 원씩만 이자가 붙어요."
+  },
+  {
+    "id": "inflation",
+    "term": "인플레이션",
+    "aliases": [
+      "인플레이션",
+      "물가상승"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "물건값이 전반적으로 계속 오르는 거예요. 같은 돈으로 살 수 있는 게 줄어요.",
+    "example": "작년에 천 원이던 과자가 올해 천이백 원이 되는 것과 같아요."
+  },
+  {
+    "id": "price_level",
+    "term": "물가",
+    "aliases": [],
+    "category": "market",
+    "level": "beginner",
+    "easy": "여러 물건과 서비스 값을 한데 모아 본 평균적인 가격 수준이에요.",
+    "example": "물가가 오르면 장바구니 값이 비싸졌다고 느껴요."
+  },
+  {
+    "id": "economy_cycle",
+    "term": "경기",
+    "aliases": [],
+    "category": "market",
+    "level": "beginner",
+    "easy": "나라 경제가 얼마나 활발하게 돌아가는지를 말해요.",
+    "example": "경기가 좋으면 가게에 손님이 많고 회사도 사람을 더 뽑아요."
+  },
+  {
+    "id": "boom",
+    "term": "호황",
+    "aliases": [
+      "호황"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "경제가 아주 잘 돌아가서 많이 팔리고 일자리도 늘어나는 때예요.",
+    "example": "호황에는 회사들의 실적이 대체로 좋아져요."
+  },
+  {
+    "id": "recession",
+    "term": "불황",
+    "aliases": [
+      "불황",
+      "불경기"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "경제가 잘 안 돌아가서 덜 팔리고 일자리도 줄어드는 때예요.",
+    "example": "불황에는 사람들이 지갑을 잘 열지 않아요."
+  },
+  {
+    "id": "bond",
+    "term": "채권",
+    "aliases": [
+      "채권"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "나라나 회사가 돈을 빌리면서 언제 얼마의 이자와 함께 갚겠다고 약속한 증서예요.",
+    "example": "채권을 사면 빌려준 돈에 대한 이자를 받아요."
+  },
+  {
+    "id": "fund",
+    "term": "펀드",
+    "aliases": [
+      "펀드"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "여러 사람의 돈을 모아 전문가가 대신 투자해 주는 상품이에요.",
+    "example": "친구들이 돈을 모아 한 사람에게 맡겨 투자하는 것과 비슷해요."
+  },
+  {
+    "id": "etf",
+    "term": "상장지수펀드",
+    "aliases": [
+      "상장지수펀드",
+      "이티에프"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "주가지수 같은 묶음을 따라가도록 만든 펀드를 주식처럼 거래소에서 사고팔 수 있게 한 거예요.",
+    "example": "코스피200 ETF 하나를 사면 큰 회사 200곳에 나눠 투자한 효과가 나요."
+  },
+  {
+    "id": "market_order",
+    "term": "시장가",
+    "aliases": [
+      "시장가",
+      "시장가주문"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "가격을 정하지 않고 지금 거래되는 가격으로 바로 사고파는 주문이에요.",
+    "example": "빨리 사고 싶을 때 시장가로 주문해요."
+  },
+  {
+    "id": "limit_order",
+    "term": "지정가",
+    "aliases": [
+      "지정가",
+      "지정가주문"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "이 가격이면 사겠다, 팔겠다고 가격을 정해서 넣는 주문이에요.",
+    "example": "9천 원까지 내려오면 사도록 지정가 주문을 넣어 둘 수 있어요."
+  },
+  {
+    "id": "trading",
+    "term": "매매",
+    "aliases": [],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "사고파는 것을 한꺼번에 이르는 말이에요.",
+    "example": "주식 매매는 주식을 사고파는 거예요."
+  },
+  {
+    "id": "capital_gain",
+    "term": "시세차익",
+    "aliases": [
+      "시세차익",
+      "차익"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "싸게 사서 비싸게 팔았을 때 생기는 가격 차이만큼의 이익이에요.",
+    "example": "1만 원에 사서 1만 2천 원에 팔면 시세차익은 2천 원이에요."
+  },
+  {
+    "id": "deficit",
+    "term": "적자",
+    "aliases": [
+      "적자"
+    ],
+    "category": "financial_statement",
+    "level": "beginner",
+    "easy": "번 돈보다 쓴 돈이 많아서 손해가 난 상태예요.",
+    "example": "100원 벌고 120원 쓰면 20원 적자예요."
+  },
+  {
+    "id": "surplus",
+    "term": "흑자",
+    "aliases": [
+      "흑자"
+    ],
+    "category": "financial_statement",
+    "level": "beginner",
+    "easy": "쓴 돈보다 번 돈이 많아서 이익이 난 상태예요.",
+    "example": "100원 벌고 80원 쓰면 20원 흑자예요."
+  },
+  {
+    "id": "earnings",
+    "term": "실적",
+    "aliases": [
+      "실적"
+    ],
+    "category": "financial_statement",
+    "level": "beginner",
+    "easy": "회사가 일정 기간 동안 얼마나 팔고 얼마나 남겼는지 보여주는 결과예요.",
+    "example": "실적 발표 날에는 주가가 크게 움직이기도 해요."
+  },
+  {
+    "id": "operating_loss",
+    "term": "영업손실",
+    "aliases": [
+      "영업손실"
+    ],
+    "category": "financial_statement",
+    "level": "beginner",
+    "easy": "장사로 번 돈보다 장사하는 데 쓴 돈이 더 많아서 생긴 손해예요.",
+    "example": "매출이 줄고 비용이 늘면 영업손실이 날 수 있어요."
+  },
+  {
+    "id": "subsidiary",
+    "term": "자회사",
+    "aliases": [
+      "자회사"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "다른 회사(엄마 회사)가 주식을 많이 가지고 경영을 이끄는 회사예요.",
+    "example": "큰 회사가 새 사업을 위해 자회사를 따로 세우기도 해요."
+  },
+  {
+    "id": "holding_company",
+    "term": "지주회사",
+    "aliases": [
+      "지주회사"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "다른 회사들의 주식을 가지고 그 회사들을 거느리는 것이 주된 일인 회사예요.",
+    "example": "이름에 '홀딩스'가 붙은 회사가 지주회사인 경우가 많아요."
+  },
+  {
+    "id": "affiliate",
+    "term": "계열사",
+    "aliases": [
+      "계열사"
+    ],
+    "category": "basic",
+    "level": "intermediate",
+    "easy": "같은 그룹에 속해 서로 연결된 회사들이에요.",
+    "example": "한 그룹 안에 전자, 건설, 보험 계열사가 함께 있기도 해요."
+  },
+  {
+    "id": "market_share",
+    "term": "점유율",
+    "aliases": [
+      "점유율",
+      "시장점유율"
+    ],
+    "category": "indicator",
+    "level": "beginner",
+    "easy": "전체 시장에서 한 회사가 차지하는 몫이 몇 %인지 보여주는 비율이에요.",
+    "example": "스마트폰 10대 중 3대가 우리 회사 제품이면 점유율은 30%예요."
+  },
+  {
+    "id": "export",
+    "term": "수출",
+    "aliases": [
+      "수출"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "우리나라에서 만든 물건이나 서비스를 다른 나라에 파는 거예요.",
+    "example": "반도체와 자동차는 우리나라의 대표 수출품이에요."
+  },
+  {
+    "id": "import_goods",
+    "term": "수입",
+    "aliases": [],
+    "category": "market",
+    "level": "beginner",
+    "easy": "다른 나라의 물건이나 서비스를 사 오는 거예요.",
+    "example": "석유는 거의 다 수입해서 써요."
+  },
+  {
+    "id": "institutional_investor",
+    "term": "기관투자자",
+    "aliases": [
+      "기관투자자"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "연금, 보험사, 자산운용사처럼 큰돈을 모아 투자하는 회사나 단체예요.",
+    "example": "국민연금도 아주 큰 기관투자자예요."
+  },
+  {
+    "id": "individual_investor",
+    "term": "개인투자자",
+    "aliases": [
+      "개인투자자"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "자기 돈으로 직접 투자하는 일반 사람이에요.",
+    "example": "앱으로 주식을 사는 우리도 개인투자자예요."
+  },
+  {
+    "id": "volatility",
+    "term": "변동성",
+    "aliases": [
+      "변동성"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "가격이 얼마나 크게, 자주 오르내리는지를 말해요.",
+    "example": "하루에 10%씩 오르내리는 주식은 변동성이 커요."
+  },
+  {
+    "id": "rebound",
+    "term": "반등",
+    "aliases": [
+      "반등"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "떨어지던 가격이 방향을 바꿔 다시 오르는 거예요.",
+    "example": "며칠 내리던 주가가 오늘 반등했어요."
+  },
+  {
+    "id": "surge",
+    "term": "급등",
+    "aliases": [
+      "급등"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "가격이 짧은 시간에 아주 크게 오르는 거예요.",
+    "example": "좋은 소식이 나오자 주가가 급등했어요."
+  },
+  {
+    "id": "plunge",
+    "term": "급락",
+    "aliases": [
+      "급락"
+    ],
+    "category": "market",
+    "level": "beginner",
+    "easy": "가격이 짧은 시간에 아주 크게 떨어지는 거예요.",
+    "example": "나쁜 소식에 주가가 급락했어요."
+  },
+  {
+    "id": "bull_market",
+    "term": "강세장",
+    "aliases": [
+      "강세장"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "주가가 전반적으로 오래 오르는 시장이에요.",
+    "example": "강세장에서는 대부분 종목이 함께 오르기도 해요."
+  },
+  {
+    "id": "bear_market",
+    "term": "약세장",
+    "aliases": [
+      "약세장"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "주가가 전반적으로 오래 내리는 시장이에요.",
+    "example": "약세장에서는 좋은 회사 주가도 같이 내리기도 해요."
+  },
+  {
+    "id": "split_buying",
+    "term": "분할매수",
+    "aliases": [
+      "분할매수"
+    ],
+    "category": "basic",
+    "level": "beginner",
+    "easy": "사고 싶은 주식을 한 번에 다 사지 않고 여러 번에 나눠 사는 방법이에요.",
+    "example": "100주를 한꺼번에 사지 않고 일주일마다 25주씩 사요."
+  },
+  {
+    "id": "ex_dividend",
+    "term": "배당락",
+    "aliases": [
+      "배당락"
+    ],
+    "category": "market",
+    "level": "intermediate",
+    "easy": "배당 받을 권리가 사라진 날, 그만큼 주가가 낮아지는 거예요.",
+    "example": "배당 기준일이 지나면 그 다음 날 배당락으로 주가가 조금 내려가요."
   }
 ]

@@ -1,15 +1,12 @@
 def test_crossword_list(client):
+    """목록은 오늘의 퀴즈 3판 (매일 새로 만들어요, test_daily_crosswords 참고)."""
     res = client.get("/api/learn/crosswords")
     assert res.status_code == 200
     puzzles = res.json()
-    assert [p["id"] for p in puzzles] == ["basics-easy", "financials-normal", "market-normal"]
-    assert puzzles[0] == {
-        "id": "basics-easy",
-        "title": "주식 기초",
-        "difficulty": "easy",
-        "size": {"rows": 5, "cols": 5},
-        "word_count": 8,
-    }
+    assert len(puzzles) == 3
+    assert all(p["id"].startswith("daily-") for p in puzzles)
+    assert [p["difficulty"] for p in puzzles] == ["easy", "normal", "normal"]
+    assert set(puzzles[0]) == {"id", "title", "difficulty", "size", "word_count"}
 
 
 def test_crossword_detail(client):

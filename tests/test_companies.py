@@ -227,7 +227,7 @@ def test_news_unknown_company(client):
 
 def test_terms(client):
     terms = client.get("/api/terms").json()
-    assert len(terms) == 70
+    assert len(terms) == 135
     assert terms[0]["id"] == "stock"
     assert set(terms[0]) == {"id", "term", "aliases", "category", "level", "easy", "example"}
 
