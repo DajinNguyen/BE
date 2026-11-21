@@ -93,14 +93,21 @@ def _price_trend(stock_code: str) -> dict[str, Any] | None:
     }
 
 
-# 종목을 찍어 주거나 크게 오른다고 부추기는 기사는 근거로 쓰지 않는다
+# 종목을 찍어 주거나 크게 오른다고 부추기는 기사, 사라·팔라·버티라고 권하는 기사는 근거로 쓰지 않는다
+# (AI가 "기사에 따르면 손절 말고 버티라고 해요"처럼 권유를 그대로 옮기는 일을 막는다)
 _HYPE = re.compile(
     r"\d+배|목표가|목표주가|추천주|유망주|급등주|대박|사야 ?할|담아라|주목할 ?종목|톱픽|수익률 ?\d"
+    r"|버텨|버티(세요|라)|손절 ?(말|하지 ?마)|저평가|고평가|줍줍|물타기|매수 ?(기회|타이밍|추천)"
+    r"|(사|파|매수하|매도하)세요|팔아라|사라[\"'”’ ,.!…]|지금이 ?기회|바닥 ?(잡|찍)|살 ?때|팔 ?때"
 )
 
 
 def _usable(articles: list[Any]) -> list[Any]:
-    return [a for a in articles if not _HYPE.search(a.title)]
+    return [
+        a
+        for a in articles
+        if not _HYPE.search(a.title) and not _HYPE.search(getattr(a, "summary_short", "") or "")
+    ]
 
 
 def _article(a: Any) -> dict[str, Any]:
